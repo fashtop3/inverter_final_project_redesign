@@ -26,6 +26,26 @@ int main(void)
 }
 
 
+ISR(TIMER1_COMPA_vect)
+{
+	
+	//when mains is balance for use
+	//mainsBalanceMonitor();
+	
+	//monitoring overloading
+	//overloadMonitoring();
+	
+	//monitoring battery charging
+	//chargingSelection();
+	
+	//battery level monitoring
+	//batteryMonitoring();
+	
+	//display on LCD
+	//displayInverterState();
+}
+
+
 //ISR(ADC_vect)
 //{
 	//switch(ADMUX)
