@@ -46,8 +46,6 @@ Discarded input sections
  .text          0x00000000        0x0 Inverter.o
  .data          0x00000000        0x0 Inverter.o
  .bss           0x00000000        0x0 Inverter.o
- .text._ZN8Inverter9setSwitchEb
-                0x00000000        0xc Inverter.o
  .text._ZN8Inverter7setLoadEb
                 0x00000000        0xc Inverter.o
  .text._ZN8Inverter13switchToMainsEb
@@ -418,7 +416,7 @@ END GROUP
 .rela.plt
  *(.rela.plt)
 
-.text           0x00000000      0x454
+.text           0x00000000      0x46a
  *(.vectors)
  .vectors       0x00000000       0x54 C:/Program Files (x86)/Atmel/Studio/7.0/Packs/atmel/ATmega_DFP/1.0.106/gcc/dev/atmega32/avr5/crtatmega32.o
                 0x00000000                __vector_default
@@ -508,52 +506,55 @@ END GROUP
                 0x000000f4        0x2 Inverter.o
                 0x000000f4                _ZN8InverterD1Ev
                 0x000000f4                _ZN8InverterD2Ev
+ .text._ZN8Inverter9setSwitchEb
+                0x000000f6        0xc Inverter.o
+                0x000000f6                _ZN8Inverter9setSwitchEb
  .text._ZN8Inverter18analogPinSwitchingEv
-                0x000000f6       0x36 Inverter.o
-                0x000000f6                _ZN8Inverter18analogPinSwitchingEv
+                0x00000102       0x36 Inverter.o
+                0x00000102                _ZN8Inverter18analogPinSwitchingEv
  .text.__vector_7
-                0x0000012c       0x14 main.o
-                0x0000012c                __vector_7
+                0x00000138       0x14 main.o
+                0x00000138                __vector_7
  .text.__vector_16
-                0x00000140       0x4e main.o
-                0x00000140                __vector_16
+                0x0000014c       0x4e main.o
+                0x0000014c                __vector_16
  .text._Z14my_timer_setupv
-                0x0000018e       0x16 main.o
-                0x0000018e                _Z14my_timer_setupv
+                0x0000019a       0x16 main.o
+                0x0000019a                _Z14my_timer_setupv
  .text.startup.main
-                0x000001a4        0xa main.o
-                0x000001a4                main
+                0x000001b0       0x14 main.o
+                0x000001b0                main
  .text.startup._GLOBAL__sub_I_inverter
-                0x000001ae        0x8 main.o
+                0x000001c4        0x8 main.o
  .text.exit._GLOBAL__sub_D_inverter
-                0x000001b6        0x8 main.o
+                0x000001cc        0x8 main.o
  .text._Z22serialReceiveInterrupth
-                0x000001be       0xf6 serial.o
-                0x000001be                _Z22serialReceiveInterrupth
+                0x000001d4       0xf6 serial.o
+                0x000001d4                _Z22serialReceiveInterrupth
  .text._Z23serialTransmitInterrupth
-                0x000002b4       0xe6 serial.o
-                0x000002b4                _Z23serialTransmitInterrupth
+                0x000002ca       0xe6 serial.o
+                0x000002ca                _Z23serialTransmitInterrupth
  .text.__vector_13
-                0x0000039a       0x4a serial.o
-                0x0000039a                __vector_13
+                0x000003b0       0x4a serial.o
+                0x000003b0                __vector_13
  .text.__vector_14
-                0x000003e4       0x4a serial.o
-                0x000003e4                __vector_14
- .text.libgcc   0x0000042e        0xc c:/program files (x86)/atmel/studio/7.0/toolchain/avr8/avr8-gnu-toolchain/bin/../lib/gcc/avr/4.9.2/avr5\libgcc.a(_tablejump2.o)
-                0x0000042e                __tablejump2__
-                0x0000043a                . = ALIGN (0x2)
+                0x000003fa       0x4a serial.o
+                0x000003fa                __vector_14
+ .text.libgcc   0x00000444        0xc c:/program files (x86)/atmel/studio/7.0/toolchain/avr8/avr8-gnu-toolchain/bin/../lib/gcc/avr/4.9.2/avr5\libgcc.a(_tablejump2.o)
+                0x00000444                __tablejump2__
+                0x00000450                . = ALIGN (0x2)
  *(.fini9)
- .fini9         0x0000043a        0x0 c:/program files (x86)/atmel/studio/7.0/toolchain/avr8/avr8-gnu-toolchain/bin/../lib/gcc/avr/4.9.2/avr5\libgcc.a(_exit.o)
-                0x0000043a                _exit
-                0x0000043a                exit
+ .fini9         0x00000450        0x0 c:/program files (x86)/atmel/studio/7.0/toolchain/avr8/avr8-gnu-toolchain/bin/../lib/gcc/avr/4.9.2/avr5\libgcc.a(_exit.o)
+                0x00000450                _exit
+                0x00000450                exit
  *(.fini9)
  *(.fini8)
  *(.fini8)
  *(.fini7)
  *(.fini7)
  *(.fini6)
- .fini6         0x0000043a       0x16 c:/program files (x86)/atmel/studio/7.0/toolchain/avr8/avr8-gnu-toolchain/bin/../lib/gcc/avr/4.9.2/avr5\libgcc.a(_dtors.o)
-                0x0000043a                __do_global_dtors
+ .fini6         0x00000450       0x16 c:/program files (x86)/atmel/studio/7.0/toolchain/avr8/avr8-gnu-toolchain/bin/../lib/gcc/avr/4.9.2/avr5\libgcc.a(_dtors.o)
+                0x00000450                __do_global_dtors
  *(.fini6)
  *(.fini5)
  *(.fini5)
@@ -566,11 +567,11 @@ END GROUP
  *(.fini1)
  *(.fini1)
  *(.fini0)
- .fini0         0x00000450        0x4 c:/program files (x86)/atmel/studio/7.0/toolchain/avr8/avr8-gnu-toolchain/bin/../lib/gcc/avr/4.9.2/avr5\libgcc.a(_exit.o)
+ .fini0         0x00000466        0x4 c:/program files (x86)/atmel/studio/7.0/toolchain/avr8/avr8-gnu-toolchain/bin/../lib/gcc/avr/4.9.2/avr5\libgcc.a(_exit.o)
  *(.fini0)
-                0x00000454                _etext = .
+                0x0000046a                _etext = .
 
-.data           0x00800060       0x14 load address 0x00000454
+.data           0x00800060       0x14 load address 0x0000046a
                 0x00800060                PROVIDE (__data_start, .)
  *(.data)
  *(.data*)
@@ -617,8 +618,8 @@ END GROUP
                 0x00800094                rxBuffer
  *(COMMON)
                 0x008000b4                PROVIDE (__bss_end, .)
-                0x00000454                __data_load_start = LOADADDR (.data)
-                0x00000468                __data_load_end = (__data_load_start + SIZEOF (.data))
+                0x0000046a                __data_load_start = LOADADDR (.data)
+                0x0000047e                __data_load_end = (__data_load_start + SIZEOF (.data))
 
 .noinit         0x008000b4        0x0
                 [!provide]                PROVIDE (__noinit_start, .)

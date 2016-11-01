@@ -69,11 +69,11 @@ void Inverter::setSwitch(bool on)
 {
 	if(on) 
 	{
-		INV_CTR &= ~(1<<POWER);
+		INV_CTR |= 1<<POWER;
 	}
 	else 
 	{
-		INV_CTR |= 1<<POWER;
+		INV_CTR &= ~(1<<POWER);		
 	}
 }
 

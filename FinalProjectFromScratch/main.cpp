@@ -23,6 +23,8 @@ int main(void)
 	sei(); //Enable Global Interrupt
 	my_timer_setup();
 	
+	inverter.setSwitch(false);
+	
     /* Replace with your application code */
     while (1) 
     {
