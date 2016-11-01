@@ -65,7 +65,7 @@ Inverter::~Inverter()
 {
 } //~Inverter
 
-void Inverter::setSwitch(bool on)
+Inverter* Inverter::setSwitch(bool on)
 {
 	if(on) 
 	{
@@ -75,9 +75,11 @@ void Inverter::setSwitch(bool on)
 	{
 		INV_CTR &= ~(1<<POWER);		
 	}
+	
+	return this;
 }
 
-void Inverter::setLoad(bool load)
+Inverter* Inverter::setLoad(bool load)
 {
 	if (load)
 	{
@@ -87,9 +89,11 @@ void Inverter::setLoad(bool load)
 	{
 		INV_CTR &= ~(1<<LOAD);
 	}
+	
+	return this;
 }
 
-void Inverter::switchToMains(bool mainsOrInverter)
+Inverter* Inverter::switchToMains(bool mainsOrInverter)
 {
 	if (mainsOrInverter)
 	{
@@ -101,9 +105,11 @@ void Inverter::switchToMains(bool mainsOrInverter)
 	{
 		INV_MODE_CTR &= ~(1<<CHANGE_OVER); //change over to inverter
 	}
+	
+	return this;
 }
 
-void Inverter::setChargeEnable(bool enable)
+Inverter* Inverter::setChargeEnable(bool enable)
 {
 	if (enable)
 	{
@@ -113,9 +119,11 @@ void Inverter::setChargeEnable(bool enable)
 	{
 		INV_MODE_CTR &= ~(1<<CHARGE_MODE);
 	}
+	
+	return this;
 }
 
-void Inverter::chargingMode(bool upgrade /*= false*/)
+Inverter* Inverter::chargingMode(bool upgrade /*= false*/)
 {
 	if (upgrade)
 	{
@@ -125,6 +133,8 @@ void Inverter::chargingMode(bool upgrade /*= false*/)
 	{
 		INV_MODE_CTR |= (1<<CHARGE_SELECT); //default charging >= 200
 	}
+	
+	return this;
 }
 
 bool Inverter::isBattLow()
@@ -137,9 +147,10 @@ bool Inverter::isBattFull()
 	return true;
 }
 
-void Inverter::batteryMonitor()
+Inverter* Inverter::batteryMonitor()
 {
 
+	return this;
 }
 
 bool Inverter::AcInputVoltageCheck()
@@ -147,9 +158,10 @@ bool Inverter::AcInputVoltageCheck()
 	return true;
 }
 
-void Inverter::surgeProtect()
+Inverter* Inverter::surgeProtect()
 {
 
+	return this;
 }
 
 bool Inverter::isOverload()
@@ -157,29 +169,34 @@ bool Inverter::isOverload()
 	return true;
 }
 
-void Inverter::mainsBalanceMonitor()
+Inverter* Inverter::mainsBalanceMonitor()
 {
 	
+	return this;
 }
 
-void Inverter::overloadMonitor()
+Inverter* Inverter::overloadMonitor()
 {
 
+	return this;
 }
 
-void Inverter::setAcAnalogValue(uint16_t value)
+Inverter* Inverter::setAcAnalogValue(uint16_t value)
 {
 	this->analog_ac_value = value;
+	return this;
 }
 
-void Inverter::setBattAnalogValue(uint16_t value)
+Inverter* Inverter::setBattAnalogValue(uint16_t value)
 {
 	this->analog_batt_value = value;
+	return this;
 }
 
-void Inverter::setOverloadAnalogValue(uint16_t value)
+Inverter* Inverter::setOverloadAnalogValue(uint16_t value)
 {
 	this->analog_overload_value = value;
+	return this;
 }
 
 int Inverter::getAcInputReadings()
@@ -200,7 +217,7 @@ int Inverter::getOverloadInputReadings()
 	return ( ( this->analog_overload_value / 51 ) * 20 );
 }
 
-void Inverter::analogPinSwitching()
+Inverter* Inverter::analogPinSwitching()
 {
 	switch(ADMUX)
 	{
@@ -231,5 +248,7 @@ void Inverter::analogPinSwitching()
 		break;
 		
 	}
+
+	return this;
 }
 

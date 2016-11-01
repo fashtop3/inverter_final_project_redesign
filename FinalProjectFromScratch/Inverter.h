@@ -50,34 +50,34 @@ public:
 	Inverter();
 	~Inverter();
 	
-	void setSwitch(bool on);
-	void setLoad(bool attach);
+	Inverter* setSwitch(bool on);
+	Inverter* setLoad(bool attach);
 	
-	void switchToMains(bool mainsOrInverter);
-	void setChargeEnable(bool enable);
-	void chargingMode(bool upgrade = false);
+	Inverter* switchToMains(bool mainsOrInverter);
+	Inverter* setChargeEnable(bool enable);
+	Inverter* chargingMode(bool upgrade = false);
 	
 	bool isBattLow();
 	bool isBattFull();
 	
-	void batteryMonitor();
+	Inverter* batteryMonitor();
 	bool AcInputVoltageCheck();
-	void surgeProtect();
+	Inverter* surgeProtect();
 	
 	bool isOverload();
-	void mainsBalanceMonitor();
+	Inverter* mainsBalanceMonitor();
 	
-	void overloadMonitor();
+	Inverter* overloadMonitor();
 	
-	void setAcAnalogValue(uint16_t value);
-	void setBattAnalogValue(uint16_t value);
-	void setOverloadAnalogValue(uint16_t value);
+	Inverter* setAcAnalogValue(uint16_t value);
+	Inverter* setBattAnalogValue(uint16_t value);
+	Inverter* setOverloadAnalogValue(uint16_t value);
 	
 	int getAcInputReadings();
 	double getBattInputReadings();
 	int getOverloadInputReadings();
 	
-	void analogPinSwitching();
+	Inverter* analogPinSwitching();
 
 
 protected:
