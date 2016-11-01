@@ -8,25 +8,22 @@
 #include <avr/interrupt.h>
 #include "Inverter.h"
 
-//volatile uint16_t Inverter::analog_ac_value = 0;
-//volatile uint16_t Inverter::analog_batt_value = 0;
-//volatile uint16_t Inverter::analog_overload_value = 0;
+volatile uint16_t Inverter::analog_ac_value = 0;
+volatile uint16_t Inverter::analog_batt_value = 0;
+volatile uint16_t Inverter::analog_overload_value = 0;
 
 // default constructor
 Inverter::Inverter()
 {
 	//initialize analog holding variables
-	this->setAcAnalogValue(0);
-	this->setBattAnalogValue(0);
-	this->setOverloadAnalogValue(0);
+	this->setAcAnalogValue(0)
+		->setBattAnalogValue(0)
+		->setOverloadAnalogValue(0);
 	
 	cli();
 		
 	//configure inverter mode
 	INV_MODE_DIR |= (1<<CHANGE_OVER) | (1<<CHARGE_MODE) | (1<<CHARGE_SELECT);
-		
-	//enable inverter mode pins
-	//INV_MODE_CTR |= (1<<CHANGE_OVER) | (1<<CHARGE_MODE) | (1<<CHARGE_SELECT);
 		
 	//enable pins for output
 	INV_DIR |= (1<<POWER) | (1<<LOAD);
@@ -97,13 +94,14 @@ Inverter* Inverter::switchToMains(bool mainsOrInverter)
 {
 	if (mainsOrInverter)
 	{
-		this->setSwitch(false); //switch off inverter
+		setSwitch(false); //switch off inverter
 		INV_MODE_CTR |=	(1<<CHANGE_OVER);
-		this->setChargeEnable(true); 
+		setChargeEnable(true); 
 	} 
 	else
 	{
 		INV_MODE_CTR &= ~(1<<CHANGE_OVER); //change over to inverter
+		setChargeEnable(false);
 	}
 	
 	return this;
@@ -116,6 +114,17 @@ Inverter* Inverter::setChargeEnable(bool enable)
 	if (enable)
 	{
 		INV_MODE_CTR |= (1<<CHARGE_MODE);
+		
+		//Todo: workaround a delay count here
+		//then set which mode to use 
+		if (getAcInputReadings() < 200)
+		{
+			chargingMode(chargeUpgrade);
+		} 
+		else
+		{
+			chargingMode(!chargeUpgrade);
+		}
 	} 
 	else
 	{
@@ -157,7 +166,8 @@ Inverter* Inverter::batteryMonitor()
 
 bool Inverter::AcInputVoltageCheck()
 {
-	return true;
+	//switch source to inverter if input ac is less or if too high
+	return ( (getAcInputReadings() <= 160) || (getAcInputReadings() >= 240) );
 }
 
 Inverter* Inverter::surgeProtect()
@@ -185,7 +195,7 @@ Inverter* Inverter::overloadMonitor()
 
 Inverter* Inverter::setAcAnalogValue(uint16_t value)
 {
-	this->analog_ac_value = value;
+	Inverter::analog_ac_value = value;
 	return this;
 }
 
@@ -203,8 +213,8 @@ Inverter* Inverter::setOverloadAnalogValue(uint16_t value)
 
 int Inverter::getAcInputReadings()
 {
-	//double readings = static_cast<double> (this->analog_ac_value);
-	return ( ( this->analog_ac_value / 51 ) * 100 );
+	double readings = static_cast<double> (this->analog_ac_value);
+	return ( ( readings / 51 ) * 100 );
 }
 
 double Inverter::getBattInputReadings()
@@ -215,8 +225,8 @@ double Inverter::getBattInputReadings()
 
 int Inverter::getOverloadInputReadings()
 {
-	//double readings = static_cast<double> (this->analog_overload_value);
-	return ( ( this->analog_overload_value / 51 ) * 20 );
+	double readings = static_cast<double> (this->analog_overload_value);
+	return ( ( readings / 51 ) * 20 );
 }
 
 Inverter* Inverter::analogPinSwitching()
@@ -246,11 +256,28 @@ Inverter* Inverter::analogPinSwitching()
 		
 		default:
 			// default
-			ADMUX = 0x60; //set to first
 		break;
 		
 	}
 
+	return this;
+}
+
+Inverter* Inverter::monitor()
+{
+	if (AcInputVoltageCheck()) //check low or high voltage
+	{
+		switchToMains(false)
+			->setSwitch(true)
+			->setLoad(true);
+	} 
+	else
+	{
+		//Todo: workaround a delay count here
+		switchToMains(true)
+			->setLoad(true);
+	}
+	
 	return this;
 }
 
