@@ -12,7 +12,7 @@
 #include "Inverter.h"
 #include "serial.h"
 
-Inverter inverter(); //initialize inverter
+Inverter inverter; //initialize inverter
 
 //function prototype
 void my_timer_setup();
@@ -52,34 +52,8 @@ ISR(TIMER1_COMPA_vect)
 
 ISR(ADC_vect)
 {
-	switch(ADMUX)
-	{
-		case 0x60: //check the pin on Analog Multiplexer Pin layout
-		//conversion for AC input
-		//ad_ac_readings = ADCH;
-			inverter.setAcAnalogValue(ADCH);
-			ADMUX = 0x61; //set to enable next pin for analog conversion
-		break;
-		case 0x61:
-		//Conversion for Battery level
-		//ad_batt_readings = ADCH;
-			inverter.setBattAnalogValue(ADCH);
-			ADMUX = 0x62;  //set to enable next pin for analog conversion
-		break;
-		case 0x62:
-		//conversion for Overload
-		//ad_overload_readings = ADCH;
-			inverter.setOverloadAnalogValue(ADCH);
-			ADMUX = 0x60;  //set to enable next pin for analog conversion
-		break;
-		
-		default:
-		// default
-			ADMUX = 0x60; //set to first 
-		break;
-		
-	}
-	
+	//allow all MCU to read from all enabled analog pin
+	inverter.analogPinSwitching();
 	//start new conversion
 	ADCSRA |= 1<<ADSC;
 }

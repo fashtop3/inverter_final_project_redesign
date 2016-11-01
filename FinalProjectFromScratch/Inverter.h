@@ -76,6 +76,8 @@ public:
 	int getAcInputReadings();
 	double getBattInputReadings();
 	int getOverloadInputReadings();
+	
+	void analogPinSwitching();
 
 
 protected:

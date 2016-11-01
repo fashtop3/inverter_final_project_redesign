@@ -200,3 +200,36 @@ int Inverter::getOverloadInputReadings()
 	return ( ( this->analog_overload_value / 51 ) * 20 );
 }
 
+void Inverter::analogPinSwitching()
+{
+	switch(ADMUX)
+	{
+		case 0x60: //check the pin on Analog Multiplexer Pin layout
+			//conversion for AC input
+			//ad_ac_readings = ADCH;
+			this->setAcAnalogValue(ADCH);
+			ADMUX = 0x61; //set to enable next pin for analog conversion
+		break;
+		
+		case 0x61:
+			//Conversion for Battery level
+			//ad_batt_readings = ADCH;
+			this->setBattAnalogValue(ADCH);
+			ADMUX = 0x62;  //set to enable next pin for analog conversion
+		break;
+		
+		case 0x62:
+			//conversion for Overload
+			//ad_overload_readings = ADCH;
+			this->setOverloadAnalogValue(ADCH);
+			ADMUX = 0x60;  //set to enable next pin for analog conversion
+		break;
+		
+		default:
+			// default
+			ADMUX = 0x60; //set to first
+		break;
+		
+	}
+}
+
