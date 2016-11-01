@@ -184,16 +184,19 @@ void Inverter::setOverloadAnalogValue(uint16_t value)
 
 int Inverter::getAcInputReadings()
 {
-
+	//double readings = static_cast<double> (this->analog_ac_value);
+	return ( ( this->analog_ac_value / 51 ) * 100 );
 }
 
-int Inverter::getBattInputReadings()
+double Inverter::getBattInputReadings()
 {
-
+	double readings = static_cast<double> (this->analog_batt_value);
+	return ( ( readings / 51.0 ) * 10 );
 }
 
 int Inverter::getOverloadInputReadings()
 {
-
+	//double readings = static_cast<double> (this->analog_overload_value);
+	return ( ( this->analog_overload_value / 51 ) * 20 );
 }
 

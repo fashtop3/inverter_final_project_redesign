@@ -74,7 +74,7 @@ public:
 	void setOverloadAnalogValue(uint16_t value);
 	
 	int getAcInputReadings();
-	int getBattInputReadings();
+	double getBattInputReadings();
 	int getOverloadInputReadings();
 
 
