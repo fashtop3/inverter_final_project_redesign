@@ -9,35 +9,47 @@
 #include <avr/io.h>
 #include <avr/interrupt.h>
 #include <stdint.h>
+#include <util/delay.h>
 #include "Inverter.h"
+#include "Lcd.h"
 #include "serial.h"
 
 Inverter inverter; //initialize inverter
+Lcd lcd;
 
 //function prototype
 void my_timer_setup();
 
 int main(void)
 {
-	cli(); //clear global interrupt
-	sei(); //Enable Global Interrupt
+	//cli(); //clear global interrupt
+	//sei(); //Enable Global Interrupt
 	my_timer_setup();
 	
-	//testing iverter api
-	inverter.setSwitch(true)
-	->setLoad(true)
-	->switchToMains(true)
-	->chargingMode(true);
+	//testing inverter api
+	inverter.setSwitch(true);
+	//->setLoad(true)
+	//->switchToMains(true)
+	//->chargingMode(true);
+	
 	
     /* Replace with your application code */
     while (1) 
-    {
+    {		
+		lcd.printIntToLCD(1, 1, inverter.getAcInputReadings(), 4);
+		lcd.printDoubleToLCD(1, 2, inverter.getBattInputReadings(), 4, 2);
+		lcd.printIntToLCD(11, 2, inverter.getOverloadInputReadings(), 3);
+		//_delay_ms(500);
+		//lcd->clScr();
     }
+	
+	//delete inverter, lcd;
 }
 
 
 ISR(TIMER1_COMPA_vect)
 {
+	inverter.monitor();
 	
 	//when mains is balance for use
 	//mainsBalanceMonitor();

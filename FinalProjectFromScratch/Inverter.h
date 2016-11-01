@@ -32,18 +32,14 @@
 #define INV_MODE_CTR	PORTB
 
 //Analog conversion pins
-#define AC_OP			PINA0
-#define AC_IP			PINA1
-#define INV_LOAD		PINA2
+#define AC_OP			PINA0 // main input
+#define AC_IP			PINA1 // inverter input
+#define INV_LOAD		PINA2 // overload input
 
 
 
 class Inverter
 {
-//variables
-public:
-protected:
-private:
 
 //functions
 public:
@@ -78,17 +74,21 @@ public:
 	int getOverloadInputReadings();
 	
 	Inverter* analogPinSwitching();
+	
+	Inverter* monitor();
 
 
 protected:
 private:
 	Inverter( const Inverter &c );
 	Inverter& operator=( const Inverter &c );
+	bool chargeUpgrade = true;
 
 	//analog readings
-	volatile uint16_t analog_ac_value;
-	volatile uint16_t analog_batt_value;
-	volatile uint16_t analog_overload_value;
+public:
+	volatile static uint16_t analog_ac_value;
+	volatile static uint16_t analog_batt_value;
+	volatile static uint16_t analog_overload_value;
 }; //Inverter
 
 #endif //__INVERTER_H__
