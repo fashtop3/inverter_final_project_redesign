@@ -119,11 +119,11 @@ void Inverter::chargingMode(bool upgrade /*= false*/)
 {
 	if (upgrade)
 	{
-		INV_MODE_CTR |= (1<<CHARGE_SELECT);
+		INV_MODE_CTR &= ~(1<<CHARGE_SELECT); //upgrade when mains is < 200 
 	} 
 	else
 	{
-		INV_MODE_CTR &= ~(1<<CHARGE_SELECT);
+		INV_MODE_CTR |= (1<<CHARGE_SELECT); //default charging >= 200
 	}
 }
 
