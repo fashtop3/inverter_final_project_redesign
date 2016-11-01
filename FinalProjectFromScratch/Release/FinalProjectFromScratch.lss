@@ -3,15 +3,15 @@ FinalProjectFromScratch.elf:     file format elf32-avr
 
 Sections:
 Idx Name          Size      VMA       LMA       File off  Algn
-  0 .text         00000308  00000000  00000000  00000094  2**1
+  0 .text         0000033a  00000000  00000000  00000094  2**1
                   CONTENTS, ALLOC, LOAD, READONLY, CODE
-  1 .data         00000014  00800060  00000308  0000039c  2**0
+  1 .data         00000014  00800060  0000033a  000003ce  2**0
                   CONTENTS, ALLOC, LOAD, DATA
-  2 .bss          0000003a  00800074  00800074  000003b0  2**0
+  2 .bss          0000003a  00800074  00800074  000003e2  2**0
                   ALLOC
-  3 .comment      00000030  00000000  00000000  000003b0  2**0
+  3 .comment      00000030  00000000  00000000  000003e2  2**0
                   CONTENTS, READONLY
-  4 .note.gnu.avr.deviceinfo 0000003c  00000000  00000000  000003e0  2**2
+  4 .note.gnu.avr.deviceinfo 0000003c  00000000  00000000  00000414  2**2
                   CONTENTS, READONLY
 
 Disassembly of section .text:
@@ -24,14 +24,14 @@ Disassembly of section .text:
   10:	0c 94 47 00 	jmp	0x8e	; 0x8e <__bad_interrupt>
   14:	0c 94 47 00 	jmp	0x8e	; 0x8e <__bad_interrupt>
   18:	0c 94 47 00 	jmp	0x8e	; 0x8e <__bad_interrupt>
-  1c:	0c 94 47 00 	jmp	0x8e	; 0x8e <__bad_interrupt>
+  1c:	0c 94 49 00 	jmp	0x92	; 0x92 <__vector_7>
   20:	0c 94 47 00 	jmp	0x8e	; 0x8e <__bad_interrupt>
   24:	0c 94 47 00 	jmp	0x8e	; 0x8e <__bad_interrupt>
   28:	0c 94 47 00 	jmp	0x8e	; 0x8e <__bad_interrupt>
   2c:	0c 94 47 00 	jmp	0x8e	; 0x8e <__bad_interrupt>
   30:	0c 94 47 00 	jmp	0x8e	; 0x8e <__bad_interrupt>
-  34:	0c 94 38 01 	jmp	0x270	; 0x270 <__vector_13>
-  38:	0c 94 5d 01 	jmp	0x2ba	; 0x2ba <__vector_14>
+  34:	0c 94 51 01 	jmp	0x2a2	; 0x2a2 <__vector_13>
+  38:	0c 94 76 01 	jmp	0x2ec	; 0x2ec <__vector_14>
   3c:	0c 94 47 00 	jmp	0x8e	; 0x8e <__bad_interrupt>
   40:	0c 94 47 00 	jmp	0x8e	; 0x8e <__bad_interrupt>
   44:	0c 94 47 00 	jmp	0x8e	; 0x8e <__bad_interrupt>
@@ -51,7 +51,7 @@ Disassembly of section .text:
   60:	10 e0       	ldi	r17, 0x00	; 0
   62:	a0 e6       	ldi	r26, 0x60	; 96
   64:	b0 e0       	ldi	r27, 0x00	; 0
-  66:	e8 e0       	ldi	r30, 0x08	; 8
+  66:	ea e3       	ldi	r30, 0x3A	; 58
   68:	f3 e0       	ldi	r31, 0x03	; 3
   6a:	02 c0       	rjmp	.+4      	; 0x70 <__do_copy_data+0x10>
   6c:	05 90       	lpm	r0, Z+
@@ -73,335 +73,363 @@ Disassembly of section .text:
   80:	ae 3a       	cpi	r26, 0xAE	; 174
   82:	b2 07       	cpc	r27, r18
   84:	e1 f7       	brne	.-8      	; 0x7e <.do_clear_bss_loop>
-  86:	0e 94 49 00 	call	0x92	; 0x92 <main>
-  8a:	0c 94 82 01 	jmp	0x304	; 0x304 <_exit>
+  86:	0e 94 5e 00 	call	0xbc	; 0xbc <main>
+  8a:	0c 94 9b 01 	jmp	0x336	; 0x336 <_exit>
 
 0000008e <__bad_interrupt>:
   8e:	0c 94 00 00 	jmp	0	; 0x0 <__vectors>
 
-00000092 <main>:
-  92:	ff cf       	rjmp	.-2      	; 0x92 <main>
+00000092 <__vector_7>:
+  92:	1f 92       	push	r1
+  94:	0f 92       	push	r0
+  96:	0f b6       	in	r0, 0x3f	; 63
+  98:	0f 92       	push	r0
+  9a:	11 24       	eor	r1, r1
+  9c:	0f 90       	pop	r0
+  9e:	0f be       	out	0x3f, r0	; 63
+  a0:	0f 90       	pop	r0
+  a2:	1f 90       	pop	r1
+  a4:	18 95       	reti
 
-00000094 <_Z22serialReceiveInterrupth>:
-  94:	cf 93       	push	r28
-  96:	df 93       	push	r29
-  98:	90 e0       	ldi	r25, 0x00	; 0
-  9a:	fc 01       	movw	r30, r24
-  9c:	ee 0f       	add	r30, r30
-  9e:	ff 1f       	adc	r31, r31
-  a0:	e4 58       	subi	r30, 0x84	; 132
-  a2:	ff 4f       	sbci	r31, 0xFF	; 255
-  a4:	20 81       	ld	r18, Z
-  a6:	31 81       	ldd	r19, Z+1	; 0x01
-  a8:	4c e0       	ldi	r20, 0x0C	; 12
-  aa:	48 9f       	mul	r20, r24
-  ac:	d0 01       	movw	r26, r0
-  ae:	49 9f       	mul	r20, r25
-  b0:	b0 0d       	add	r27, r0
-  b2:	11 24       	eor	r1, r1
-  b4:	a9 59       	subi	r26, 0x99	; 153
-  b6:	bf 4f       	sbci	r27, 0xFF	; 255
-  b8:	0d 90       	ld	r0, X+
-  ba:	bc 91       	ld	r27, X
-  bc:	a0 2d       	mov	r26, r0
-  be:	4c 91       	ld	r20, X
-  c0:	dc 01       	movw	r26, r24
-  c2:	55 e0       	ldi	r21, 0x05	; 5
-  c4:	aa 0f       	add	r26, r26
-  c6:	bb 1f       	adc	r27, r27
-  c8:	5a 95       	dec	r21
-  ca:	e1 f7       	brne	.-8      	; 0xc4 <_Z22serialReceiveInterrupth+0x30>
-  cc:	a2 0f       	add	r26, r18
-  ce:	b3 1f       	adc	r27, r19
-  d0:	a2 57       	subi	r26, 0x72	; 114
-  d2:	bf 4f       	sbci	r27, 0xFF	; 255
-  d4:	4c 93       	st	X, r20
+000000a6 <_Z14my_timer_setupv>:
+  a6:	8e b5       	in	r24, 0x2e	; 46
+  a8:	8b 60       	ori	r24, 0x0B	; 11
+  aa:	8e bd       	out	0x2e, r24	; 46
+  ac:	89 b7       	in	r24, 0x39	; 57
+  ae:	80 61       	ori	r24, 0x10	; 16
+  b0:	89 bf       	out	0x39, r24	; 57
+  b2:	88 e0       	ldi	r24, 0x08	; 8
+  b4:	9d e3       	ldi	r25, 0x3D	; 61
+  b6:	9b bd       	out	0x2b, r25	; 43
+  b8:	8a bd       	out	0x2a, r24	; 42
+  ba:	08 95       	ret
+
+000000bc <main>:
+  bc:	f8 94       	cli
+  be:	78 94       	sei
+  c0:	0e 94 53 00 	call	0xa6	; 0xa6 <_Z14my_timer_setupv>
+  c4:	ff cf       	rjmp	.-2      	; 0xc4 <main+0x8>
+
+000000c6 <_Z22serialReceiveInterrupth>:
+  c6:	cf 93       	push	r28
+  c8:	df 93       	push	r29
+  ca:	90 e0       	ldi	r25, 0x00	; 0
+  cc:	fc 01       	movw	r30, r24
+  ce:	ee 0f       	add	r30, r30
+  d0:	ff 1f       	adc	r31, r31
+  d2:	e4 58       	subi	r30, 0x84	; 132
+  d4:	ff 4f       	sbci	r31, 0xFF	; 255
   d6:	20 81       	ld	r18, Z
   d8:	31 81       	ldd	r19, Z+1	; 0x01
-  da:	2f 31       	cpi	r18, 0x1F	; 31
-  dc:	31 05       	cpc	r19, r1
-  de:	38 f4       	brcc	.+14     	; 0xee <_Z22serialReceiveInterrupth+0x5a>
-  e0:	20 81       	ld	r18, Z
-  e2:	31 81       	ldd	r19, Z+1	; 0x01
-  e4:	2f 5f       	subi	r18, 0xFF	; 255
-  e6:	3f 4f       	sbci	r19, 0xFF	; 255
-  e8:	31 83       	std	Z+1, r19	; 0x01
-  ea:	20 83       	st	Z, r18
-  ec:	02 c0       	rjmp	.+4      	; 0xf2 <_Z22serialReceiveInterrupth+0x5e>
-  ee:	11 82       	std	Z+1, r1	; 0x01
-  f0:	10 82       	st	Z, r1
-  f2:	fc 01       	movw	r30, r24
-  f4:	ec 58       	subi	r30, 0x8C	; 140
-  f6:	ff 4f       	sbci	r31, 0xFF	; 255
-  f8:	20 81       	ld	r18, Z
-  fa:	2f 5f       	subi	r18, 0xFF	; 255
-  fc:	20 83       	st	Z, r18
-  fe:	dc 01       	movw	r26, r24
- 100:	ab 58       	subi	r26, 0x8B	; 139
- 102:	bf 4f       	sbci	r27, 0xFF	; 255
- 104:	2c 91       	ld	r18, X
- 106:	21 30       	cpi	r18, 0x01	; 1
- 108:	e9 f5       	brne	.+122    	; 0x184 <_Z22serialReceiveInterrupth+0xf0>
- 10a:	20 81       	ld	r18, Z
- 10c:	2b 31       	cpi	r18, 0x1B	; 27
- 10e:	d0 f1       	brcs	.+116    	; 0x184 <_Z22serialReceiveInterrupth+0xf0>
- 110:	23 e1       	ldi	r18, 0x13	; 19
- 112:	fc 01       	movw	r30, r24
- 114:	ea 58       	subi	r30, 0x8A	; 138
- 116:	ff 4f       	sbci	r31, 0xFF	; 255
- 118:	20 83       	st	Z, r18
- 11a:	1c 92       	st	X, r1
- 11c:	fc 01       	movw	r30, r24
- 11e:	e9 58       	subi	r30, 0x89	; 137
- 120:	ff 4f       	sbci	r31, 0xFF	; 255
- 122:	20 81       	ld	r18, Z
- 124:	22 23       	and	r18, r18
- 126:	71 f1       	breq	.+92     	; 0x184 <_Z22serialReceiveInterrupth+0xf0>
- 128:	10 82       	st	Z, r1
- 12a:	2c e0       	ldi	r18, 0x0C	; 12
- 12c:	28 9f       	mul	r18, r24
- 12e:	d0 01       	movw	r26, r0
- 130:	29 9f       	mul	r18, r25
- 132:	b0 0d       	add	r27, r0
- 134:	11 24       	eor	r1, r1
- 136:	a9 59       	subi	r26, 0x99	; 153
- 138:	bf 4f       	sbci	r27, 0xFF	; 255
- 13a:	12 96       	adiw	r26, 0x02	; 2
- 13c:	cd 91       	ld	r28, X+
- 13e:	dc 91       	ld	r29, X
- 140:	13 97       	sbiw	r26, 0x03	; 3
- 142:	48 81       	ld	r20, Y
- 144:	27 e0       	ldi	r18, 0x07	; 7
- 146:	28 9f       	mul	r18, r24
- 148:	f0 01       	movw	r30, r0
- 14a:	29 9f       	mul	r18, r25
- 14c:	f0 0d       	add	r31, r0
- 14e:	11 24       	eor	r1, r1
- 150:	e0 5a       	subi	r30, 0xA0	; 160
+  da:	4c e0       	ldi	r20, 0x0C	; 12
+  dc:	48 9f       	mul	r20, r24
+  de:	d0 01       	movw	r26, r0
+  e0:	49 9f       	mul	r20, r25
+  e2:	b0 0d       	add	r27, r0
+  e4:	11 24       	eor	r1, r1
+  e6:	a9 59       	subi	r26, 0x99	; 153
+  e8:	bf 4f       	sbci	r27, 0xFF	; 255
+  ea:	0d 90       	ld	r0, X+
+  ec:	bc 91       	ld	r27, X
+  ee:	a0 2d       	mov	r26, r0
+  f0:	4c 91       	ld	r20, X
+  f2:	dc 01       	movw	r26, r24
+  f4:	55 e0       	ldi	r21, 0x05	; 5
+  f6:	aa 0f       	add	r26, r26
+  f8:	bb 1f       	adc	r27, r27
+  fa:	5a 95       	dec	r21
+  fc:	e1 f7       	brne	.-8      	; 0xf6 <_Z22serialReceiveInterrupth+0x30>
+  fe:	a2 0f       	add	r26, r18
+ 100:	b3 1f       	adc	r27, r19
+ 102:	a2 57       	subi	r26, 0x72	; 114
+ 104:	bf 4f       	sbci	r27, 0xFF	; 255
+ 106:	4c 93       	st	X, r20
+ 108:	20 81       	ld	r18, Z
+ 10a:	31 81       	ldd	r19, Z+1	; 0x01
+ 10c:	2f 31       	cpi	r18, 0x1F	; 31
+ 10e:	31 05       	cpc	r19, r1
+ 110:	38 f4       	brcc	.+14     	; 0x120 <_Z22serialReceiveInterrupth+0x5a>
+ 112:	20 81       	ld	r18, Z
+ 114:	31 81       	ldd	r19, Z+1	; 0x01
+ 116:	2f 5f       	subi	r18, 0xFF	; 255
+ 118:	3f 4f       	sbci	r19, 0xFF	; 255
+ 11a:	31 83       	std	Z+1, r19	; 0x01
+ 11c:	20 83       	st	Z, r18
+ 11e:	02 c0       	rjmp	.+4      	; 0x124 <_Z22serialReceiveInterrupth+0x5e>
+ 120:	11 82       	std	Z+1, r1	; 0x01
+ 122:	10 82       	st	Z, r1
+ 124:	fc 01       	movw	r30, r24
+ 126:	ec 58       	subi	r30, 0x8C	; 140
+ 128:	ff 4f       	sbci	r31, 0xFF	; 255
+ 12a:	20 81       	ld	r18, Z
+ 12c:	2f 5f       	subi	r18, 0xFF	; 255
+ 12e:	20 83       	st	Z, r18
+ 130:	dc 01       	movw	r26, r24
+ 132:	ab 58       	subi	r26, 0x8B	; 139
+ 134:	bf 4f       	sbci	r27, 0xFF	; 255
+ 136:	2c 91       	ld	r18, X
+ 138:	21 30       	cpi	r18, 0x01	; 1
+ 13a:	e9 f5       	brne	.+122    	; 0x1b6 <_Z22serialReceiveInterrupth+0xf0>
+ 13c:	20 81       	ld	r18, Z
+ 13e:	2b 31       	cpi	r18, 0x1B	; 27
+ 140:	d0 f1       	brcs	.+116    	; 0x1b6 <_Z22serialReceiveInterrupth+0xf0>
+ 142:	23 e1       	ldi	r18, 0x13	; 19
+ 144:	fc 01       	movw	r30, r24
+ 146:	ea 58       	subi	r30, 0x8A	; 138
+ 148:	ff 4f       	sbci	r31, 0xFF	; 255
+ 14a:	20 83       	st	Z, r18
+ 14c:	1c 92       	st	X, r1
+ 14e:	fc 01       	movw	r30, r24
+ 150:	e9 58       	subi	r30, 0x89	; 137
  152:	ff 4f       	sbci	r31, 0xFF	; 255
- 154:	81 e0       	ldi	r24, 0x01	; 1
- 156:	90 e0       	ldi	r25, 0x00	; 0
- 158:	9c 01       	movw	r18, r24
- 15a:	05 80       	ldd	r0, Z+5	; 0x05
- 15c:	02 c0       	rjmp	.+4      	; 0x162 <_Z22serialReceiveInterrupth+0xce>
- 15e:	22 0f       	add	r18, r18
- 160:	33 1f       	adc	r19, r19
- 162:	0a 94       	dec	r0
- 164:	e2 f7       	brpl	.-8      	; 0x15e <_Z22serialReceiveInterrupth+0xca>
- 166:	24 2b       	or	r18, r20
- 168:	28 83       	st	Y, r18
- 16a:	16 96       	adiw	r26, 0x06	; 6
- 16c:	0d 90       	ld	r0, X+
- 16e:	bc 91       	ld	r27, X
- 170:	a0 2d       	mov	r26, r0
- 172:	2c 91       	ld	r18, X
- 174:	06 80       	ldd	r0, Z+6	; 0x06
- 176:	02 c0       	rjmp	.+4      	; 0x17c <_Z22serialReceiveInterrupth+0xe8>
- 178:	88 0f       	add	r24, r24
- 17a:	99 1f       	adc	r25, r25
- 17c:	0a 94       	dec	r0
- 17e:	e2 f7       	brpl	.-8      	; 0x178 <_Z22serialReceiveInterrupth+0xe4>
- 180:	82 2b       	or	r24, r18
- 182:	8c 93       	st	X, r24
- 184:	df 91       	pop	r29
- 186:	cf 91       	pop	r28
- 188:	08 95       	ret
-
-0000018a <_Z23serialTransmitInterrupth>:
- 18a:	cf 93       	push	r28
- 18c:	df 93       	push	r29
- 18e:	90 e0       	ldi	r25, 0x00	; 0
- 190:	fc 01       	movw	r30, r24
- 192:	ea 58       	subi	r30, 0x8A	; 138
- 194:	ff 4f       	sbci	r31, 0xFF	; 255
- 196:	20 81       	ld	r18, Z
- 198:	22 23       	and	r18, r18
- 19a:	79 f0       	breq	.+30     	; 0x1ba <_Z23serialTransmitInterrupth+0x30>
- 19c:	2c e0       	ldi	r18, 0x0C	; 12
- 19e:	28 9f       	mul	r18, r24
- 1a0:	d0 01       	movw	r26, r0
- 1a2:	29 9f       	mul	r18, r25
- 1a4:	b0 0d       	add	r27, r0
- 1a6:	11 24       	eor	r1, r1
- 1a8:	a9 59       	subi	r26, 0x99	; 153
- 1aa:	bf 4f       	sbci	r27, 0xFF	; 255
- 1ac:	0d 90       	ld	r0, X+
- 1ae:	bc 91       	ld	r27, X
- 1b0:	a0 2d       	mov	r26, r0
- 1b2:	80 81       	ld	r24, Z
+ 154:	20 81       	ld	r18, Z
+ 156:	22 23       	and	r18, r18
+ 158:	71 f1       	breq	.+92     	; 0x1b6 <_Z22serialReceiveInterrupth+0xf0>
+ 15a:	10 82       	st	Z, r1
+ 15c:	2c e0       	ldi	r18, 0x0C	; 12
+ 15e:	28 9f       	mul	r18, r24
+ 160:	d0 01       	movw	r26, r0
+ 162:	29 9f       	mul	r18, r25
+ 164:	b0 0d       	add	r27, r0
+ 166:	11 24       	eor	r1, r1
+ 168:	a9 59       	subi	r26, 0x99	; 153
+ 16a:	bf 4f       	sbci	r27, 0xFF	; 255
+ 16c:	12 96       	adiw	r26, 0x02	; 2
+ 16e:	cd 91       	ld	r28, X+
+ 170:	dc 91       	ld	r29, X
+ 172:	13 97       	sbiw	r26, 0x03	; 3
+ 174:	48 81       	ld	r20, Y
+ 176:	27 e0       	ldi	r18, 0x07	; 7
+ 178:	28 9f       	mul	r18, r24
+ 17a:	f0 01       	movw	r30, r0
+ 17c:	29 9f       	mul	r18, r25
+ 17e:	f0 0d       	add	r31, r0
+ 180:	11 24       	eor	r1, r1
+ 182:	e0 5a       	subi	r30, 0xA0	; 160
+ 184:	ff 4f       	sbci	r31, 0xFF	; 255
+ 186:	81 e0       	ldi	r24, 0x01	; 1
+ 188:	90 e0       	ldi	r25, 0x00	; 0
+ 18a:	9c 01       	movw	r18, r24
+ 18c:	05 80       	ldd	r0, Z+5	; 0x05
+ 18e:	02 c0       	rjmp	.+4      	; 0x194 <_Z22serialReceiveInterrupth+0xce>
+ 190:	22 0f       	add	r18, r18
+ 192:	33 1f       	adc	r19, r19
+ 194:	0a 94       	dec	r0
+ 196:	e2 f7       	brpl	.-8      	; 0x190 <_Z22serialReceiveInterrupth+0xca>
+ 198:	24 2b       	or	r18, r20
+ 19a:	28 83       	st	Y, r18
+ 19c:	16 96       	adiw	r26, 0x06	; 6
+ 19e:	0d 90       	ld	r0, X+
+ 1a0:	bc 91       	ld	r27, X
+ 1a2:	a0 2d       	mov	r26, r0
+ 1a4:	2c 91       	ld	r18, X
+ 1a6:	06 80       	ldd	r0, Z+6	; 0x06
+ 1a8:	02 c0       	rjmp	.+4      	; 0x1ae <_Z22serialReceiveInterrupth+0xe8>
+ 1aa:	88 0f       	add	r24, r24
+ 1ac:	99 1f       	adc	r25, r25
+ 1ae:	0a 94       	dec	r0
+ 1b0:	e2 f7       	brpl	.-8      	; 0x1aa <_Z22serialReceiveInterrupth+0xe4>
+ 1b2:	82 2b       	or	r24, r18
  1b4:	8c 93       	st	X, r24
- 1b6:	10 82       	st	Z, r1
- 1b8:	58 c0       	rjmp	.+176    	; 0x26a <_Z23serialTransmitInterrupth+0xe0>
- 1ba:	9c 01       	movw	r18, r24
- 1bc:	22 0f       	add	r18, r18
- 1be:	33 1f       	adc	r19, r19
- 1c0:	f9 01       	movw	r30, r18
- 1c2:	e6 58       	subi	r30, 0x86	; 134
- 1c4:	ff 4f       	sbci	r31, 0xFF	; 255
- 1c6:	40 81       	ld	r20, Z
- 1c8:	51 81       	ldd	r21, Z+1	; 0x01
- 1ca:	d9 01       	movw	r26, r18
- 1cc:	a8 58       	subi	r26, 0x88	; 136
- 1ce:	bf 4f       	sbci	r27, 0xFF	; 255
- 1d0:	2d 91       	ld	r18, X+
- 1d2:	3c 91       	ld	r19, X
- 1d4:	42 17       	cp	r20, r18
- 1d6:	53 07       	cpc	r21, r19
- 1d8:	29 f1       	breq	.+74     	; 0x224 <_Z23serialTransmitInterrupth+0x9a>
- 1da:	2c e0       	ldi	r18, 0x0C	; 12
- 1dc:	28 9f       	mul	r18, r24
- 1de:	d0 01       	movw	r26, r0
- 1e0:	29 9f       	mul	r18, r25
- 1e2:	b0 0d       	add	r27, r0
- 1e4:	11 24       	eor	r1, r1
- 1e6:	a9 59       	subi	r26, 0x99	; 153
- 1e8:	bf 4f       	sbci	r27, 0xFF	; 255
- 1ea:	cd 91       	ld	r28, X+
- 1ec:	dc 91       	ld	r29, X
- 1ee:	20 81       	ld	r18, Z
- 1f0:	31 81       	ldd	r19, Z+1	; 0x01
- 1f2:	dc 01       	movw	r26, r24
- 1f4:	84 e0       	ldi	r24, 0x04	; 4
- 1f6:	aa 0f       	add	r26, r26
- 1f8:	bb 1f       	adc	r27, r27
- 1fa:	8a 95       	dec	r24
- 1fc:	e1 f7       	brne	.-8      	; 0x1f6 <_Z23serialTransmitInterrupth+0x6c>
- 1fe:	a2 0f       	add	r26, r18
- 200:	b3 1f       	adc	r27, r19
- 202:	a2 58       	subi	r26, 0x82	; 130
- 204:	bf 4f       	sbci	r27, 0xFF	; 255
- 206:	8c 91       	ld	r24, X
- 208:	88 83       	st	Y, r24
- 20a:	80 81       	ld	r24, Z
- 20c:	91 81       	ldd	r25, Z+1	; 0x01
- 20e:	0f 97       	sbiw	r24, 0x0f	; 15
- 210:	30 f4       	brcc	.+12     	; 0x21e <_Z23serialTransmitInterrupth+0x94>
- 212:	80 81       	ld	r24, Z
- 214:	91 81       	ldd	r25, Z+1	; 0x01
- 216:	01 96       	adiw	r24, 0x01	; 1
- 218:	91 83       	std	Z+1, r25	; 0x01
- 21a:	80 83       	st	Z, r24
- 21c:	26 c0       	rjmp	.+76     	; 0x26a <_Z23serialTransmitInterrupth+0xe0>
- 21e:	11 82       	std	Z+1, r1	; 0x01
- 220:	10 82       	st	Z, r1
- 222:	23 c0       	rjmp	.+70     	; 0x26a <_Z23serialTransmitInterrupth+0xe0>
- 224:	fc 01       	movw	r30, r24
- 226:	e9 58       	subi	r30, 0x89	; 137
- 228:	ff 4f       	sbci	r31, 0xFF	; 255
- 22a:	21 e0       	ldi	r18, 0x01	; 1
- 22c:	20 83       	st	Z, r18
- 22e:	2c e0       	ldi	r18, 0x0C	; 12
- 230:	28 9f       	mul	r18, r24
- 232:	f0 01       	movw	r30, r0
- 234:	29 9f       	mul	r18, r25
- 236:	f0 0d       	add	r31, r0
- 238:	11 24       	eor	r1, r1
- 23a:	e9 59       	subi	r30, 0x99	; 153
- 23c:	ff 4f       	sbci	r31, 0xFF	; 255
- 23e:	a2 81       	ldd	r26, Z+2	; 0x02
- 240:	b3 81       	ldd	r27, Z+3	; 0x03
- 242:	2c 91       	ld	r18, X
- 244:	37 e0       	ldi	r19, 0x07	; 7
- 246:	38 9f       	mul	r19, r24
- 248:	f0 01       	movw	r30, r0
- 24a:	39 9f       	mul	r19, r25
- 24c:	f0 0d       	add	r31, r0
- 24e:	11 24       	eor	r1, r1
- 250:	e0 5a       	subi	r30, 0xA0	; 160
- 252:	ff 4f       	sbci	r31, 0xFF	; 255
- 254:	81 e0       	ldi	r24, 0x01	; 1
- 256:	90 e0       	ldi	r25, 0x00	; 0
- 258:	05 80       	ldd	r0, Z+5	; 0x05
- 25a:	02 c0       	rjmp	.+4      	; 0x260 <_Z23serialTransmitInterrupth+0xd6>
- 25c:	88 0f       	add	r24, r24
- 25e:	99 1f       	adc	r25, r25
- 260:	0a 94       	dec	r0
- 262:	e2 f7       	brpl	.-8      	; 0x25c <_Z23serialTransmitInterrupth+0xd2>
- 264:	80 95       	com	r24
- 266:	82 23       	and	r24, r18
- 268:	8c 93       	st	X, r24
- 26a:	df 91       	pop	r29
- 26c:	cf 91       	pop	r28
- 26e:	08 95       	ret
+ 1b6:	df 91       	pop	r29
+ 1b8:	cf 91       	pop	r28
+ 1ba:	08 95       	ret
 
-00000270 <__vector_13>:
- 270:	1f 92       	push	r1
- 272:	0f 92       	push	r0
- 274:	0f b6       	in	r0, 0x3f	; 63
- 276:	0f 92       	push	r0
- 278:	11 24       	eor	r1, r1
- 27a:	2f 93       	push	r18
- 27c:	3f 93       	push	r19
- 27e:	4f 93       	push	r20
- 280:	5f 93       	push	r21
- 282:	6f 93       	push	r22
- 284:	7f 93       	push	r23
- 286:	8f 93       	push	r24
- 288:	9f 93       	push	r25
- 28a:	af 93       	push	r26
- 28c:	bf 93       	push	r27
- 28e:	ef 93       	push	r30
- 290:	ff 93       	push	r31
- 292:	80 e0       	ldi	r24, 0x00	; 0
- 294:	0e 94 4a 00 	call	0x94	; 0x94 <_Z22serialReceiveInterrupth>
- 298:	ff 91       	pop	r31
- 29a:	ef 91       	pop	r30
- 29c:	bf 91       	pop	r27
- 29e:	af 91       	pop	r26
- 2a0:	9f 91       	pop	r25
- 2a2:	8f 91       	pop	r24
- 2a4:	7f 91       	pop	r23
- 2a6:	6f 91       	pop	r22
- 2a8:	5f 91       	pop	r21
- 2aa:	4f 91       	pop	r20
- 2ac:	3f 91       	pop	r19
- 2ae:	2f 91       	pop	r18
- 2b0:	0f 90       	pop	r0
- 2b2:	0f be       	out	0x3f, r0	; 63
- 2b4:	0f 90       	pop	r0
- 2b6:	1f 90       	pop	r1
- 2b8:	18 95       	reti
+000001bc <_Z23serialTransmitInterrupth>:
+ 1bc:	cf 93       	push	r28
+ 1be:	df 93       	push	r29
+ 1c0:	90 e0       	ldi	r25, 0x00	; 0
+ 1c2:	fc 01       	movw	r30, r24
+ 1c4:	ea 58       	subi	r30, 0x8A	; 138
+ 1c6:	ff 4f       	sbci	r31, 0xFF	; 255
+ 1c8:	20 81       	ld	r18, Z
+ 1ca:	22 23       	and	r18, r18
+ 1cc:	79 f0       	breq	.+30     	; 0x1ec <_Z23serialTransmitInterrupth+0x30>
+ 1ce:	2c e0       	ldi	r18, 0x0C	; 12
+ 1d0:	28 9f       	mul	r18, r24
+ 1d2:	d0 01       	movw	r26, r0
+ 1d4:	29 9f       	mul	r18, r25
+ 1d6:	b0 0d       	add	r27, r0
+ 1d8:	11 24       	eor	r1, r1
+ 1da:	a9 59       	subi	r26, 0x99	; 153
+ 1dc:	bf 4f       	sbci	r27, 0xFF	; 255
+ 1de:	0d 90       	ld	r0, X+
+ 1e0:	bc 91       	ld	r27, X
+ 1e2:	a0 2d       	mov	r26, r0
+ 1e4:	80 81       	ld	r24, Z
+ 1e6:	8c 93       	st	X, r24
+ 1e8:	10 82       	st	Z, r1
+ 1ea:	58 c0       	rjmp	.+176    	; 0x29c <_Z23serialTransmitInterrupth+0xe0>
+ 1ec:	9c 01       	movw	r18, r24
+ 1ee:	22 0f       	add	r18, r18
+ 1f0:	33 1f       	adc	r19, r19
+ 1f2:	f9 01       	movw	r30, r18
+ 1f4:	e6 58       	subi	r30, 0x86	; 134
+ 1f6:	ff 4f       	sbci	r31, 0xFF	; 255
+ 1f8:	40 81       	ld	r20, Z
+ 1fa:	51 81       	ldd	r21, Z+1	; 0x01
+ 1fc:	d9 01       	movw	r26, r18
+ 1fe:	a8 58       	subi	r26, 0x88	; 136
+ 200:	bf 4f       	sbci	r27, 0xFF	; 255
+ 202:	2d 91       	ld	r18, X+
+ 204:	3c 91       	ld	r19, X
+ 206:	42 17       	cp	r20, r18
+ 208:	53 07       	cpc	r21, r19
+ 20a:	29 f1       	breq	.+74     	; 0x256 <_Z23serialTransmitInterrupth+0x9a>
+ 20c:	2c e0       	ldi	r18, 0x0C	; 12
+ 20e:	28 9f       	mul	r18, r24
+ 210:	d0 01       	movw	r26, r0
+ 212:	29 9f       	mul	r18, r25
+ 214:	b0 0d       	add	r27, r0
+ 216:	11 24       	eor	r1, r1
+ 218:	a9 59       	subi	r26, 0x99	; 153
+ 21a:	bf 4f       	sbci	r27, 0xFF	; 255
+ 21c:	cd 91       	ld	r28, X+
+ 21e:	dc 91       	ld	r29, X
+ 220:	20 81       	ld	r18, Z
+ 222:	31 81       	ldd	r19, Z+1	; 0x01
+ 224:	dc 01       	movw	r26, r24
+ 226:	84 e0       	ldi	r24, 0x04	; 4
+ 228:	aa 0f       	add	r26, r26
+ 22a:	bb 1f       	adc	r27, r27
+ 22c:	8a 95       	dec	r24
+ 22e:	e1 f7       	brne	.-8      	; 0x228 <_Z23serialTransmitInterrupth+0x6c>
+ 230:	a2 0f       	add	r26, r18
+ 232:	b3 1f       	adc	r27, r19
+ 234:	a2 58       	subi	r26, 0x82	; 130
+ 236:	bf 4f       	sbci	r27, 0xFF	; 255
+ 238:	8c 91       	ld	r24, X
+ 23a:	88 83       	st	Y, r24
+ 23c:	80 81       	ld	r24, Z
+ 23e:	91 81       	ldd	r25, Z+1	; 0x01
+ 240:	0f 97       	sbiw	r24, 0x0f	; 15
+ 242:	30 f4       	brcc	.+12     	; 0x250 <_Z23serialTransmitInterrupth+0x94>
+ 244:	80 81       	ld	r24, Z
+ 246:	91 81       	ldd	r25, Z+1	; 0x01
+ 248:	01 96       	adiw	r24, 0x01	; 1
+ 24a:	91 83       	std	Z+1, r25	; 0x01
+ 24c:	80 83       	st	Z, r24
+ 24e:	26 c0       	rjmp	.+76     	; 0x29c <_Z23serialTransmitInterrupth+0xe0>
+ 250:	11 82       	std	Z+1, r1	; 0x01
+ 252:	10 82       	st	Z, r1
+ 254:	23 c0       	rjmp	.+70     	; 0x29c <_Z23serialTransmitInterrupth+0xe0>
+ 256:	fc 01       	movw	r30, r24
+ 258:	e9 58       	subi	r30, 0x89	; 137
+ 25a:	ff 4f       	sbci	r31, 0xFF	; 255
+ 25c:	21 e0       	ldi	r18, 0x01	; 1
+ 25e:	20 83       	st	Z, r18
+ 260:	2c e0       	ldi	r18, 0x0C	; 12
+ 262:	28 9f       	mul	r18, r24
+ 264:	f0 01       	movw	r30, r0
+ 266:	29 9f       	mul	r18, r25
+ 268:	f0 0d       	add	r31, r0
+ 26a:	11 24       	eor	r1, r1
+ 26c:	e9 59       	subi	r30, 0x99	; 153
+ 26e:	ff 4f       	sbci	r31, 0xFF	; 255
+ 270:	a2 81       	ldd	r26, Z+2	; 0x02
+ 272:	b3 81       	ldd	r27, Z+3	; 0x03
+ 274:	2c 91       	ld	r18, X
+ 276:	37 e0       	ldi	r19, 0x07	; 7
+ 278:	38 9f       	mul	r19, r24
+ 27a:	f0 01       	movw	r30, r0
+ 27c:	39 9f       	mul	r19, r25
+ 27e:	f0 0d       	add	r31, r0
+ 280:	11 24       	eor	r1, r1
+ 282:	e0 5a       	subi	r30, 0xA0	; 160
+ 284:	ff 4f       	sbci	r31, 0xFF	; 255
+ 286:	81 e0       	ldi	r24, 0x01	; 1
+ 288:	90 e0       	ldi	r25, 0x00	; 0
+ 28a:	05 80       	ldd	r0, Z+5	; 0x05
+ 28c:	02 c0       	rjmp	.+4      	; 0x292 <_Z23serialTransmitInterrupth+0xd6>
+ 28e:	88 0f       	add	r24, r24
+ 290:	99 1f       	adc	r25, r25
+ 292:	0a 94       	dec	r0
+ 294:	e2 f7       	brpl	.-8      	; 0x28e <_Z23serialTransmitInterrupth+0xd2>
+ 296:	80 95       	com	r24
+ 298:	82 23       	and	r24, r18
+ 29a:	8c 93       	st	X, r24
+ 29c:	df 91       	pop	r29
+ 29e:	cf 91       	pop	r28
+ 2a0:	08 95       	ret
 
-000002ba <__vector_14>:
- 2ba:	1f 92       	push	r1
- 2bc:	0f 92       	push	r0
- 2be:	0f b6       	in	r0, 0x3f	; 63
- 2c0:	0f 92       	push	r0
- 2c2:	11 24       	eor	r1, r1
- 2c4:	2f 93       	push	r18
- 2c6:	3f 93       	push	r19
- 2c8:	4f 93       	push	r20
- 2ca:	5f 93       	push	r21
- 2cc:	6f 93       	push	r22
- 2ce:	7f 93       	push	r23
- 2d0:	8f 93       	push	r24
- 2d2:	9f 93       	push	r25
- 2d4:	af 93       	push	r26
- 2d6:	bf 93       	push	r27
- 2d8:	ef 93       	push	r30
- 2da:	ff 93       	push	r31
- 2dc:	80 e0       	ldi	r24, 0x00	; 0
- 2de:	0e 94 c5 00 	call	0x18a	; 0x18a <_Z23serialTransmitInterrupth>
- 2e2:	ff 91       	pop	r31
- 2e4:	ef 91       	pop	r30
- 2e6:	bf 91       	pop	r27
- 2e8:	af 91       	pop	r26
- 2ea:	9f 91       	pop	r25
- 2ec:	8f 91       	pop	r24
- 2ee:	7f 91       	pop	r23
- 2f0:	6f 91       	pop	r22
- 2f2:	5f 91       	pop	r21
- 2f4:	4f 91       	pop	r20
- 2f6:	3f 91       	pop	r19
- 2f8:	2f 91       	pop	r18
- 2fa:	0f 90       	pop	r0
- 2fc:	0f be       	out	0x3f, r0	; 63
- 2fe:	0f 90       	pop	r0
- 300:	1f 90       	pop	r1
- 302:	18 95       	reti
+000002a2 <__vector_13>:
+ 2a2:	1f 92       	push	r1
+ 2a4:	0f 92       	push	r0
+ 2a6:	0f b6       	in	r0, 0x3f	; 63
+ 2a8:	0f 92       	push	r0
+ 2aa:	11 24       	eor	r1, r1
+ 2ac:	2f 93       	push	r18
+ 2ae:	3f 93       	push	r19
+ 2b0:	4f 93       	push	r20
+ 2b2:	5f 93       	push	r21
+ 2b4:	6f 93       	push	r22
+ 2b6:	7f 93       	push	r23
+ 2b8:	8f 93       	push	r24
+ 2ba:	9f 93       	push	r25
+ 2bc:	af 93       	push	r26
+ 2be:	bf 93       	push	r27
+ 2c0:	ef 93       	push	r30
+ 2c2:	ff 93       	push	r31
+ 2c4:	80 e0       	ldi	r24, 0x00	; 0
+ 2c6:	0e 94 63 00 	call	0xc6	; 0xc6 <_Z22serialReceiveInterrupth>
+ 2ca:	ff 91       	pop	r31
+ 2cc:	ef 91       	pop	r30
+ 2ce:	bf 91       	pop	r27
+ 2d0:	af 91       	pop	r26
+ 2d2:	9f 91       	pop	r25
+ 2d4:	8f 91       	pop	r24
+ 2d6:	7f 91       	pop	r23
+ 2d8:	6f 91       	pop	r22
+ 2da:	5f 91       	pop	r21
+ 2dc:	4f 91       	pop	r20
+ 2de:	3f 91       	pop	r19
+ 2e0:	2f 91       	pop	r18
+ 2e2:	0f 90       	pop	r0
+ 2e4:	0f be       	out	0x3f, r0	; 63
+ 2e6:	0f 90       	pop	r0
+ 2e8:	1f 90       	pop	r1
+ 2ea:	18 95       	reti
 
-00000304 <_exit>:
- 304:	f8 94       	cli
+000002ec <__vector_14>:
+ 2ec:	1f 92       	push	r1
+ 2ee:	0f 92       	push	r0
+ 2f0:	0f b6       	in	r0, 0x3f	; 63
+ 2f2:	0f 92       	push	r0
+ 2f4:	11 24       	eor	r1, r1
+ 2f6:	2f 93       	push	r18
+ 2f8:	3f 93       	push	r19
+ 2fa:	4f 93       	push	r20
+ 2fc:	5f 93       	push	r21
+ 2fe:	6f 93       	push	r22
+ 300:	7f 93       	push	r23
+ 302:	8f 93       	push	r24
+ 304:	9f 93       	push	r25
+ 306:	af 93       	push	r26
+ 308:	bf 93       	push	r27
+ 30a:	ef 93       	push	r30
+ 30c:	ff 93       	push	r31
+ 30e:	80 e0       	ldi	r24, 0x00	; 0
+ 310:	0e 94 de 00 	call	0x1bc	; 0x1bc <_Z23serialTransmitInterrupth>
+ 314:	ff 91       	pop	r31
+ 316:	ef 91       	pop	r30
+ 318:	bf 91       	pop	r27
+ 31a:	af 91       	pop	r26
+ 31c:	9f 91       	pop	r25
+ 31e:	8f 91       	pop	r24
+ 320:	7f 91       	pop	r23
+ 322:	6f 91       	pop	r22
+ 324:	5f 91       	pop	r21
+ 326:	4f 91       	pop	r20
+ 328:	3f 91       	pop	r19
+ 32a:	2f 91       	pop	r18
+ 32c:	0f 90       	pop	r0
+ 32e:	0f be       	out	0x3f, r0	; 63
+ 330:	0f 90       	pop	r0
+ 332:	1f 90       	pop	r1
+ 334:	18 95       	reti
 
-00000306 <__stop_program>:
- 306:	ff cf       	rjmp	.-2      	; 0x306 <__stop_program>
+00000336 <_exit>:
+ 336:	f8 94       	cli
+
+00000338 <__stop_program>:
+ 338:	ff cf       	rjmp	.-2      	; 0x338 <__stop_program>
