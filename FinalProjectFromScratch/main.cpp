@@ -13,6 +13,9 @@
 #include "serial.h"
 
 
+//function prototype
+void TIMER_setup();
+
 int main(void)
 {
 	
@@ -54,3 +57,10 @@ int main(void)
 	//ADCSRA |= 1<<ADSC;
 //}
 
+void TIMER_setup()
+{
+	//1000000/64 = 15625
+	TCCR1B |= (1<<WGM12) | (1<<CS11) | (1<<CS10);
+	TIMSK |= (1<<OCIE1A);
+	OCR1A = 15624; //timer overflow value set to 1sec
+}
