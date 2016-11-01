@@ -97,9 +97,9 @@ Inverter* Inverter::switchToMains(bool mainsOrInverter)
 {
 	if (mainsOrInverter)
 	{
-		//setSwitch(false); //switch off inverter
+		this->setSwitch(false); //switch off inverter
 		INV_MODE_CTR |=	(1<<CHANGE_OVER);
-		//setChargeEnable(true); 
+		this->setChargeEnable(true); 
 	} 
 	else
 	{
@@ -111,6 +111,8 @@ Inverter* Inverter::switchToMains(bool mainsOrInverter)
 
 Inverter* Inverter::setChargeEnable(bool enable)
 {
+	//Todo: check the last fully charge state to prevent recursive charge
+	
 	if (enable)
 	{
 		INV_MODE_CTR |= (1<<CHARGE_MODE);

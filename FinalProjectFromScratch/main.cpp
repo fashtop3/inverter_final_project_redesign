@@ -23,9 +23,11 @@ int main(void)
 	sei(); //Enable Global Interrupt
 	my_timer_setup();
 	
+	//testing iverter api
 	inverter.setSwitch(true)
-	->setLoad(true);
-	inverter.switchToMains(true);
+	->setLoad(true)
+	->switchToMains(true)
+	->chargingMode(true);
 	
     /* Replace with your application code */
     while (1) 
