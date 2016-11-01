@@ -1,0 +1,556 @@
+
+FinalProjectFromScratch.elf:     file format elf32-avr
+
+Sections:
+Idx Name          Size      VMA       LMA       File off  Algn
+  0 .text         00000380  00000000  00000000  00000094  2**1
+                  CONTENTS, ALLOC, LOAD, READONLY, CODE
+  1 .data         00000014  00800060  00000380  00000414  2**0
+                  CONTENTS, ALLOC, LOAD, DATA
+  2 .bss          0000003a  00800074  00800074  00000428  2**0
+                  ALLOC
+  3 .comment      00000030  00000000  00000000  00000428  2**0
+                  CONTENTS, READONLY
+  4 .note.gnu.avr.deviceinfo 0000003c  00000000  00000000  00000458  2**2
+                  CONTENTS, READONLY
+  5 .debug_aranges 000000c0  00000000  00000000  00000494  2**0
+                  CONTENTS, READONLY, DEBUGGING
+  6 .debug_info   00000696  00000000  00000000  00000554  2**0
+                  CONTENTS, READONLY, DEBUGGING
+  7 .debug_abbrev 000001fe  00000000  00000000  00000bea  2**0
+                  CONTENTS, READONLY, DEBUGGING
+  8 .debug_line   000005a0  00000000  00000000  00000de8  2**0
+                  CONTENTS, READONLY, DEBUGGING
+  9 .debug_frame  00000234  00000000  00000000  00001388  2**2
+                  CONTENTS, READONLY, DEBUGGING
+ 10 .debug_str    0000049c  00000000  00000000  000015bc  2**0
+                  CONTENTS, READONLY, DEBUGGING
+ 11 .debug_loc    000006a2  00000000  00000000  00001a58  2**0
+                  CONTENTS, READONLY, DEBUGGING
+ 12 .debug_ranges 000000a0  00000000  00000000  000020fa  2**0
+                  CONTENTS, READONLY, DEBUGGING
+
+Disassembly of section .text:
+
+00000000 <__vectors>:
+   0:	0c 94 2a 00 	jmp	0x54	; 0x54 <__ctors_end>
+   4:	0c 94 47 00 	jmp	0x8e	; 0x8e <__bad_interrupt>
+   8:	0c 94 47 00 	jmp	0x8e	; 0x8e <__bad_interrupt>
+   c:	0c 94 47 00 	jmp	0x8e	; 0x8e <__bad_interrupt>
+  10:	0c 94 47 00 	jmp	0x8e	; 0x8e <__bad_interrupt>
+  14:	0c 94 47 00 	jmp	0x8e	; 0x8e <__bad_interrupt>
+  18:	0c 94 47 00 	jmp	0x8e	; 0x8e <__bad_interrupt>
+  1c:	0c 94 47 00 	jmp	0x8e	; 0x8e <__bad_interrupt>
+  20:	0c 94 47 00 	jmp	0x8e	; 0x8e <__bad_interrupt>
+  24:	0c 94 47 00 	jmp	0x8e	; 0x8e <__bad_interrupt>
+  28:	0c 94 47 00 	jmp	0x8e	; 0x8e <__bad_interrupt>
+  2c:	0c 94 47 00 	jmp	0x8e	; 0x8e <__bad_interrupt>
+  30:	0c 94 47 00 	jmp	0x8e	; 0x8e <__bad_interrupt>
+  34:	0c 94 74 01 	jmp	0x2e8	; 0x2e8 <__vector_13>
+  38:	0c 94 99 01 	jmp	0x332	; 0x332 <__vector_14>
+  3c:	0c 94 47 00 	jmp	0x8e	; 0x8e <__bad_interrupt>
+  40:	0c 94 47 00 	jmp	0x8e	; 0x8e <__bad_interrupt>
+  44:	0c 94 47 00 	jmp	0x8e	; 0x8e <__bad_interrupt>
+  48:	0c 94 47 00 	jmp	0x8e	; 0x8e <__bad_interrupt>
+  4c:	0c 94 47 00 	jmp	0x8e	; 0x8e <__bad_interrupt>
+  50:	0c 94 47 00 	jmp	0x8e	; 0x8e <__bad_interrupt>
+
+00000054 <__ctors_end>:
+  54:	11 24       	eor	r1, r1
+  56:	1f be       	out	0x3f, r1	; 63
+  58:	cf e5       	ldi	r28, 0x5F	; 95
+  5a:	d8 e0       	ldi	r29, 0x08	; 8
+  5c:	de bf       	out	0x3e, r29	; 62
+  5e:	cd bf       	out	0x3d, r28	; 61
+
+00000060 <__do_copy_data>:
+  60:	10 e0       	ldi	r17, 0x00	; 0
+  62:	a0 e6       	ldi	r26, 0x60	; 96
+  64:	b0 e0       	ldi	r27, 0x00	; 0
+  66:	e0 e8       	ldi	r30, 0x80	; 128
+  68:	f3 e0       	ldi	r31, 0x03	; 3
+  6a:	02 c0       	rjmp	.+4      	; 0x70 <__do_copy_data+0x10>
+  6c:	05 90       	lpm	r0, Z+
+  6e:	0d 92       	st	X+, r0
+  70:	a4 37       	cpi	r26, 0x74	; 116
+  72:	b1 07       	cpc	r27, r17
+  74:	d9 f7       	brne	.-10     	; 0x6c <__do_copy_data+0xc>
+
+00000076 <__do_clear_bss>:
+  76:	20 e0       	ldi	r18, 0x00	; 0
+  78:	a4 e7       	ldi	r26, 0x74	; 116
+  7a:	b0 e0       	ldi	r27, 0x00	; 0
+  7c:	01 c0       	rjmp	.+2      	; 0x80 <.do_clear_bss_start>
+
+0000007e <.do_clear_bss_loop>:
+  7e:	1d 92       	st	X+, r1
+
+00000080 <.do_clear_bss_start>:
+  80:	ae 3a       	cpi	r26, 0xAE	; 174
+  82:	b2 07       	cpc	r27, r18
+  84:	e1 f7       	brne	.-8      	; 0x7e <.do_clear_bss_loop>
+  86:	0e 94 49 00 	call	0x92	; 0x92 <main>
+  8a:	0c 94 be 01 	jmp	0x37c	; 0x37c <_exit>
+
+0000008e <__bad_interrupt>:
+  8e:	0c 94 00 00 	jmp	0	; 0x0 <__vectors>
+
+00000092 <main>:
+#include <stdint.h>
+#include "Inverter.h"
+#include "serial.h"
+
+
+int main(void)
+  92:	ff cf       	rjmp	.-2      	; 0x92 <main>
+
+00000094 <_Z22serialReceiveInterrupth>:
+    } else {
+        return 1;
+    }
+}
+
+void serialReceiveInterrupt(uint8_t uart) {
+  94:	cf 93       	push	r28
+  96:	df 93       	push	r29
+    rxBuffer[uart][rxWrite[uart]] = *serialRegisters[uart][SERIALDATA];
+  98:	90 e0       	ldi	r25, 0x00	; 0
+  9a:	9c 01       	movw	r18, r24
+  9c:	22 0f       	add	r18, r18
+  9e:	33 1f       	adc	r19, r19
+  a0:	d9 01       	movw	r26, r18
+  a2:	a4 58       	subi	r26, 0x84	; 132
+  a4:	bf 4f       	sbci	r27, 0xFF	; 255
+  a6:	4d 91       	ld	r20, X+
+  a8:	5c 91       	ld	r21, X
+  aa:	11 97       	sbiw	r26, 0x01	; 1
+  ac:	f9 01       	movw	r30, r18
+  ae:	e8 0f       	add	r30, r24
+  b0:	f9 1f       	adc	r31, r25
+  b2:	ee 0f       	add	r30, r30
+  b4:	ff 1f       	adc	r31, r31
+  b6:	ee 0f       	add	r30, r30
+  b8:	ff 1f       	adc	r31, r31
+  ba:	e9 59       	subi	r30, 0x99	; 153
+  bc:	ff 4f       	sbci	r31, 0xFF	; 255
+  be:	01 90       	ld	r0, Z+
+  c0:	f0 81       	ld	r31, Z
+  c2:	e0 2d       	mov	r30, r0
+  c4:	20 81       	ld	r18, Z
+  c6:	fc 01       	movw	r30, r24
+  c8:	ee 0f       	add	r30, r30
+  ca:	ff 1f       	adc	r31, r31
+  cc:	e2 95       	swap	r30
+  ce:	f2 95       	swap	r31
+  d0:	f0 7f       	andi	r31, 0xF0	; 240
+  d2:	fe 27       	eor	r31, r30
+  d4:	e0 7f       	andi	r30, 0xF0	; 240
+  d6:	fe 27       	eor	r31, r30
+  d8:	e4 0f       	add	r30, r20
+  da:	f5 1f       	adc	r31, r21
+  dc:	e2 57       	subi	r30, 0x72	; 114
+  de:	ff 4f       	sbci	r31, 0xFF	; 255
+  e0:	20 83       	st	Z, r18
+    if (rxWrite[uart] < (RX_BUFFER_SIZE - 1)) {
+  e2:	2d 91       	ld	r18, X+
+  e4:	3c 91       	ld	r19, X
+  e6:	11 97       	sbiw	r26, 0x01	; 1
+  e8:	2f 31       	cpi	r18, 0x1F	; 31
+  ea:	31 05       	cpc	r19, r1
+  ec:	40 f4       	brcc	.+16     	; 0xfe <_Z22serialReceiveInterrupth+0x6a>
+        rxWrite[uart]++;
+  ee:	fd 01       	movw	r30, r26
+  f0:	20 81       	ld	r18, Z
+  f2:	31 81       	ldd	r19, Z+1	; 0x01
+  f4:	2f 5f       	subi	r18, 0xFF	; 255
+  f6:	3f 4f       	sbci	r19, 0xFF	; 255
+  f8:	31 83       	std	Z+1, r19	; 0x01
+  fa:	20 83       	st	Z, r18
+  fc:	07 c0       	rjmp	.+14     	; 0x10c <_Z22serialReceiveInterrupth+0x78>
+    } else {
+        rxWrite[uart] = 0;
+  fe:	fc 01       	movw	r30, r24
+ 100:	ee 0f       	add	r30, r30
+ 102:	ff 1f       	adc	r31, r31
+ 104:	e4 58       	subi	r30, 0x84	; 132
+ 106:	ff 4f       	sbci	r31, 0xFF	; 255
+ 108:	11 82       	std	Z+1, r1	; 0x01
+ 10a:	10 82       	st	Z, r1
+    }
+
+#ifdef FLOWCONTROL
+    rxBufferElements[uart]++;
+ 10c:	fc 01       	movw	r30, r24
+ 10e:	ec 58       	subi	r30, 0x8C	; 140
+ 110:	ff 4f       	sbci	r31, 0xFF	; 255
+ 112:	20 81       	ld	r18, Z
+ 114:	2f 5f       	subi	r18, 0xFF	; 255
+ 116:	20 83       	st	Z, r18
+    if ((flow[uart] == 1) && (rxBufferElements[uart] >= (RX_BUFFER_SIZE - FLOWMARK))) {
+ 118:	fc 01       	movw	r30, r24
+ 11a:	eb 58       	subi	r30, 0x8B	; 139
+ 11c:	ff 4f       	sbci	r31, 0xFF	; 255
+ 11e:	20 81       	ld	r18, Z
+ 120:	21 30       	cpi	r18, 0x01	; 1
+ 122:	09 f0       	breq	.+2      	; 0x126 <_Z22serialReceiveInterrupth+0x92>
+ 124:	4e c0       	rjmp	.+156    	; 0x1c2 <_Z22serialReceiveInterrupth+0x12e>
+ 126:	fc 01       	movw	r30, r24
+ 128:	ec 58       	subi	r30, 0x8C	; 140
+ 12a:	ff 4f       	sbci	r31, 0xFF	; 255
+ 12c:	20 81       	ld	r18, Z
+ 12e:	2b 31       	cpi	r18, 0x1B	; 27
+ 130:	c8 f5       	brcc	.+114    	; 0x1a4 <_Z22serialReceiveInterrupth+0x110>
+ 132:	47 c0       	rjmp	.+142    	; 0x1c2 <_Z22serialReceiveInterrupth+0x12e>
+        sendThisNext[uart] = XOFF;
+        flow[uart] = 0;
+        if (shouldStartTransmission[uart]) {
+            shouldStartTransmission[uart] = 0;
+ 134:	fc 01       	movw	r30, r24
+ 136:	e9 58       	subi	r30, 0x89	; 137
+ 138:	ff 4f       	sbci	r31, 0xFF	; 255
+ 13a:	10 82       	st	Z, r1
+            *serialRegisters[uart][SERIALB] |= (1 << serialBits[uart][SERIALUDRIE]); // Enable Interrupt
+ 13c:	fc 01       	movw	r30, r24
+ 13e:	ee 0f       	add	r30, r30
+ 140:	ff 1f       	adc	r31, r31
+ 142:	e8 0f       	add	r30, r24
+ 144:	f9 1f       	adc	r31, r25
+ 146:	ee 0f       	add	r30, r30
+ 148:	ff 1f       	adc	r31, r31
+ 14a:	ee 0f       	add	r30, r30
+ 14c:	ff 1f       	adc	r31, r31
+ 14e:	e9 59       	subi	r30, 0x99	; 153
+ 150:	ff 4f       	sbci	r31, 0xFF	; 255
+ 152:	c2 81       	ldd	r28, Z+2	; 0x02
+ 154:	d3 81       	ldd	r29, Z+3	; 0x03
+ 156:	48 81       	ld	r20, Y
+ 158:	dc 01       	movw	r26, r24
+ 15a:	aa 0f       	add	r26, r26
+ 15c:	bb 1f       	adc	r27, r27
+ 15e:	aa 0f       	add	r26, r26
+ 160:	bb 1f       	adc	r27, r27
+ 162:	aa 0f       	add	r26, r26
+ 164:	bb 1f       	adc	r27, r27
+ 166:	a8 1b       	sub	r26, r24
+ 168:	b9 0b       	sbc	r27, r25
+ 16a:	a0 5a       	subi	r26, 0xA0	; 160
+ 16c:	bf 4f       	sbci	r27, 0xFF	; 255
+ 16e:	81 e0       	ldi	r24, 0x01	; 1
+ 170:	90 e0       	ldi	r25, 0x00	; 0
+ 172:	9c 01       	movw	r18, r24
+ 174:	15 96       	adiw	r26, 0x05	; 5
+ 176:	0c 90       	ld	r0, X
+ 178:	15 97       	sbiw	r26, 0x05	; 5
+ 17a:	02 c0       	rjmp	.+4      	; 0x180 <_Z22serialReceiveInterrupth+0xec>
+ 17c:	22 0f       	add	r18, r18
+ 17e:	33 1f       	adc	r19, r19
+ 180:	0a 94       	dec	r0
+ 182:	e2 f7       	brpl	.-8      	; 0x17c <_Z22serialReceiveInterrupth+0xe8>
+ 184:	24 2b       	or	r18, r20
+ 186:	28 83       	st	Y, r18
+            *serialRegisters[uart][SERIALA] |= (1 << serialBits[uart][SERIALUDRE]); // Trigger Interrupt
+ 188:	06 80       	ldd	r0, Z+6	; 0x06
+ 18a:	f7 81       	ldd	r31, Z+7	; 0x07
+ 18c:	e0 2d       	mov	r30, r0
+ 18e:	20 81       	ld	r18, Z
+ 190:	16 96       	adiw	r26, 0x06	; 6
+ 192:	0c 90       	ld	r0, X
+ 194:	02 c0       	rjmp	.+4      	; 0x19a <_Z22serialReceiveInterrupth+0x106>
+ 196:	88 0f       	add	r24, r24
+ 198:	99 1f       	adc	r25, r25
+ 19a:	0a 94       	dec	r0
+ 19c:	e2 f7       	brpl	.-8      	; 0x196 <_Z22serialReceiveInterrupth+0x102>
+ 19e:	82 2b       	or	r24, r18
+ 1a0:	80 83       	st	Z, r24
+ 1a2:	0f c0       	rjmp	.+30     	; 0x1c2 <_Z22serialReceiveInterrupth+0x12e>
+    }
+
+#ifdef FLOWCONTROL
+    rxBufferElements[uart]++;
+    if ((flow[uart] == 1) && (rxBufferElements[uart] >= (RX_BUFFER_SIZE - FLOWMARK))) {
+        sendThisNext[uart] = XOFF;
+ 1a4:	23 e1       	ldi	r18, 0x13	; 19
+ 1a6:	fc 01       	movw	r30, r24
+ 1a8:	ea 58       	subi	r30, 0x8A	; 138
+ 1aa:	ff 4f       	sbci	r31, 0xFF	; 255
+ 1ac:	20 83       	st	Z, r18
+        flow[uart] = 0;
+ 1ae:	fc 01       	movw	r30, r24
+ 1b0:	eb 58       	subi	r30, 0x8B	; 139
+ 1b2:	ff 4f       	sbci	r31, 0xFF	; 255
+ 1b4:	10 82       	st	Z, r1
+        if (shouldStartTransmission[uart]) {
+ 1b6:	fc 01       	movw	r30, r24
+ 1b8:	e9 58       	subi	r30, 0x89	; 137
+ 1ba:	ff 4f       	sbci	r31, 0xFF	; 255
+ 1bc:	20 81       	ld	r18, Z
+ 1be:	21 11       	cpse	r18, r1
+ 1c0:	b9 cf       	rjmp	.-142    	; 0x134 <_Z22serialReceiveInterrupth+0xa0>
+            *serialRegisters[uart][SERIALB] |= (1 << serialBits[uart][SERIALUDRIE]); // Enable Interrupt
+            *serialRegisters[uart][SERIALA] |= (1 << serialBits[uart][SERIALUDRE]); // Trigger Interrupt
+        }
+    }
+#endif
+}
+ 1c2:	df 91       	pop	r29
+ 1c4:	cf 91       	pop	r28
+ 1c6:	08 95       	ret
+
+000001c8 <_Z23serialTransmitInterrupth>:
+
+void serialTransmitInterrupt(uint8_t uart) {
+ 1c8:	cf 93       	push	r28
+ 1ca:	df 93       	push	r29
+#ifdef FLOWCONTROL
+    if (sendThisNext[uart]) {
+ 1cc:	90 e0       	ldi	r25, 0x00	; 0
+ 1ce:	fc 01       	movw	r30, r24
+ 1d0:	ea 58       	subi	r30, 0x8A	; 138
+ 1d2:	ff 4f       	sbci	r31, 0xFF	; 255
+ 1d4:	20 81       	ld	r18, Z
+ 1d6:	22 23       	and	r18, r18
+ 1d8:	a1 f0       	breq	.+40     	; 0x202 <_Z23serialTransmitInterrupth+0x3a>
+        *serialRegisters[uart][SERIALDATA] = sendThisNext[uart];
+ 1da:	fc 01       	movw	r30, r24
+ 1dc:	ee 0f       	add	r30, r30
+ 1de:	ff 1f       	adc	r31, r31
+ 1e0:	e8 0f       	add	r30, r24
+ 1e2:	f9 1f       	adc	r31, r25
+ 1e4:	ee 0f       	add	r30, r30
+ 1e6:	ff 1f       	adc	r31, r31
+ 1e8:	ee 0f       	add	r30, r30
+ 1ea:	ff 1f       	adc	r31, r31
+ 1ec:	e9 59       	subi	r30, 0x99	; 153
+ 1ee:	ff 4f       	sbci	r31, 0xFF	; 255
+ 1f0:	a0 81       	ld	r26, Z
+ 1f2:	b1 81       	ldd	r27, Z+1	; 0x01
+ 1f4:	fc 01       	movw	r30, r24
+ 1f6:	ea 58       	subi	r30, 0x8A	; 138
+ 1f8:	ff 4f       	sbci	r31, 0xFF	; 255
+ 1fa:	80 81       	ld	r24, Z
+ 1fc:	8c 93       	st	X, r24
+        sendThisNext[uart] = 0;
+ 1fe:	10 82       	st	Z, r1
+ 200:	70 c0       	rjmp	.+224    	; 0x2e2 <_Z23serialTransmitInterrupth+0x11a>
+    } else {
+#endif
+        if (txRead[uart] != txWrite[uart]) {
+ 202:	9c 01       	movw	r18, r24
+ 204:	22 0f       	add	r18, r18
+ 206:	33 1f       	adc	r19, r19
+ 208:	f9 01       	movw	r30, r18
+ 20a:	e6 58       	subi	r30, 0x86	; 134
+ 20c:	ff 4f       	sbci	r31, 0xFF	; 255
+ 20e:	40 81       	ld	r20, Z
+ 210:	51 81       	ldd	r21, Z+1	; 0x01
+ 212:	f9 01       	movw	r30, r18
+ 214:	e8 58       	subi	r30, 0x88	; 136
+ 216:	ff 4f       	sbci	r31, 0xFF	; 255
+ 218:	20 81       	ld	r18, Z
+ 21a:	31 81       	ldd	r19, Z+1	; 0x01
+ 21c:	42 17       	cp	r20, r18
+ 21e:	53 07       	cpc	r21, r19
+ 220:	b9 f1       	breq	.+110    	; 0x290 <_Z23serialTransmitInterrupth+0xc8>
+            *serialRegisters[uart][SERIALDATA] = txBuffer[uart][txRead[uart]];
+ 222:	fc 01       	movw	r30, r24
+ 224:	ee 0f       	add	r30, r30
+ 226:	ff 1f       	adc	r31, r31
+ 228:	df 01       	movw	r26, r30
+ 22a:	a8 0f       	add	r26, r24
+ 22c:	b9 1f       	adc	r27, r25
+ 22e:	aa 0f       	add	r26, r26
+ 230:	bb 1f       	adc	r27, r27
+ 232:	aa 0f       	add	r26, r26
+ 234:	bb 1f       	adc	r27, r27
+ 236:	a9 59       	subi	r26, 0x99	; 153
+ 238:	bf 4f       	sbci	r27, 0xFF	; 255
+ 23a:	cd 91       	ld	r28, X+
+ 23c:	dc 91       	ld	r29, X
+ 23e:	e6 58       	subi	r30, 0x86	; 134
+ 240:	ff 4f       	sbci	r31, 0xFF	; 255
+ 242:	20 81       	ld	r18, Z
+ 244:	31 81       	ldd	r19, Z+1	; 0x01
+ 246:	dc 01       	movw	r26, r24
+ 248:	a2 95       	swap	r26
+ 24a:	b2 95       	swap	r27
+ 24c:	b0 7f       	andi	r27, 0xF0	; 240
+ 24e:	ba 27       	eor	r27, r26
+ 250:	a0 7f       	andi	r26, 0xF0	; 240
+ 252:	ba 27       	eor	r27, r26
+ 254:	a2 0f       	add	r26, r18
+ 256:	b3 1f       	adc	r27, r19
+ 258:	a2 58       	subi	r26, 0x82	; 130
+ 25a:	bf 4f       	sbci	r27, 0xFF	; 255
+ 25c:	2c 91       	ld	r18, X
+ 25e:	28 83       	st	Y, r18
+            if (txRead[uart] < (TX_BUFFER_SIZE -1)) {
+ 260:	20 81       	ld	r18, Z
+ 262:	31 81       	ldd	r19, Z+1	; 0x01
+ 264:	2f 30       	cpi	r18, 0x0F	; 15
+ 266:	31 05       	cpc	r19, r1
+ 268:	58 f4       	brcc	.+22     	; 0x280 <_Z23serialTransmitInterrupth+0xb8>
+                txRead[uart]++;
+ 26a:	88 0f       	add	r24, r24
+ 26c:	99 1f       	adc	r25, r25
+ 26e:	fc 01       	movw	r30, r24
+ 270:	e6 58       	subi	r30, 0x86	; 134
+ 272:	ff 4f       	sbci	r31, 0xFF	; 255
+ 274:	80 81       	ld	r24, Z
+ 276:	91 81       	ldd	r25, Z+1	; 0x01
+ 278:	01 96       	adiw	r24, 0x01	; 1
+ 27a:	91 83       	std	Z+1, r25	; 0x01
+ 27c:	80 83       	st	Z, r24
+ 27e:	31 c0       	rjmp	.+98     	; 0x2e2 <_Z23serialTransmitInterrupth+0x11a>
+            } else {
+                txRead[uart] = 0;
+ 280:	88 0f       	add	r24, r24
+ 282:	99 1f       	adc	r25, r25
+ 284:	fc 01       	movw	r30, r24
+ 286:	e6 58       	subi	r30, 0x86	; 134
+ 288:	ff 4f       	sbci	r31, 0xFF	; 255
+ 28a:	11 82       	std	Z+1, r1	; 0x01
+ 28c:	10 82       	st	Z, r1
+ 28e:	29 c0       	rjmp	.+82     	; 0x2e2 <_Z23serialTransmitInterrupth+0x11a>
+            }
+        } else {
+            shouldStartTransmission[uart] = 1;
+ 290:	fc 01       	movw	r30, r24
+ 292:	e9 58       	subi	r30, 0x89	; 137
+ 294:	ff 4f       	sbci	r31, 0xFF	; 255
+ 296:	21 e0       	ldi	r18, 0x01	; 1
+ 298:	20 83       	st	Z, r18
+            *serialRegisters[uart][SERIALB] &= ~(1 << serialBits[uart][SERIALUDRIE]); // Disable Interrupt
+ 29a:	fc 01       	movw	r30, r24
+ 29c:	ee 0f       	add	r30, r30
+ 29e:	ff 1f       	adc	r31, r31
+ 2a0:	e8 0f       	add	r30, r24
+ 2a2:	f9 1f       	adc	r31, r25
+ 2a4:	ee 0f       	add	r30, r30
+ 2a6:	ff 1f       	adc	r31, r31
+ 2a8:	ee 0f       	add	r30, r30
+ 2aa:	ff 1f       	adc	r31, r31
+ 2ac:	e9 59       	subi	r30, 0x99	; 153
+ 2ae:	ff 4f       	sbci	r31, 0xFF	; 255
+ 2b0:	a2 81       	ldd	r26, Z+2	; 0x02
+ 2b2:	b3 81       	ldd	r27, Z+3	; 0x03
+ 2b4:	2c 91       	ld	r18, X
+ 2b6:	fc 01       	movw	r30, r24
+ 2b8:	ee 0f       	add	r30, r30
+ 2ba:	ff 1f       	adc	r31, r31
+ 2bc:	ee 0f       	add	r30, r30
+ 2be:	ff 1f       	adc	r31, r31
+ 2c0:	ee 0f       	add	r30, r30
+ 2c2:	ff 1f       	adc	r31, r31
+ 2c4:	e8 1b       	sub	r30, r24
+ 2c6:	f9 0b       	sbc	r31, r25
+ 2c8:	e0 5a       	subi	r30, 0xA0	; 160
+ 2ca:	ff 4f       	sbci	r31, 0xFF	; 255
+ 2cc:	81 e0       	ldi	r24, 0x01	; 1
+ 2ce:	90 e0       	ldi	r25, 0x00	; 0
+ 2d0:	05 80       	ldd	r0, Z+5	; 0x05
+ 2d2:	02 c0       	rjmp	.+4      	; 0x2d8 <_Z23serialTransmitInterrupth+0x110>
+ 2d4:	88 0f       	add	r24, r24
+ 2d6:	99 1f       	adc	r25, r25
+ 2d8:	0a 94       	dec	r0
+ 2da:	e2 f7       	brpl	.-8      	; 0x2d4 <_Z23serialTransmitInterrupth+0x10c>
+ 2dc:	80 95       	com	r24
+ 2de:	82 23       	and	r24, r18
+ 2e0:	8c 93       	st	X, r24
+        }
+#ifdef FLOWCONTROL
+    }
+#endif
+}
+ 2e2:	df 91       	pop	r29
+ 2e4:	cf 91       	pop	r28
+ 2e6:	08 95       	ret
+
+000002e8 <__vector_13>:
+
+ISR(SERIALRECIEVEINTERRUPT) { // Receive complete
+ 2e8:	1f 92       	push	r1
+ 2ea:	0f 92       	push	r0
+ 2ec:	0f b6       	in	r0, 0x3f	; 63
+ 2ee:	0f 92       	push	r0
+ 2f0:	11 24       	eor	r1, r1
+ 2f2:	2f 93       	push	r18
+ 2f4:	3f 93       	push	r19
+ 2f6:	4f 93       	push	r20
+ 2f8:	5f 93       	push	r21
+ 2fa:	6f 93       	push	r22
+ 2fc:	7f 93       	push	r23
+ 2fe:	8f 93       	push	r24
+ 300:	9f 93       	push	r25
+ 302:	af 93       	push	r26
+ 304:	bf 93       	push	r27
+ 306:	ef 93       	push	r30
+ 308:	ff 93       	push	r31
+    serialReceiveInterrupt(0);
+ 30a:	80 e0       	ldi	r24, 0x00	; 0
+ 30c:	0e 94 4a 00 	call	0x94	; 0x94 <_Z22serialReceiveInterrupth>
+}
+ 310:	ff 91       	pop	r31
+ 312:	ef 91       	pop	r30
+ 314:	bf 91       	pop	r27
+ 316:	af 91       	pop	r26
+ 318:	9f 91       	pop	r25
+ 31a:	8f 91       	pop	r24
+ 31c:	7f 91       	pop	r23
+ 31e:	6f 91       	pop	r22
+ 320:	5f 91       	pop	r21
+ 322:	4f 91       	pop	r20
+ 324:	3f 91       	pop	r19
+ 326:	2f 91       	pop	r18
+ 328:	0f 90       	pop	r0
+ 32a:	0f be       	out	0x3f, r0	; 63
+ 32c:	0f 90       	pop	r0
+ 32e:	1f 90       	pop	r1
+ 330:	18 95       	reti
+
+00000332 <__vector_14>:
+
+ISR(SERIALTRANSMITINTERRUPT) { // Data register empty
+ 332:	1f 92       	push	r1
+ 334:	0f 92       	push	r0
+ 336:	0f b6       	in	r0, 0x3f	; 63
+ 338:	0f 92       	push	r0
+ 33a:	11 24       	eor	r1, r1
+ 33c:	2f 93       	push	r18
+ 33e:	3f 93       	push	r19
+ 340:	4f 93       	push	r20
+ 342:	5f 93       	push	r21
+ 344:	6f 93       	push	r22
+ 346:	7f 93       	push	r23
+ 348:	8f 93       	push	r24
+ 34a:	9f 93       	push	r25
+ 34c:	af 93       	push	r26
+ 34e:	bf 93       	push	r27
+ 350:	ef 93       	push	r30
+ 352:	ff 93       	push	r31
+    serialTransmitInterrupt(0);
+ 354:	80 e0       	ldi	r24, 0x00	; 0
+ 356:	0e 94 e4 00 	call	0x1c8	; 0x1c8 <_Z23serialTransmitInterrupth>
+}
+ 35a:	ff 91       	pop	r31
+ 35c:	ef 91       	pop	r30
+ 35e:	bf 91       	pop	r27
+ 360:	af 91       	pop	r26
+ 362:	9f 91       	pop	r25
+ 364:	8f 91       	pop	r24
+ 366:	7f 91       	pop	r23
+ 368:	6f 91       	pop	r22
+ 36a:	5f 91       	pop	r21
+ 36c:	4f 91       	pop	r20
+ 36e:	3f 91       	pop	r19
+ 370:	2f 91       	pop	r18
+ 372:	0f 90       	pop	r0
+ 374:	0f be       	out	0x3f, r0	; 63
+ 376:	0f 90       	pop	r0
+ 378:	1f 90       	pop	r1
+ 37a:	18 95       	reti
+
+0000037c <_exit>:
+ 37c:	f8 94       	cli
+
+0000037e <__stop_program>:
+ 37e:	ff cf       	rjmp	.-2      	; 0x37e <__stop_program>
