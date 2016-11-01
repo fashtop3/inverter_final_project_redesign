@@ -83,6 +83,7 @@ private:
 	Inverter( const Inverter &c );
 	Inverter& operator=( const Inverter &c );
 	bool chargeUpgrade = true;
+	bool isMains;
 
 	//analog readings
 public:

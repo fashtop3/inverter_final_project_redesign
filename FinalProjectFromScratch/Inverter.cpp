@@ -66,7 +66,17 @@ Inverter* Inverter::setSwitch(bool on)
 {
 	if(on) 
 	{
-		INV_CTR |= 1<<POWER;
+		if (isBattLow())
+		{
+			//emit message here
+			//Todo: work around delay here
+			setSwitch(false);
+		} 
+		else
+		{
+			INV_CTR |= 1<<POWER;
+		}
+		
 	}
 	else 
 	{
@@ -80,7 +90,16 @@ Inverter* Inverter::setLoad(bool load)
 {
 	if (load)
 	{
-		INV_CTR |= 1<<LOAD;
+		if (!isMains && (getOverloadInputReadings() > 75))
+		{
+			//emit message here
+			//Todo: work around delay here
+			setLoad(false);
+		} 
+		else
+		{
+			INV_CTR |= 1<<LOAD;
+		}
 	} 
 	else
 	{
@@ -110,6 +129,13 @@ Inverter* Inverter::switchToMains(bool mainsOrInverter)
 Inverter* Inverter::setChargeEnable(bool enable)
 {
 	//Todo: check the last fully charge state to prevent recursive charge
+	
+	if(enable && isBattFull())
+	{
+		//emit message battery full and init a var and can only be track back when ac is off
+		setChargeEnable(!enable); //recall
+		return this;
+	}
 	
 	if (enable)
 	{
@@ -150,12 +176,12 @@ Inverter* Inverter::chargingMode(bool upgrade /*= false*/)
 
 bool Inverter::isBattLow()
 {
-	return true;
+	return (getBattInputReadings() < 10.5);
 }
 
 bool Inverter::isBattFull()
 {
-	return true;
+	return (getBattInputReadings() > 14.5);
 }
 
 Inverter* Inverter::batteryMonitor()
@@ -270,12 +296,14 @@ Inverter* Inverter::monitor()
 		switchToMains(false)
 			->setSwitch(true)
 			->setLoad(true);
+		isMains = false;
 	} 
 	else
 	{
 		//Todo: workaround a delay count here
 		switchToMains(true)
 			->setLoad(true);
+		isMains = true;
 	}
 	
 	return this;
