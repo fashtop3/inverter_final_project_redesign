@@ -66,7 +66,9 @@ void Inverter::incrementEntryCounter()
 
 // default constructor
 Inverter::Inverter()
-	:isCharging(false), 
+	:BATT_LOW_LEVEL(10.5),
+	 BATT_FULL_LEVEL(14.5),
+	 isCharging(false), 
 	 isModeSet(false),
 	 entryCounter1(1),
 	 entryCounter2(1),
@@ -115,6 +117,16 @@ Inverter::Inverter()
 	//outputLoad(); //put load on by default
 
 } //Inverter
+
+
+void Inverter::resetChargeSelectionControl()
+{
+	if(isModeSet && entryCounter3 == 10)
+	{
+		entryCounter3 = 5;
+		isModeSet = false;
+	}
+}
 
 // default destructor
 Inverter::~Inverter()
@@ -179,6 +191,7 @@ Inverter* Inverter::switchToMains(bool mainsOrInverter)
 {
 	if (mainsOrInverter)
 	{
+		isMains = true;
 		setSwitch(false); //switch off inverter
 		INV_MODE_CTR |=	(1<<CHANGE_OVER);
 		if (entryCounter2 == 8)
@@ -189,6 +202,7 @@ Inverter* Inverter::switchToMains(bool mainsOrInverter)
 	} 
 	else
 	{
+		isMains = false;
 		INV_MODE_CTR &= ~(1<<CHANGE_OVER); //change over to inverter
 		setChargeEnable(false);
 		isCharging = false;
@@ -214,20 +228,12 @@ Inverter* Inverter::setChargeEnable(bool enable)
 		//then set which mode to use 
 		if (getAcInputReadings() < 200)
 		{
-			if(isUpgraded && entryCounter3 == 10)
-			{
-				entryCounter3 = 5;
-				isModeSet = false;
-			}
+			resetChargeSelectionControl();
 			chargingMode(chargeUpgrade);
 		} 
 		else
 		{
-			if(!isUpgraded && entryCounter3 == 10)
-			{
-				entryCounter3 = 5;
-				isModeSet = false;
-			}
+			resetChargeSelectionControl();
 			chargingMode(!chargeUpgrade);
 		}
 	} 
@@ -261,7 +267,7 @@ Inverter* Inverter::chargingMode(bool upgrade /*= false*/)
 
 bool Inverter::isBattLow()
 {
-	if (getBattInputReadings() < 10.5)
+	if (getBattInputReadings() < BATT_LOW_LEVEL)
 	{
 		hasLowBatt = true;
 		return true;
@@ -276,7 +282,7 @@ bool Inverter::isBattLow()
 
 bool Inverter::isBattFull()
 {
-	return (getBattInputReadings() > 14.5);
+	return (getBattInputReadings() > BATT_FULL_LEVEL);
 }
 
 bool Inverter::AcInputVoltageCheck()
@@ -372,15 +378,13 @@ Inverter* Inverter::analogPinSwitching()
 
 Inverter* Inverter::monitor()
 {
-	//this->incrementEntryCounter();
-	
+		
 	if (AcInputVoltageCheck()) //check low or high voltage
 	{
 		switchToMains(false)
 			->setSwitch(true)
 			->setLoad(true);
-		isMains = false;
-		
+				
 		entryCounter1 = 1;
 		entryCounter2 = 1;
 		entryCounter3 = 1;
@@ -392,8 +396,7 @@ Inverter* Inverter::monitor()
 		{
 			switchToMains(true)
 			->setLoad(true);
-			isMains = true;
-			
+						
 			entryCounter4 = 1;
 		}
 	}

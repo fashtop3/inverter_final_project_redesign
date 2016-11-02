@@ -77,14 +77,17 @@ protected:
 private:
 	Inverter( const Inverter &c );
 	Inverter& operator=( const Inverter &c );
+	void resetChargeSelectionControl();
+	const double BATT_LOW_LEVEL;
+	const double BATT_FULL_LEVEL;
 	bool chargeUpgrade = true;
 	bool isUpgraded = true;
 	bool isOverloaded = false;
 	bool isLoadEnabled = false;
 	bool hasLowBatt = false;
+	bool isModeSet;
 	bool isMains;
 	bool isCharging;
-	bool isModeSet;
 	int entryCounter1;
 	int entryCounter2;
 	int entryCounter3;
