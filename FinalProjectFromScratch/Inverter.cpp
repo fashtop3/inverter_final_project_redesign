@@ -12,8 +12,67 @@ volatile uint16_t Inverter::analog_ac_value = 0;
 volatile uint16_t Inverter::analog_batt_value = 0;
 volatile uint16_t Inverter::analog_overload_value = 0;
 
+int Inverter::getEntryCounter()
+{
+	return entryCounter1;
+}
+
+void Inverter::incrementEntryCounter()
+{
+	if (entryCounter1 < 5)
+	{
+		if(!isMains)
+		{
+			++entryCounter1;
+		}
+	} 
+	
+	//entryCounter2 for switching charging
+	if (entryCounter2 < 8)
+	{
+		if(!isCharging)
+		{
+			++entryCounter2;
+		}
+	} 
+	
+	//entryCounter3 for switching charging mode
+	if (entryCounter3 < 10)
+	{
+		if(!isModeSet)
+		{
+			++entryCounter3;
+		}
+	}
+	
+	//entryCounter4 for switching overload
+	if (entryCounter4 < 5)
+	{
+		if(isOverloaded)
+		{
+			++entryCounter4;
+		}
+	}	
+	
+	//entryCounter5 for switching low batt
+	if (entryCounter5 < 5)
+	{
+		if(hasLowBatt)
+		{
+			++entryCounter5;
+		}
+	}
+}
+
 // default constructor
 Inverter::Inverter()
+	:isCharging(false), 
+	 isModeSet(false),
+	 entryCounter1(1),
+	 entryCounter2(1),
+	 entryCounter3(1),
+	 entryCounter4(1),
+	 entryCounter5(1)
 {
 	//initialize analog holding variables
 	this->setAcAnalogValue(0)
@@ -65,12 +124,15 @@ Inverter::~Inverter()
 Inverter* Inverter::setSwitch(bool on)
 {
 	if(on) 
-	{
+	{		
 		if (isBattLow())
 		{
-			//emit message here
-			//Todo: work around delay here
-			setSwitch(false);
+			//Todo: emit message here
+			if (entryCounter5 == 5)
+			{
+				setSwitch(false);
+			}
+			
 		} 
 		else
 		{
@@ -89,12 +151,15 @@ Inverter* Inverter::setSwitch(bool on)
 Inverter* Inverter::setLoad(bool load)
 {
 	if (load)
-	{
-		if (!isMains && (getOverloadInputReadings() > 75))
+	{		
+		if (!isMains && isOverload())
 		{
 			//emit message here
 			//Todo: work around delay here
-			setLoad(false);
+			if (entryCounter4 == 5)
+			{
+				setLoad(false);
+			}
 		} 
 		else
 		{
@@ -110,17 +175,23 @@ Inverter* Inverter::setLoad(bool load)
 }
 
 Inverter* Inverter::switchToMains(bool mainsOrInverter)
+
 {
 	if (mainsOrInverter)
 	{
 		setSwitch(false); //switch off inverter
 		INV_MODE_CTR |=	(1<<CHANGE_OVER);
-		setChargeEnable(true); 
+		if (entryCounter2 == 8)
+		{
+			setChargeEnable(true); 
+			isCharging = true;
+		}
 	} 
 	else
 	{
 		INV_MODE_CTR &= ~(1<<CHANGE_OVER); //change over to inverter
 		setChargeEnable(false);
+		isCharging = false;
 	}
 	
 	return this;
@@ -140,15 +211,23 @@ Inverter* Inverter::setChargeEnable(bool enable)
 	if (enable)
 	{
 		INV_MODE_CTR |= (1<<CHARGE_MODE);
-		
-		//Todo: workaround a delay count here
 		//then set which mode to use 
 		if (getAcInputReadings() < 200)
 		{
+			if(isUpgraded && entryCounter3 == 10)
+			{
+				entryCounter3 = 5;
+				isModeSet = false;
+			}
 			chargingMode(chargeUpgrade);
 		} 
 		else
 		{
+			if(!isUpgraded && entryCounter3 == 10)
+			{
+				entryCounter3 = 5;
+				isModeSet = false;
+			}
 			chargingMode(!chargeUpgrade);
 		}
 	} 
@@ -162,13 +241,19 @@ Inverter* Inverter::setChargeEnable(bool enable)
 
 Inverter* Inverter::chargingMode(bool upgrade /*= false*/)
 {
-	if (upgrade)
+	if (entryCounter3 == 10)
 	{
-		INV_MODE_CTR &= ~(1<<CHARGE_SELECT); //upgrade when mains is < 200 
-	} 
-	else
-	{
-		INV_MODE_CTR |= (1<<CHARGE_SELECT); //default charging >= 200
+		if (upgrade)
+		{
+			INV_MODE_CTR &= ~(1<<CHARGE_SELECT); //upgrade when mains is < 200
+			isUpgraded = upgrade;
+		}
+		else
+		{
+			INV_MODE_CTR |= (1<<CHARGE_SELECT); //default charging >= 200
+			isUpgraded = upgrade;
+		}
+		isModeSet = true;
 	}
 	
 	return this;
@@ -176,7 +261,17 @@ Inverter* Inverter::chargingMode(bool upgrade /*= false*/)
 
 bool Inverter::isBattLow()
 {
-	return (getBattInputReadings() < 10.5);
+	if (getBattInputReadings() < 10.5)
+	{
+		hasLowBatt = true;
+		return true;
+	} 
+	else
+	{
+		entryCounter5 = 1;
+		hasLowBatt = false;
+		return false;
+	}
 }
 
 bool Inverter::isBattFull()
@@ -198,13 +293,30 @@ bool Inverter::AcInputVoltageCheck()
 
 Inverter* Inverter::surgeProtect()
 {
-
+	if (getAcInputReadings() >= 240)
+	{
+		//Todo: emit message voltage too high
+		switchToMains(false)
+		->setSwitch(true)
+		->setLoad(true);
+		isMains = false;
+	} 
 	return this;
 }
 
 bool Inverter::isOverload()
 {
-	return true;
+	if (getOverloadInputReadings() > 75)
+	{
+		isOverloaded = true;
+		return true;
+	} 
+	else
+	{
+		isOverloaded = false;
+		entryCounter4 = 1;
+		return false;
+	}
 }
 
 Inverter* Inverter::mainsBalanceMonitor()
@@ -291,19 +403,30 @@ Inverter* Inverter::analogPinSwitching()
 
 Inverter* Inverter::monitor()
 {
+	//this->incrementEntryCounter();
+	
 	if (AcInputVoltageCheck()) //check low or high voltage
 	{
 		switchToMains(false)
 			->setSwitch(true)
 			->setLoad(true);
 		isMains = false;
+		
+		entryCounter1 = 1;
+		entryCounter2 = 1;
+		entryCounter3 = 1;
 	} 
 	else
 	{
 		//Todo: workaround a delay count here
-		switchToMains(true)
+		if (entryCounter1 == 5)
+		{
+			switchToMains(true)
 			->setLoad(true);
-		isMains = true;
+			isMains = true;
+			
+			entryCounter4 = 1;
+		}
 	}
 	
 	return this;

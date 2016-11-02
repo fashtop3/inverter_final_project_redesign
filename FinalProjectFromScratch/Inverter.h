@@ -77,19 +77,36 @@ public:
 	
 	Inverter* monitor();
 
+	int getEntryCounter();
 
+	void incrementEntryCounter();
+	
 protected:
+	
 private:
 	Inverter( const Inverter &c );
 	Inverter& operator=( const Inverter &c );
 	bool chargeUpgrade = true;
+	bool isUpgraded = true;
+	bool isOverloaded = false;
+	bool isLoadEnabled = false;
+	bool hasLowBatt = false;
 	bool isMains;
+	bool isCharging;
+	bool isModeSet;
+	int entryCounter1;
+	int entryCounter2;
+	int entryCounter3;
+	int entryCounter4;
+	int entryCounter5;
 
 	//analog readings
-public:
+private:
 	volatile static uint16_t analog_ac_value;
 	volatile static uint16_t analog_batt_value;
 	volatile static uint16_t analog_overload_value;
+	
+	int mainsStandby;
 }; //Inverter
 
 #endif //__INVERTER_H__

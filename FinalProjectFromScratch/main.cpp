@@ -37,10 +37,14 @@ int main(void)
     while (1) 
     {		
 		lcd.printIntToLCD(1, 1, inverter.getAcInputReadings(), 4);
+		lcd.printIntToLCD(6, 1, inverter.getEntryCounter(), 1);
 		lcd.printDoubleToLCD(1, 2, inverter.getBattInputReadings(), 4, 2);
 		lcd.printIntToLCD(11, 2, inverter.getOverloadInputReadings(), 3);
 		//_delay_ms(500);
 		//lcd->clScr();
+		
+		//inverter.surgeProtect();
+		inverter.monitor();
     }
 	
 	//delete inverter, lcd;
@@ -49,7 +53,7 @@ int main(void)
 
 ISR(TIMER1_COMPA_vect)
 {
-	inverter.monitor();
+	inverter.incrementEntryCounter();
 	
 	//when mains is balance for use
 	//mainsBalanceMonitor();
