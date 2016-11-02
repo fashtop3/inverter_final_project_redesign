@@ -56,14 +56,10 @@ public:
 	bool isBattLow();
 	bool isBattFull();
 	
-	Inverter* batteryMonitor();
 	bool AcInputVoltageCheck();
 	Inverter* surgeProtect();
 	
 	bool isOverload();
-	Inverter* mainsBalanceMonitor();
-	
-	Inverter* overloadMonitor();
 	
 	Inverter* setAcAnalogValue(uint16_t value);
 	Inverter* setBattAnalogValue(uint16_t value);

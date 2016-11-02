@@ -279,12 +279,6 @@ bool Inverter::isBattFull()
 	return (getBattInputReadings() > 14.5);
 }
 
-Inverter* Inverter::batteryMonitor()
-{
-
-	return this;
-}
-
 bool Inverter::AcInputVoltageCheck()
 {
 	//switch source to inverter if input ac is less or if too high
@@ -317,18 +311,6 @@ bool Inverter::isOverload()
 		entryCounter4 = 1;
 		return false;
 	}
-}
-
-Inverter* Inverter::mainsBalanceMonitor()
-{
-	
-	return this;
-}
-
-Inverter* Inverter::overloadMonitor()
-{
-
-	return this;
 }
 
 Inverter* Inverter::setAcAnalogValue(uint16_t value)
