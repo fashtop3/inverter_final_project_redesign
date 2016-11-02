@@ -153,7 +153,8 @@ Lcd* Lcd::clScr()
 {
 	send_A_Command(0x01);
 	_delay_ms(2);
-	send_A_Command(0b00001110);
+	//send_A_Command(0b00001110);
+	send_A_Command(0b00001100); //hiding cursor
 	_delay_ms(50);
 
 	return this;
