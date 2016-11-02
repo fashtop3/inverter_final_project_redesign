@@ -14,8 +14,8 @@
 #include "Lcd.h"
 #include "serial.h"
 
-Inverter inverter; //initialize inverter
 Lcd lcd;
+Inverter inverter(lcd); //initialize inverter
 
 //function prototype
 void my_timer_setup();
@@ -46,26 +46,13 @@ int main(void)
 ISR(TIMER1_COMPA_vect)
 {
 	inverter.incrementEntryCounter();
+	inverter.emitMessage();
 	
-	lcd.printIntToLCD(1, 1, inverter.getAcInputReadings(), 4);
-	lcd.printIntToLCD(6, 1, inverter.getEntryCounter(), 1);
-	lcd.printDoubleToLCD(1, 2, inverter.getBattInputReadings(), 4, 2);
-	lcd.printIntToLCD(11, 2, inverter.getOverloadInputReadings(), 3);
+	//lcd.printIntToLCD(1, 1, inverter.getAcInputReadings(), 4);
+	//lcd.printIntToLCD(6, 1, inverter.getEntryCounter(), 1);
+	//lcd.printDoubleToLCD(1, 2, inverter.getBattInputReadings(), 4, 2);
+	//lcd.printIntToLCD(11, 2, inverter.getOverloadInputReadings(), 3);
 	
-	//when mains is balance for use
-	//mainsBalanceMonitor();
-	
-	//monitoring overloading
-	//overloadMonitoring();
-	
-	//monitoring battery charging
-	//chargingSelection();
-	
-	//battery level monitoring
-	//batteryMonitoring();
-	
-	//display on LCD
-	//displayInverterState();
 }
 
 

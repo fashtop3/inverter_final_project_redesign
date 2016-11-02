@@ -14,6 +14,7 @@
 #include <avr/io.h>
 #include <util/delay.h>
 #include <stdio.h>
+#include "Lcd.h"
 
 //inverter io controls pin configurations
 #define BATT_LOW		PIND2
@@ -43,7 +44,7 @@ class Inverter
 
 //functions
 public:
-	Inverter();
+	Inverter(Lcd &lcd);
 	~Inverter();
 	
 	Inverter* setSwitch(bool on);
@@ -58,6 +59,16 @@ public:
 	int getEntryCounter();
 	void incrementEntryCounter();
 	
+	void emitMessage();
+	
+public:
+	enum Event {
+		NO_INT_vect = 0x0,
+		CLEAR_SCR_INT_vect = 0x12,
+		INT_BATTERY_LOW_vect = 0x23,
+		MAINS_INT_vect = 0x24,
+	};
+
 protected:
 
 	Inverter* setLoad(bool attach);
@@ -74,10 +85,25 @@ protected:
 	Inverter* setBattAnalogValue(uint16_t value);
 	Inverter* setOverloadAnalogValue(uint16_t value);
 	
+	void messageBattLow();
+	void mainInformation();
+	
+	void text_load();
+	void text_battery();
+	void text_mains();
+
+	void saveCurrentEventFor(Event e);
+	void restoreEventFor(Event e);
+	void resetEventFor(Event e);
 private:
 	Inverter( const Inverter &c );
 	Inverter& operator=( const Inverter &c );
 	void resetChargeSelectionControl();
+	
+private:
+	Lcd &lcd;
+	int INVERTER_INT;
+	int INVERTER_INT_CP;
 	const double BATT_LOW_LEVEL;
 	const double BATT_FULL_LEVEL;
 	bool chargeUpgrade = true;

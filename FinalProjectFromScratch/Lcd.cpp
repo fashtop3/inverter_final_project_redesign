@@ -107,7 +107,7 @@ Lcd* Lcd::printIntToLCD(uint8_t x, uint8_t y, int val, uint8_t len)
 	itoa(val, str, 10);
 	gotoLocation(x, y);
 	send_A_String(str);
-	send_A_String(" ");
+	//send_A_String(" ");
 
 	return this;
 }
@@ -128,7 +128,7 @@ Lcd* Lcd::printDoubleToLCD(uint8_t x, uint8_t y, double val, uint8_t len, char p
 	
 	gotoLocation(x, y);
 	send_A_String(str);
-	send_A_String(" ");
+	//send_A_String(" ");
 
 	return this;
 }

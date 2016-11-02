@@ -65,9 +65,10 @@ void Inverter::incrementEntryCounter()
 }
 
 // default constructor
-Inverter::Inverter()
+Inverter::Inverter(Lcd &lcd)
 	:BATT_LOW_LEVEL(10.5),
 	 BATT_FULL_LEVEL(14.5),
+	 lcd(lcd),
 	 isCharging(false), 
 	 isModeSet(false),
 	 entryCounter1(1),
@@ -80,6 +81,8 @@ Inverter::Inverter()
 	this->setAcAnalogValue(0)
 		->setBattAnalogValue(0)
 		->setOverloadAnalogValue(0);
+	
+	INVERTER_INT = MAINS_INT_vect;
 	
 	cli();
 		
@@ -140,14 +143,18 @@ Inverter* Inverter::setSwitch(bool on)
 		if (isBattLow())
 		{
 			//Todo: emit message here
+			if(!isMains)
+			{
+				saveCurrentEventFor(INT_BATTERY_LOW_vect);
+			}
 			if (entryCounter5 == 5)
 			{
 				setSwitch(false);
 			}
-			
 		} 
 		else
 		{
+			restoreEventFor(INT_BATTERY_LOW_vect);
 			INV_CTR |= 1<<POWER;
 		}
 		
@@ -324,6 +331,129 @@ Inverter* Inverter::setOverloadAnalogValue(uint16_t value)
 	return this;
 }
 
+void Inverter::emitMessage()
+{
+	switch(INVERTER_INT) 
+	{
+		case CLEAR_SCR_INT_vect:
+			lcd.clScr();
+			break;
+		case INT_BATTERY_LOW_vect:
+			messageBattLow();
+			break;
+		case MAINS_INT_vect:
+			mainInformation();
+			break;
+		
+		default:
+			//lcd.clScr();
+			break;
+	}
+}
+
+void Inverter::messageBattLow()
+{
+	if(!isMains) //only emit message when source is inverter
+	{
+		lcd.printStringToLCD(1, 1, "Battery Low!!!");
+		lcd.printStringToLCD(1, 2, "BATT:");
+		
+		//Todo: if value flickers try introducing a variable to delay
+		lcd.printDoubleToLCD(7, 2, getBattInputReadings(), 4, 1);
+		lcd.send_A_String("v");
+		lcd.send_A_String(" ");
+	}
+}
+
+void Inverter::mainInformation()
+{		
+	text_mains();
+	text_load();
+	text_battery();
+}
+
+void Inverter::text_load()
+{
+	if (isOverloaded)
+	{
+		lcd.printStringToLCD(13, 1, "OVER");
+		lcd.printStringToLCD(13, 2, "LOAD");
+	} 
+	else
+	{
+		lcd.printStringToLCD(13, 1, "LOAD");
+		lcd.printIntToLCD(13, 2, getOverloadInputReadings(), 3);
+		lcd.send_A_String("%");
+		lcd.send_A_String(" ");
+	}
+}
+
+void Inverter::text_battery()
+{
+	lcd.printStringToLCD(7, 1, "BATT");
+	if (isMains)
+	{
+		if (isBattFull())
+		{
+			lcd.printStringToLCD(7, 2, "FULL ");
+		} 
+		else
+		{
+			lcd.printStringToLCD(7, 1, "BC...");
+			lcd.printDoubleToLCD(7, 2, getBattInputReadings(), 4, 1);
+			lcd.send_A_String("v");
+			lcd.send_A_String(" ");
+		}
+	}
+	else
+	{
+		lcd.printDoubleToLCD(7, 2, getBattInputReadings(), 4, 1);
+		lcd.send_A_String("v");
+		lcd.send_A_String(" ");
+	}
+}
+
+void Inverter::text_mains()
+{
+	lcd.printStringToLCD(1, 1, "MAINS");
+	lcd.printIntToLCD(1, 2, getAcInputReadings(), 3);
+	lcd.send_A_String("v");
+	lcd.send_A_String(" ");
+}
+
+void Inverter::saveCurrentEventFor(Event e)
+{
+	//copy and save interrupt
+	if (e != INVERTER_INT)
+	{
+		lcd.clScr();
+		//lcd.printIntToLCD(1, 2, INVERTER_INT, 2);
+		INVERTER_INT_CP = INVERTER_INT;
+		INVERTER_INT = e;
+		//lcd.printIntToLCD(4, 2, INVERTER_INT, 2);
+	}
+}
+
+void Inverter::restoreEventFor(Event e)
+{
+	if (e == INVERTER_INT)
+	{
+		lcd.clScr();
+		//lcd.printIntToLCD(1, 2, INVERTER_INT, 2);
+		INVERTER_INT = INVERTER_INT_CP;
+		//lcd.printIntToLCD(4, 2, INVERTER_INT, 2);
+	}
+}
+
+void Inverter::resetEventFor(Event e)
+{
+	if(e != INVERTER_INT)
+	{
+		lcd.clScr();
+	}
+	INVERTER_INT = INVERTER_INT_CP = e;
+}
+
 int Inverter::getAcInputReadings()
 {
 	double readings = static_cast<double> (this->analog_ac_value);
@@ -391,7 +521,8 @@ Inverter* Inverter::monitor()
 	} 
 	else
 	{
-		//Todo: workaround a delay count here
+		saveCurrentEventFor(MAINS_INT_vect);
+		//workaround a delay count here
 		if (entryCounter1 == 5)
 		{
 			switchToMains(true)
