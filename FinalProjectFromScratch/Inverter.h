@@ -47,9 +47,20 @@ public:
 	~Inverter();
 	
 	Inverter* setSwitch(bool on);
-	Inverter* setLoad(bool attach);
-	
 	Inverter* switchToMains(bool mainsOrInverter);
+	Inverter* monitor();
+	
+	int getAcInputReadings();
+	double getBattInputReadings();
+	int getOverloadInputReadings();
+	Inverter* analogPinSwitching();
+	
+	int getEntryCounter();
+	void incrementEntryCounter();
+	
+protected:
+
+	Inverter* setLoad(bool attach);
 	Inverter* setChargeEnable(bool enable);
 	Inverter* chargingMode(bool upgrade = false);
 	
@@ -57,27 +68,11 @@ public:
 	bool isBattFull();
 	
 	bool AcInputVoltageCheck();
-	Inverter* surgeProtect();
-	
 	bool isOverload();
 	
 	Inverter* setAcAnalogValue(uint16_t value);
 	Inverter* setBattAnalogValue(uint16_t value);
 	Inverter* setOverloadAnalogValue(uint16_t value);
-	
-	int getAcInputReadings();
-	double getBattInputReadings();
-	int getOverloadInputReadings();
-	
-	Inverter* analogPinSwitching();
-	
-	Inverter* monitor();
-
-	int getEntryCounter();
-
-	void incrementEntryCounter();
-	
-protected:
 	
 private:
 	Inverter( const Inverter &c );

@@ -285,19 +285,6 @@ bool Inverter::AcInputVoltageCheck()
 	return ( (getAcInputReadings() <= 160) || (getAcInputReadings() >= 240) );
 }
 
-Inverter* Inverter::surgeProtect()
-{
-	if (getAcInputReadings() >= 240)
-	{
-		//Todo: emit message voltage too high
-		switchToMains(false)
-		->setSwitch(true)
-		->setLoad(true);
-		isMains = false;
-	} 
-	return this;
-}
-
 bool Inverter::isOverload()
 {
 	if (getOverloadInputReadings() > 75)
