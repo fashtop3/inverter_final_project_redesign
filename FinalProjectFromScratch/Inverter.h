@@ -102,6 +102,7 @@ private:
 	
 private:
 	Lcd &lcd;
+	int OVERLOAD_VAL;
 	int INVERTER_INT;
 	int INVERTER_INT_CP;
 	const double BATT_LOW_LEVEL;

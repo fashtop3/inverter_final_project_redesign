@@ -68,6 +68,7 @@ void Inverter::incrementEntryCounter()
 Inverter::Inverter(Lcd &lcd)
 	:BATT_LOW_LEVEL(10.5),
 	 BATT_FULL_LEVEL(14.5),
+	 OVERLOAD_VAL(75),
 	 lcd(lcd),
 	 isCharging(false), 
 	 isModeSet(false),
@@ -136,6 +137,13 @@ Inverter::~Inverter()
 {
 } //~Inverter
 
+/**
+ * \Inverter power switch control 
+ * 
+ * \param on boolean
+ * 
+ * \return Inverter::Inverter*
+ */
 Inverter* Inverter::setSwitch(bool on)
 {
 	if(on) 
@@ -167,6 +175,13 @@ Inverter* Inverter::setSwitch(bool on)
 	return this;
 }
 
+/**
+ * \Inverter Loading control 
+ * 
+ * \param load boolean
+ * 
+ * \return Inverter::Inverter*
+ */
 Inverter* Inverter::setLoad(bool load)
 {
 	if (load)
@@ -193,6 +208,17 @@ Inverter* Inverter::setLoad(bool load)
 	return this;
 }
 
+/**
+ * \Inverter source switching control 
+ * \if true it switches to mains
+ * \else it switches to inverter
+ * \this also prevents bridging 
+ * \so neccesities are considered for switching
+ *
+ * \param mainsOrInverter boolean
+ * 
+ * \return Inverter::Inverter*
+ */
 Inverter* Inverter::switchToMains(bool mainsOrInverter)
 {
 	if (mainsOrInverter)
@@ -218,6 +244,13 @@ Inverter* Inverter::switchToMains(bool mainsOrInverter)
 	return this;
 }
 
+/**
+ * \Inverter charging control 
+ * 
+ * \param enable boolean
+ * 
+ * \return Inverter::Inverter*
+ */
 Inverter* Inverter::setChargeEnable(bool enable)
 {
 	//Todo: check the last fully charge state to prevent recursive charge
@@ -256,6 +289,14 @@ Inverter* Inverter::setChargeEnable(bool enable)
 	return this;
 }
 
+/**
+ * \Charging selection mode if it needs
+ * \charging upgrade for low input voltage 
+ * 
+ * \param upgrade boolean
+ * 
+ * \return Inverter::Inverter*
+ */
 Inverter* Inverter::chargingMode(bool upgrade /*= false*/)
 {
 	if (entryCounter3 == 10)
@@ -304,7 +345,7 @@ bool Inverter::AcInputVoltageCheck()
 
 bool Inverter::isOverload()
 {
-	if (getOverloadInputReadings() > 75)
+	if (getOverloadInputReadings() > OVERLOAD_VAL)
 	{
 		isOverloaded = true;
 		return true;
@@ -335,6 +376,14 @@ Inverter* Inverter::setOverloadAnalogValue(uint16_t value)
 	return this;
 }
 
+
+/**
+ * \This method is called every second 
+ * \ as configured in the main.cpp ISR(TIMER1_COMPA_vect)
+ * \ It controls how messages are displayed on LCD
+ *
+ * \return void
+ */
 void Inverter::emitMessage()
 {
 	switch(INVERTER_INT) 
@@ -355,6 +404,12 @@ void Inverter::emitMessage()
 	}
 }
 
+
+/**
+ * \Battery message is designed here 
+ * 
+ * \return void
+ */
 void Inverter::messageBattLow()
 {
 	if(!isMains) //only emit message when source is inverter
@@ -369,6 +424,12 @@ void Inverter::messageBattLow()
 	}
 }
 
+/**
+ * \This method is called from  emitMessage()
+ * It writes various messages on the LCD
+ * 
+ * \return void
+ */
 void Inverter::mainInformation()
 {		
 	text_mains();
@@ -438,6 +499,15 @@ void Inverter::text_mains()
 	lcd.send_A_String(" ");
 }
 
+/**
+ * \Checks if the event parsed is not the same  
+ * \as the current inverter interrupt variable
+ * \if not then it copy inverter interrupt 
+ * \holder to a temp var set as required
+ * \param e Event enumeration 
+ * 
+ * \return void
+ */
 void Inverter::saveCurrentEventFor(Event e)
 {
 	//copy and save interrupt
@@ -451,6 +521,14 @@ void Inverter::saveCurrentEventFor(Event e)
 	}
 }
 
+/**
+ * \Restore previously stored event from  
+ * \temporary holder if the e & inv_int matched
+ *
+ * \param e Event enum
+ * 
+ * \return void
+ */
 void Inverter::restoreEventFor(Event e)
 {
 	if (e == INVERTER_INT)
@@ -462,33 +540,62 @@ void Inverter::restoreEventFor(Event e)
 	}
 }
 
+/**
+ * \Resets event 
+ * 
+ * \param e
+ * 
+ * \return void
+ */
 void Inverter::resetEventFor(Event e)
 {
-	if(e != INVERTER_INT)
-	{
-		lcd.clScr();
-	}
 	INVERTER_INT = INVERTER_INT_CP = e;
 }
 
+/**
+ * \Read the analog input for 
+ * \Alternation Current (mains)
+ * 
+ * \return int
+ */
 int Inverter::getAcInputReadings()
 {
 	double readings = static_cast<double> (this->analog_ac_value);
 	return ( ( readings / 51 ) * 100 );
 }
 
+/**
+ * \Read the analog input for  
+ * \Battery level
+ * 
+ * \return double
+ */
 double Inverter::getBattInputReadings()
 {
 	double readings = static_cast<double> (this->analog_batt_value);
 	return ( ( readings / 51.0 ) * 10 );
 }
 
+/**
+ * \Read the analog input for  
+ * \Inverter loading
+ * 
+ * \return int
+ */
 int Inverter::getOverloadInputReadings()
 {
 	double readings = static_cast<double> (this->analog_overload_value);
 	return ( ( readings / 51 ) * 20 );
 }
 
+/**
+ * \This method is called from main.cpp ISR(ADC_vect)
+ * \Analog Digital Conversion 
+ * \and switches the pin to read from
+ * \after every analog data read
+ *
+ * \return Inverter::Inverter*
+ */
 Inverter* Inverter::analogPinSwitching()
 {
 	switch(ADMUX)
@@ -523,6 +630,15 @@ Inverter* Inverter::analogPinSwitching()
 	return this;
 }
 
+
+/**
+ * \This is the main inverter service method
+ * \This method is called from main.cpp while(1)
+ * \this controls all the inverter functions
+ * \and also prevent surge
+ *
+ * \return Inverter::Inverter*
+ */
 Inverter* Inverter::monitor()
 {
 		
