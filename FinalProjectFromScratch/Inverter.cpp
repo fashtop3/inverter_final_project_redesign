@@ -10,82 +10,82 @@
 #include <avr/interrupt.h>
 #include "Inverter.h"
 
-volatile uint16_t Inverter::analog_ac_value = 0;
-volatile uint16_t Inverter::analog_batt_value = 0;
-volatile uint16_t Inverter::analog_overload_value = 0;
+volatile uint16_t Inverter::__analog_ac_value__ = 0;
+volatile uint16_t Inverter::__analog_batt_value__ = 0;
+volatile uint16_t Inverter::__analog_overload_value__ = 0;
 
 int Inverter::getEntryCounter()
 {
-	return entryCounter1;
+	return _entryCounter1;
 }
 
 void Inverter::incrementEntryCounter()
 {
-	if (entryCounter1 < 5)
+	if (_entryCounter1 < 5)
 	{
-		if(!isMains)
+		if(!_isMains)
 		{
-			++entryCounter1;
+			++_entryCounter1;
 		}
 	} 
 	
 	//entryCounter2 for switching charging
-	if (entryCounter2 < 8)
+	if (_entryCounter2 < 8)
 	{
-		if(!isCharging)
+		if(!_isCharging)
 		{
-			++entryCounter2;
+			++_entryCounter2;
 		}
 	} 
 	
 	//entryCounter3 for switching charging mode
-	if (entryCounter3 < 10)
+	if (_entryCounter3 < 10)
 	{
-		if(!isModeSet)
+		if(!_isModeSet)
 		{
-			++entryCounter3;
+			++_entryCounter3;
 		}
 	}
 	
 	//entryCounter4 for switching overload
-	if (entryCounter4 < 5)
+	if (_entryCounter4 < 5)
 	{
-		if(isOverloaded)
+		if(_isOverloaded)
 		{
-			++entryCounter4;
+			++_entryCounter4;
 		}
 	}	
 	
 	//entryCounter5 for switching low batt
-	if (entryCounter5 < 5)
+	if (_entryCounter5 < 5)
 	{
-		if(hasLowBatt)
+		if(_hasLowBatt)
 		{
-			++entryCounter5;
+			++_entryCounter5;
 		}
 	}
 }
 
 // default constructor
 Inverter::Inverter(Lcd &lcd)
-	:BATT_LOW_LEVEL(10.5),
-	 BATT_FULL_LEVEL(14.5),
-	 OVERLOAD_VAL(75),
+	:__BATT_LOW_LEVEL__(10.5),
+	 __BATT_FULL_LEVEL__(14.5),
+	 __OVERLOAD_VAL__(75),
 	 lcd(lcd),
-	 isCharging(false), 
-	 isModeSet(false),
-	 entryCounter1(1),
-	 entryCounter2(1),
-	 entryCounter3(1),
-	 entryCounter4(1),
-	 entryCounter5(1)
+	 _isCharging(false), 
+	 _isModeSet(false),
+	 _entryCounter1(1),
+	 _entryCounter2(1),
+	 _entryCounter3(1),
+	 _entryCounter4(1),
+	 _entryCounter5(1)
 {
 	//initialize analog holding variables
-	this->setAcAnalogValue(0)
-		->setBattAnalogValue(0)
-		->setOverloadAnalogValue(0);
+	this->__setAcAnalogValue(0)
+		->__setBattAnalogValue(0)
+		->__setOverloadAnalogValue(0);
 	
-	INVERTER_INT = MAINS_INT_vect;
+	__INVERTER_INT__ = MAINS_INT_vect;
 	
 	cli();
 		
@@ -125,12 +125,12 @@ Inverter::Inverter(Lcd &lcd)
 } //Inverter
 
 
-void Inverter::resetChargeSelectionControl()
+void Inverter::__resetChargeSelectionControl()
 {
-	if(isModeSet && entryCounter3 == 10)
+	if(_isModeSet && _entryCounter3 == 10)
 	{
-		entryCounter3 = 5;
-		isModeSet = false;
+		_entryCounter3 = 5;
+		_isModeSet = false;
 	}
 }
 
@@ -150,21 +150,21 @@ Inverter* Inverter::setSwitch(bool on)
 {
 	if(on) 
 	{		
-		if (isBattLow())
+		if (__isBattLow())
 		{
 			//Todo: emit message here
-			if(!isMains)
+			if(!_isMains)
 			{
-				saveCurrentEventFor(INT_BATTERY_LOW_vect);
+				__saveCurrentEventFor(INT_BATTERY_LOW_vect);
 			}
-			if (entryCounter5 == 5)
+			if (_entryCounter5 == 5)
 			{
 				setSwitch(false);
 			}
 		} 
 		else
 		{
-			restoreEventFor(INT_BATTERY_LOW_vect);
+			__restoreEventFor(INT_BATTERY_LOW_vect);
 			INV_CTR |= 1<<POWER;
 		}
 		
@@ -184,17 +184,17 @@ Inverter* Inverter::setSwitch(bool on)
  * 
  * \return Inverter::Inverter*
  */
-Inverter* Inverter::setLoad(bool load)
+Inverter* Inverter::__setLoad(bool load)
 {
 	if (load)
 	{		
-		if (!isMains && isOverload())
+		if (!_isMains && __isOverload())
 		{
 			//emit message here
 			//Todo: work around delay here
-			if (entryCounter4 == 5)
+			if (_entryCounter4 == 5)
 			{
-				setLoad(false);
+				__setLoad(false);
 			}
 		} 
 		else
@@ -225,22 +225,22 @@ Inverter* Inverter::switchToMains(bool mainsOrInverter)
 {
 	if (mainsOrInverter)
 	{
-		isMains = true;
+		_isMains = true;
 		setSwitch(false); //switch off inverter
 		INV_MODE_CTR |=	(1<<CHANGE_OVER);
-		if (entryCounter2 == 8)
+		if (_entryCounter2 == 8)
 		{
-			setChargeEnable(true); 
-			isCharging = true;
+			__setChargeEnable(true); 
+			_isCharging = true;
 		}
 	} 
 	else
 	{
-		isMains = false;
-		isFullyCharged = false; //battery charge no longer pristine because it has switched to inverter
+		_isMains = false;
+		_isFullyCharged = false; //battery charge no longer pristine because it has switched to inverter
 		INV_MODE_CTR &= ~(1<<CHANGE_OVER); //change over to inverter
-		setChargeEnable(false);
-		isCharging = false;
+		__setChargeEnable(false);
+		_isCharging = false;
 	}
 	
 	return this;
@@ -253,34 +253,34 @@ Inverter* Inverter::switchToMains(bool mainsOrInverter)
  * 
  * \return Inverter::Inverter*
  */
-Inverter* Inverter::setChargeEnable(bool enable)
+Inverter* Inverter::__setChargeEnable(bool enable)
 {
 	//Todo: check the last fully charge state to prevent recursive charge
 	
-	if(enable && isBattFull())
+	if(enable && __isBattFull())
 	{
 		//emit message battery full
-		isFullyCharged = true;
-		setChargeEnable(!enable); //recall
+		_isFullyCharged = true;
+		__setChargeEnable(!enable); //recall
 		return this;
 	}
 		
 	if (enable)
 	{
-		if (!isFullyCharged) //recheck
+		if (!_isFullyCharged) //recheck
 		{
 			INV_MODE_CTR |= (1<<CHARGE_MODE);
 		}
 		//then set which mode to use 
 		if (getAcInputReadings() < 200)
 		{
-			resetChargeSelectionControl();
-			chargingMode(chargeUpgrade);
+			__resetChargeSelectionControl();
+			__chargingMode(_chargeUpgrade);
 		} 
 		else
 		{
-			resetChargeSelectionControl();
-			chargingMode(!chargeUpgrade);
+			__resetChargeSelectionControl();
+			__chargingMode(!_chargeUpgrade);
 		}
 	} 
 	else
@@ -299,82 +299,82 @@ Inverter* Inverter::setChargeEnable(bool enable)
  * 
  * \return Inverter::Inverter*
  */
-Inverter* Inverter::chargingMode(bool upgrade /*= false*/)
+Inverter* Inverter::__chargingMode(bool upgrade /*= false*/)
 {
-	if (entryCounter3 == 10)
+	if (_entryCounter3 == 10)
 	{
 		if (upgrade)
 		{
 			INV_MODE_CTR &= ~(1<<CHARGE_SELECT); //upgrade when mains is < 200
-			isUpgraded = upgrade;
+			_isUpgraded = upgrade;
 		}
 		else
 		{
 			INV_MODE_CTR |= (1<<CHARGE_SELECT); //default charging >= 200
-			isUpgraded = upgrade;
+			_isUpgraded = upgrade;
 		}
-		isModeSet = true;
+		_isModeSet = true;
 	}
 	
 	return this;
 }
 
-bool Inverter::isBattLow()
+bool Inverter::__isBattLow()
 {
-	if (getBattInputReadings() < BATT_LOW_LEVEL)
+	if (getBattInputReadings() < __BATT_LOW_LEVEL__)
 	{
-		hasLowBatt = true;
+		_hasLowBatt = true;
 		return true;
 	} 
 	else
 	{
-		entryCounter5 = 1;
-		hasLowBatt = false;
+		_entryCounter5 = 1;
+		_hasLowBatt = false;
 		return false;
 	}
 }
 
-bool Inverter::isBattFull()
+bool Inverter::__isBattFull()
 {
-	return (getBattInputReadings() > BATT_FULL_LEVEL);
+	return (getBattInputReadings() > __BATT_FULL_LEVEL__);
 }
 
-bool Inverter::AcInputVoltageCheck()
+bool Inverter::__AcInputVoltageCheck()
 {
 	//switch source to inverter if input ac is less or if too high
 	return ( (getAcInputReadings() <= 160) || (getAcInputReadings() >= 240) );
 }
 
-bool Inverter::isOverload()
+bool Inverter::__isOverload()
 {
-	if (getOverloadInputReadings() > OVERLOAD_VAL)
+	if (getOverloadInputReadings() > __OVERLOAD_VAL__)
 	{
-		isOverloaded = true;
+		_isOverloaded = true;
 		return true;
 	} 
 	else
 	{
-		isOverloaded = false;
-		entryCounter4 = 1;
+		_isOverloaded = false;
+		_entryCounter4 = 1;
 		return false;
 	}
 }
 
-Inverter* Inverter::setAcAnalogValue(uint16_t value)
+Inverter* Inverter::__setAcAnalogValue(uint16_t value)
 {
-	Inverter::analog_ac_value = value;
+	Inverter::__analog_ac_value__ = value;
 	return this;
 }
 
-Inverter* Inverter::setBattAnalogValue(uint16_t value)
+Inverter* Inverter::__setBattAnalogValue(uint16_t value)
 {
-	this->analog_batt_value = value;
+	this->__analog_batt_value__ = value;
 	return this;
 }
 
-Inverter* Inverter::setOverloadAnalogValue(uint16_t value)
+Inverter* Inverter::__setOverloadAnalogValue(uint16_t value)
 {
-	this->analog_overload_value = value;
+	this->__analog_overload_value__ = value;
 	return this;
 }
 
@@ -388,16 +388,16 @@ Inverter* Inverter::setOverloadAnalogValue(uint16_t value)
  */
 void Inverter::emitMessage()
 {
-	switch(INVERTER_INT) 
+	switch(__INVERTER_INT__) 
 	{
 		case CLEAR_SCR_INT_vect:
-			lcd.clScr();
+			_lcd.clScr();
 			break;
 		case INT_BATTERY_LOW_vect:
-			messageBattLow();
+			__messageBattLow();
 			break;
 		case MAINS_INT_vect:
-			mainInformation();
+			__mainInformation();
 			break;
 		
 		default:
@@ -412,17 +412,17 @@ void Inverter::emitMessage()
  * 
  * \return void
  */
-void Inverter::messageBattLow()
+void Inverter::__messageBattLow()
 {
-	if(!isMains) //only emit message when source is inverter
+	if(!_isMains) //only emit message when source is inverter
 	{
-		lcd.printStringToLCD(1, 1, "Battery Low!!!");
-		lcd.printStringToLCD(1, 2, "BATT:");
+		_lcd.printStringToLCD(1, 1, "Battery Low!!!");
+		_lcd.printStringToLCD(1, 2, "BATT:");
 		
 		//Todo: if value flickers try introducing a variable to delay
-		lcd.printDoubleToLCD(7, 2, getBattInputReadings(), 4, 1);
-		lcd.send_A_String("v");
-		lcd.send_A_String(" ");
+		_lcd.printDoubleToLCD(7, 2, getBattInputReadings(), 4, 1);
+		_lcd.send_A_String("v");
+		_lcd.send_A_String(" ");
 	}
 }
 
@@ -432,73 +432,73 @@ void Inverter::messageBattLow()
  * 
  * \return void
  */
-void Inverter::mainInformation()
+void Inverter::__mainInformation()
 {		
-	text_mains();
-	text_load();
-	text_battery();
+	__text_mains();
+	__text_load();
+	__text_battery();
 }
 
-void Inverter::text_load()
+void Inverter::__text_load()
 {
-	if (isOverloaded)
+	if (_isOverloaded)
 	{
-		lcd.printStringToLCD(13, 1, "OVER");
-		lcd.printStringToLCD(13, 2, "LOAD");
+		_lcd.printStringToLCD(13, 1, "OVER");
+		_lcd.printStringToLCD(13, 2, "LOAD");
 	} 
 	else
 	{
-		lcd.printStringToLCD(13, 1, "LOAD");
-		lcd.printIntToLCD(13, 2, getOverloadInputReadings(), 3);
-		lcd.send_A_String("%");
-		lcd.send_A_String(" ");
+		_lcd.printStringToLCD(13, 1, "LOAD");
+		_lcd.printIntToLCD(13, 2, getOverloadInputReadings(), 3);
+		_lcd.send_A_String("%");
+		_lcd.send_A_String(" ");
 	}
 }
 
-void Inverter::text_battery()
+void Inverter::__text_battery()
 {
 	static int styleCounter = 0;
-	lcd.printStringToLCD(7, 1, "BATT ");
-	if (isMains)
+	_lcd.printStringToLCD(7, 1, "BATT ");
+	if (_isMains)
 	{
-		if (isFullyCharged)
+		if (_isFullyCharged)
 		{
-			lcd.printStringToLCD(7, 2, "FULL ");
+			_lcd.printStringToLCD(7, 2, "FULL ");
 		} 
 		else
 		{
 			switch(styleCounter)
 			{
-				case 0: lcd.printStringToLCD(7, 1, ".    "); break;
-				case 1: lcd.printStringToLCD(7, 1, "..   "); break;
-				case 2: lcd.printStringToLCD(7, 1, "...  "); break;
-				case 3: lcd.printStringToLCD(7, 1, ".... "); break;
-				case 4: lcd.printStringToLCD(7, 1, "....."); break;
+				case 0: _lcd.printStringToLCD(7, 1, ".    "); break;
+				case 1: _lcd.printStringToLCD(7, 1, "..   "); break;
+				case 2: _lcd.printStringToLCD(7, 1, "...  "); break;
+				case 3: _lcd.printStringToLCD(7, 1, ".... "); break;
+				case 4: _lcd.printStringToLCD(7, 1, "....."); break;
 				default:
 				break;
 			}
 						
-			lcd.printDoubleToLCD(7, 2, getBattInputReadings(), 4, 1);
-			lcd.send_A_String("v");
-			lcd.send_A_String(" ");
+			_lcd.printDoubleToLCD(7, 2, getBattInputReadings(), 4, 1);
+			_lcd.send_A_String("v");
+			_lcd.send_A_String(" ");
 						
 			(styleCounter > 4) ? styleCounter = 0 : styleCounter++;
 		}
 	}
 	else
 	{
-		lcd.printDoubleToLCD(7, 2, getBattInputReadings(), 4, 1);
-		lcd.send_A_String("v");
-		lcd.send_A_String(" ");
+		_lcd.printDoubleToLCD(7, 2, getBattInputReadings(), 4, 1);
+		_lcd.send_A_String("v");
+		_lcd.send_A_String(" ");
 	}
 }
 
-void Inverter::text_mains()
+void Inverter::__text_mains()
 {
-	lcd.printStringToLCD(1, 1, "MAINS");
-	lcd.printIntToLCD(1, 2, getAcInputReadings(), 3);
-	lcd.send_A_String("v");
-	lcd.send_A_String(" ");
+	_lcd.printStringToLCD(1, 1, "MAINS");
+	_lcd.printIntToLCD(1, 2, getAcInputReadings(), 3);
+	_lcd.send_A_String("v");
+	_lcd.send_A_String(" ");
 }
 
 /**
@@ -510,16 +510,16 @@ void Inverter::text_mains()
  * 
  * \return void
  */
-void Inverter::saveCurrentEventFor(Event e)
+void Inverter::__saveCurrentEventFor(Event e)
 {
 	//copy and save interrupt
-	if (e != INVERTER_INT)
+	if (e != __INVERTER_INT__)
 	{
 		//lcd.printIntToLCD(1, 2, INVERTER_INT, 2);
-		INVERTER_INT_CP = INVERTER_INT;
-		INVERTER_INT = e;
+		__INVERTER_INT_CP__ = __INVERTER_INT__;
+		__INVERTER_INT__ = e;
 		//lcd.printIntToLCD(4, 2, INVERTER_INT, 2);
-		lcd.clScr();
+		_lcd.clScr();
 	}
 }
 
@@ -531,14 +531,14 @@ void Inverter::saveCurrentEventFor(Event e)
  * 
  * \return void
  */
-void Inverter::restoreEventFor(Event e)
+void Inverter::__restoreEventFor(Event e)
 {
-	if (e == INVERTER_INT)
+	if (e == __INVERTER_INT__)
 	{
 		//lcd.printIntToLCD(1, 2, INVERTER_INT, 2);
-		INVERTER_INT = INVERTER_INT_CP;
+		__INVERTER_INT__ = __INVERTER_INT_CP__;
 		//lcd.printIntToLCD(4, 2, INVERTER_INT, 2);
-		lcd.clScr();
+		_lcd.clScr();
 	}
 }
 
@@ -549,9 +549,9 @@ void Inverter::restoreEventFor(Event e)
  * 
  * \return void
  */
-void Inverter::resetEventFor(Event e)
+void Inverter::__resetEventFor(Event e)
 {
-	INVERTER_INT = INVERTER_INT_CP = e;
+	__INVERTER_INT__ = __INVERTER_INT_CP__ = e;
 }
 
 /**
@@ -562,7 +562,7 @@ void Inverter::resetEventFor(Event e)
  */
 int Inverter::getAcInputReadings()
 {
-	double readings = static_cast<double> (this->analog_ac_value);
+	double readings = static_cast<double> (this->__analog_ac_value__);
 	return ( ( readings / 51 ) * 100 );
 }
 
@@ -574,7 +574,7 @@ int Inverter::getAcInputReadings()
  */
 double Inverter::getBattInputReadings()
 {
-	double readings = static_cast<double> (this->analog_batt_value);
+	double readings = static_cast<double> (this->__analog_batt_value__);
 	return ( ( readings / 51.0 ) * 10 );
 }
 
@@ -586,7 +586,7 @@ double Inverter::getBattInputReadings()
  */
 int Inverter::getOverloadInputReadings()
 {
-	double readings = static_cast<double> (this->analog_overload_value);
+	double readings = static_cast<double> (this->__analog_overload_value__);
 	return ( ( readings / 51 ) * 20 );
 }
 
@@ -605,21 +605,21 @@ Inverter* Inverter::analogPinSwitching()
 		case 0x60: //check the pin on Analog Multiplexer Pin layout
 			//conversion for AC input
 			//ad_ac_readings = ADCH;
-			this->setAcAnalogValue(ADCH);
+			this->__setAcAnalogValue(ADCH);
 			ADMUX = 0x61; //set to enable next pin for analog conversion
 		break;
 		
 		case 0x61:
 			//Conversion for Battery level
 			//ad_batt_readings = ADCH;
-			this->setBattAnalogValue(ADCH);
+			this->__setBattAnalogValue(ADCH);
 			ADMUX = 0x62;  //set to enable next pin for analog conversion
 		break;
 		
 		case 0x62:
 			//conversion for Overload
 			//ad_overload_readings = ADCH;
-			this->setOverloadAnalogValue(ADCH);
+			this->__setOverloadAnalogValue(ADCH);
 			ADMUX = 0x60;  //set to enable next pin for analog conversion
 		break;
 		
@@ -644,26 +644,26 @@ Inverter* Inverter::analogPinSwitching()
 Inverter* Inverter::monitor()
 {
 		
-	if (AcInputVoltageCheck()) //check low or high voltage
+	if (__AcInputVoltageCheck()) //check low or high voltage
 	{
 		switchToMains(false)
 			->setSwitch(true)
-			->setLoad(true);
+			->__setLoad(true);
 				
-		entryCounter1 = 1;
-		entryCounter2 = 1;
-		entryCounter3 = 1;
+		_entryCounter1 = 1;
+		_entryCounter2 = 1;
+		_entryCounter3 = 1;
 	} 
 	else
 	{
-		saveCurrentEventFor(MAINS_INT_vect);
+		__saveCurrentEventFor(MAINS_INT_vect);
 		//workaround a delay count here
-		if (entryCounter1 == 5)
+		if (_entryCounter1 == 5)
 		{
 			switchToMains(true)
-			->setLoad(true);
+			->__setLoad(true);
 						
-			entryCounter4 = 1;
+			_entryCounter4 = 1;
 		}
 	}
 	

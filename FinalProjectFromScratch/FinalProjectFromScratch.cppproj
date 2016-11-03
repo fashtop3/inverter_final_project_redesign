@@ -151,6 +151,9 @@
     </ToolchainSettings>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="f_cpu.h">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="Inverter.cpp">
       <SubType>compile</SubType>
     </Compile>

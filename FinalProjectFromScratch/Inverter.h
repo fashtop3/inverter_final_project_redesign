@@ -69,62 +69,62 @@ public:
 
 protected:
 
-	Inverter* setLoad(bool attach);
-	Inverter* setChargeEnable(bool enable);
-	Inverter* chargingMode(bool upgrade = false);
+	Inverter* __setLoad(bool attach);
+	Inverter* __setChargeEnable(bool enable);
+	Inverter* __chargingMode(bool upgrade = false);
 	
-	bool isBattLow();
-	bool isBattFull();
+	bool __isBattLow();
+	bool __isBattFull();
 	
-	bool AcInputVoltageCheck();
-	bool isOverload();
+	bool __AcInputVoltageCheck();
+	bool __isOverload();
 	
-	Inverter* setAcAnalogValue(uint16_t value);
-	Inverter* setBattAnalogValue(uint16_t value);
-	Inverter* setOverloadAnalogValue(uint16_t value);
+	Inverter* __setAcAnalogValue(uint16_t value);
+	Inverter* __setBattAnalogValue(uint16_t value);
+	Inverter* __setOverloadAnalogValue(uint16_t value);
 	
-	void messageBattLow();
-	void mainInformation();
+	void __messageBattLow();
+	void __mainInformation();
 	
-	void text_load();
-	void text_battery();
-	void text_mains();
+	void __text_load();
+	void __text_battery();
+	void __text_mains();
 
-	void saveCurrentEventFor(Event e);
-	void restoreEventFor(Event e);
-	void resetEventFor(Event e);
+	void __saveCurrentEventFor(Event e);
+	void __restoreEventFor(Event e);
+	void __resetEventFor(Event e);
 private:
 	Inverter( const Inverter &c );
 	Inverter& operator=( const Inverter &c );
-	void resetChargeSelectionControl();
+	void __resetChargeSelectionControl();
 	
 private:
-	Lcd &lcd;
-	int OVERLOAD_VAL;
-	int INVERTER_INT;
-	int INVERTER_INT_CP;
-	const double BATT_LOW_LEVEL;
-	const double BATT_FULL_LEVEL;
-	volatile bool chargeUpgrade = true;
-	volatile bool isUpgraded = true;
-	volatile bool isOverloaded = false;
-	volatile bool isLoadEnabled = false;
-	volatile bool hasLowBatt = false;
-	volatile bool isFullyCharged = false;
-	volatile bool isModeSet;
-	volatile bool isMains;
-	volatile bool isCharging;
-	volatile int entryCounter1;
-	volatile int entryCounter2;
-	volatile int entryCounter3;
-	volatile int entryCounter4;
-	volatile int entryCounter5;
+	Lcd &_lcd;
+	int __OVERLOAD_VAL__;
+	int __INVERTER_INT__;
+	int __INVERTER_INT_CP__;
+	const double __BATT_LOW_LEVEL__;
+	const double __BATT_FULL_LEVEL__;
+	volatile bool _chargeUpgrade = true;
+	volatile bool _isUpgraded = true;
+	volatile bool _isOverloaded = false;
+	volatile bool _isLoadEnabled = false;
+	volatile bool _hasLowBatt = false;
+	volatile bool _isFullyCharged = false;
+	volatile bool _isModeSet;
+	volatile bool _isMains;
+	volatile bool _isCharging;
+	volatile int _entryCounter1;
+	volatile int _entryCounter2;
+	volatile int _entryCounter4;
+	volatile int _entryCounter3;
+	volatile int _entryCounter5;
 
 	//analog readings
 private:
-	volatile static uint16_t analog_ac_value;
-	volatile static uint16_t analog_batt_value;
-	volatile static uint16_t analog_overload_value;
+	volatile static uint16_t __analog_ac_value__;
+	volatile static uint16_t __analog_batt_value__;
+	volatile static uint16_t __analog_overload_value__;
 	
 	int mainsStandby;
 }; //Inverter
