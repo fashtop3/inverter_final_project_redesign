@@ -22,46 +22,29 @@ void my_timer_setup();
 
 int main(void)
 {
-	//cli(); //clear global interrupt
-	//sei(); //Enable Global Interrupt
+	cli(); //clear global interrupt
+	sei(); //Enable Global Interrupt
 	my_timer_setup();
+	inverter.setSwitch(true); //power on the inverter
 	
-	//testing inverter api
-	inverter.setSwitch(true);
-	//->setLoad(true)
-	//->switchToMains(true)
-	//->chargingMode(true);
-	
-	
-    /* Replace with your application code */
     while (1) 
     {		
 		inverter.monitor();
     }
-	
-	//delete inverter, lcd;
 }
 
 
 ISR(TIMER1_COMPA_vect)
 {
 	inverter.incrementEntryCounter();
-	inverter.emitMessage();
-	
-	//lcd.printIntToLCD(1, 1, inverter.getAcInputReadings(), 4);
-	//lcd.printIntToLCD(6, 1, inverter.getEntryCounter(), 1);
-	//lcd.printDoubleToLCD(1, 2, inverter.getBattInputReadings(), 4, 2);
-	//lcd.printIntToLCD(11, 2, inverter.getOverloadInputReadings(), 3);
-	
+	inverter.emitMessage();	
 }
 
 
 ISR(ADC_vect)
 {
-	//allow all MCU to read from all enabled analog pin
-	inverter.analogPinSwitching();
-	//start new conversion
-	ADCSRA |= 1<<ADSC;
+	inverter.analogPinSwitching(); //allow all MCU to read from all enabled analog pin
+	ADCSRA |= 1<<ADSC; //start new conversion
 }
 
 void my_timer_setup()

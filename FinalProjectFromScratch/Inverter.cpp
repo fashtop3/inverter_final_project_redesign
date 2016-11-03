@@ -194,7 +194,6 @@ Inverter* Inverter::setLoad(bool load)
 }
 
 Inverter* Inverter::switchToMains(bool mainsOrInverter)
-
 {
 	if (mainsOrInverter)
 	{
