@@ -511,7 +511,6 @@ Inverter* Inverter::monitor()
 		
 	if (AcInputVoltageCheck()) //check low or high voltage
 	{
-		restoreEventFor(MAINS_INT_vect); //Todo: check bug
 		switchToMains(false)
 			->setSwitch(true)
 			->setLoad(true);
