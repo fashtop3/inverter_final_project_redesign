@@ -71,7 +71,7 @@ Inverter::Inverter(Lcd &lcd)
 	:__BATT_LOW_LEVEL__(10.5),
 	 __BATT_FULL_LEVEL__(14.5),
 	 __OVERLOAD_VAL__(75),
-	 lcd(lcd),
+	 _lcd(lcd),
 	 _isCharging(false), 
 	 _isModeSet(false),
 	 _entryCounter1(1),

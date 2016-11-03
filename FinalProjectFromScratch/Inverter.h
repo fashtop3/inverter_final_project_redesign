@@ -40,6 +40,15 @@
 class Inverter
 {
 
+public:
+	enum Event {
+		NO_INT_vect = 0x0,
+		CLEAR_SCR_INT_vect = 0x12,
+		INT_BATTERY_LOW_vect = 0x23,
+		MAINS_INT_vect = 0x24,
+	};
+
+
 //functions
 public:
 	Inverter(Lcd &lcd);
@@ -59,14 +68,6 @@ public:
 	
 	void emitMessage();
 	
-public:
-	enum Event {
-		NO_INT_vect = 0x0,
-		CLEAR_SCR_INT_vect = 0x12,
-		INT_BATTERY_LOW_vect = 0x23,
-		MAINS_INT_vect = 0x24,
-	};
-
 protected:
 
 	Inverter* __setLoad(bool attach);
@@ -97,7 +98,7 @@ private:
 	Inverter( const Inverter &c );
 	Inverter& operator=( const Inverter &c );
 	void __resetChargeSelectionControl();
-	
+
 private:
 	Lcd &_lcd;
 	int __OVERLOAD_VAL__;
@@ -121,7 +122,6 @@ private:
 	volatile int _entryCounter5;
 
 	//analog readings
-private:
 	volatile static uint16_t __analog_ac_value__;
 	volatile static uint16_t __analog_batt_value__;
 	volatile static uint16_t __analog_overload_value__;
