@@ -155,7 +155,7 @@ Lcd* Lcd::clScr()
 	_delay_ms(2);
 	//send_A_Command(0b00001110);
 	send_A_Command(0b00001100); //hiding cursor
-	_delay_ms(50);
+	_delay_ms(100); //allow the command to execute to avoid screen flicker
 
 	return this;
 }

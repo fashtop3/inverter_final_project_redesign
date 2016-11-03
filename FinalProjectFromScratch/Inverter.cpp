@@ -426,11 +426,11 @@ void Inverter::saveCurrentEventFor(Event e)
 	//copy and save interrupt
 	if (e != INVERTER_INT)
 	{
-		lcd.clScr();
 		//lcd.printIntToLCD(1, 2, INVERTER_INT, 2);
 		INVERTER_INT_CP = INVERTER_INT;
 		INVERTER_INT = e;
 		//lcd.printIntToLCD(4, 2, INVERTER_INT, 2);
+		lcd.clScr();
 	}
 }
 
@@ -438,10 +438,10 @@ void Inverter::restoreEventFor(Event e)
 {
 	if (e == INVERTER_INT)
 	{
-		lcd.clScr();
 		//lcd.printIntToLCD(1, 2, INVERTER_INT, 2);
 		INVERTER_INT = INVERTER_INT_CP;
 		//lcd.printIntToLCD(4, 2, INVERTER_INT, 2);
+		lcd.clScr();
 	}
 }
 
@@ -511,6 +511,7 @@ Inverter* Inverter::monitor()
 		
 	if (AcInputVoltageCheck()) //check low or high voltage
 	{
+		restoreEventFor(MAINS_INT_vect); //Todo: check bug
 		switchToMains(false)
 			->setSwitch(true)
 			->setLoad(true);
