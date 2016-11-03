@@ -390,7 +390,8 @@ void Inverter::text_load()
 
 void Inverter::text_battery()
 {
-	lcd.printStringToLCD(7, 1, "BATT");
+	static int styleCounter = 0;
+	lcd.printStringToLCD(7, 1, "BATT ");
 	if (isMains)
 	{
 		if (isBattFull())
@@ -399,10 +400,22 @@ void Inverter::text_battery()
 		} 
 		else
 		{
-			lcd.printStringToLCD(7, 1, "BC...");
+			switch(styleCounter)
+			{
+				case 0: lcd.printStringToLCD(7, 1, ".    "); break;
+				case 1: lcd.printStringToLCD(7, 1, "..   "); break;
+				case 2: lcd.printStringToLCD(7, 1, "...  "); break;
+				case 3: lcd.printStringToLCD(7, 1, ".... "); break;
+				case 4: lcd.printStringToLCD(7, 1, "....."); break;
+				default:
+				break;
+			}
+						
 			lcd.printDoubleToLCD(7, 2, getBattInputReadings(), 4, 1);
 			lcd.send_A_String("v");
 			lcd.send_A_String(" ");
+						
+			(styleCounter > 4) ? styleCounter = 0 : styleCounter++;
 		}
 	}
 	else
