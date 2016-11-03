@@ -5,6 +5,8 @@
 * Author: Ayodeji
 */
 
+#define F_CPU 16000000UL
+
 #include <avr/interrupt.h>
 #include "Inverter.h"
 

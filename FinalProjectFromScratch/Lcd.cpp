@@ -19,16 +19,16 @@ Lcd::Lcd()
 		
 	LCDsControlDirection |= (1<<RS) | (1<<RW) | (1<<ENABLE);
 	
-	_delay_ms(15); //allow lcd to get ready
+	_delay_ms(200); //15 for 1MHz //allow lcd to get ready
 	
 	send_A_Command(0x01); 	// 0x01 clears the screen
-	_delay_ms(2);
+	_delay_ms(150); //2 for 1MHz
 	
 	send_A_Command(0x38);		//8 bit mood
-	_delay_ms(50);
+	_delay_ms(150); //50 for 1MHz
 	
 	send_A_Command(0b00001100);
-	_delay_ms(50);
+	_delay_ms(150); //50 for 1MHz
 } //Lcd
 
 // default destructor
@@ -152,10 +152,10 @@ Lcd* Lcd::gotoLocation(uint8_t x, uint8_t y)
 Lcd* Lcd::clScr()
 {
 	send_A_Command(0x01);
-	_delay_ms(2);
+	_delay_ms(100); //2 for 1MHz
 	//send_A_Command(0b00001110);
 	send_A_Command(0b00001100); //hiding cursor
-	_delay_ms(100); //allow the command to execute to avoid screen flicker
+	_delay_ms(100); //100 for 1MHz //allow the command to execute to avoid screen flicker
 
 	return this;
 }
@@ -187,6 +187,7 @@ Lcd* Lcd::peek_A_Boo(void)
 	LCDsControl |= 1<<ENABLE;
 	asm volatile ("nop");
 	asm volatile ("nop");
+	_delay_ms(43);
 	LCDsControl &= ~(1<<ENABLE);
 
 	return this;

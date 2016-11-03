@@ -8,8 +8,6 @@
 #ifndef __INVERTER_H__
 #define __INVERTER_H__
 
-#define F_CPU 1000000UL
-
 #include <stdbool.h>
 #include <avr/io.h>
 #include <util/delay.h>

@@ -49,8 +49,8 @@ ISR(ADC_vect)
 
 void my_timer_setup()
 {
-	//1000000/64 = 15625
-	TCCR1B |= (1<<WGM12) | (1<<CS11) | (1<<CS10);
+	//16000000/1024 = 15625
+	TCCR1B |= (1<<WGM12) | (1<<CS12) | (1<<CS10);
 	TIMSK |= (1<<OCIE1A);
 	OCR1A = 15624; //timer overflow value set to 1sec
 }
