@@ -210,6 +210,7 @@ Inverter* Inverter::switchToMains(bool mainsOrInverter)
 	else
 	{
 		isMains = false;
+		isFullyCharged = false; //battery charge no longer pristine because it has switched to inverter
 		INV_MODE_CTR &= ~(1<<CHANGE_OVER); //change over to inverter
 		setChargeEnable(false);
 		isCharging = false;
@@ -224,14 +225,18 @@ Inverter* Inverter::setChargeEnable(bool enable)
 	
 	if(enable && isBattFull())
 	{
-		//emit message battery full and init a var and can only be track back when ac is off
+		//emit message battery full
+		isFullyCharged = true;
 		setChargeEnable(!enable); //recall
 		return this;
 	}
-	
+		
 	if (enable)
 	{
-		INV_MODE_CTR |= (1<<CHARGE_MODE);
+		if (!isFullyCharged) //recheck
+		{
+			INV_MODE_CTR |= (1<<CHARGE_MODE);
+		}
 		//then set which mode to use 
 		if (getAcInputReadings() < 200)
 		{
@@ -394,7 +399,7 @@ void Inverter::text_battery()
 	lcd.printStringToLCD(7, 1, "BATT ");
 	if (isMains)
 	{
-		if (isBattFull())
+		if (isFullyCharged)
 		{
 			lcd.printStringToLCD(7, 2, "FULL ");
 		} 

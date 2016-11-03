@@ -106,19 +106,20 @@ private:
 	int INVERTER_INT_CP;
 	const double BATT_LOW_LEVEL;
 	const double BATT_FULL_LEVEL;
-	bool chargeUpgrade = true;
-	bool isUpgraded = true;
-	bool isOverloaded = false;
-	bool isLoadEnabled = false;
-	bool hasLowBatt = false;
-	bool isModeSet;
-	bool isMains;
-	bool isCharging;
-	int entryCounter1;
-	int entryCounter2;
-	int entryCounter3;
-	int entryCounter4;
-	int entryCounter5;
+	volatile bool chargeUpgrade = true;
+	volatile bool isUpgraded = true;
+	volatile bool isOverloaded = false;
+	volatile bool isLoadEnabled = false;
+	volatile bool hasLowBatt = false;
+	volatile bool isFullyCharged = false;
+	volatile bool isModeSet;
+	volatile bool isMains;
+	volatile bool isCharging;
+	volatile int entryCounter1;
+	volatile int entryCounter2;
+	volatile int entryCounter3;
+	volatile int entryCounter4;
+	volatile int entryCounter5;
 
 	//analog readings
 private:
