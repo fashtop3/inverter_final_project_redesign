@@ -11,12 +11,12 @@
 #include <avr/interrupt.h>
 #include <stdint.h>
 #include <util/delay.h>
-#include "Inverter.h"
-#include "Lcd.h"
+//#include "Inverter.h"
+//#include "Lcd.h"
 #include "serial.h"
 
-Lcd lcd;
-Inverter inverter(lcd); //initialize inverter
+//Lcd lcd;
+//Inverter inverter(lcd); //initialize inverter
 
 //function prototype
 void my_timer_setup();
@@ -27,27 +27,27 @@ int main(void)
 	sei(); //Enable Global Interrupt
 	my_timer_setup();
 	_delay_ms(500); //allow boot time
-	inverter.setSwitch(true); //power on the inverter
+	//inverter.setSwitch(true); //power on the inverter
 	
     while (1) 
     {		
-		inverter.monitor();
+		//inverter.monitor();
     }
 }
 
 
-ISR(TIMER1_COMPA_vect)
-{
-	inverter.incrementEntryCounter();
-	inverter.emitMessage();	
-}
+//ISR(TIMER1_COMPA_vect)
+//{
+	//inverter.incrementEntryCounter();
+	//inverter.emitMessage();	
+//}
 
 
-ISR(ADC_vect)
-{
-	inverter.analogPinSwitching(); //allow all MCU to read from all enabled analog pin
-	ADCSRA |= 1<<ADSC; //start new conversion
-}
+//ISR(ADC_vect)
+//{
+	//inverter.analogPinSwitching(); //allow all MCU to read from all enabled analog pin
+	//ADCSRA |= 1<<ADSC; //start new conversion
+//}
 
 void my_timer_setup()
 {
