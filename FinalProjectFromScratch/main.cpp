@@ -29,6 +29,18 @@ int main(void)
 	_delay_ms(500); //allow boot time
 	//inverter.setSwitch(true); //power on the inverter
 	
+	// Initialize UART modules
+	for (int i = 0; i < serialAvailable(); i++) {
+		serialInit(i, BAUD(38400, F_CPU));
+	}
+	
+	// Print Welcome Message
+	for (int i = 0; i < serialAvailable(); i++) {
+		serialWriteString(i, "Hello from UART");
+		serialWrite(i, i + '0');
+		serialWriteString(i, "... :)\n");
+	}
+	
     while (1) 
     {		
 		//inverter.monitor();
