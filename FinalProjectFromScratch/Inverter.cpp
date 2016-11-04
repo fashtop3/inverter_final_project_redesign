@@ -5,9 +5,9 @@
 * Author: Ayodeji
 */
 
-#define F_CPU 16000000UL
 
 #include <avr/interrupt.h>
+#include <util/delay.h>
 #include "Inverter.h"
 
 volatile uint16_t Inverter::__analog_ac_value__ = 0;
@@ -458,22 +458,23 @@ void Inverter::__text_load()
 void Inverter::__text_battery()
 {
 	static int styleCounter = 0;
-	_lcd.printStringToLCD(7, 1, "BATT ");
 	if (_isMains)
 	{
 		if (_isFullyCharged)
 		{
+			_lcd.printStringToLCD(7, 1, "BATT ");
 			_lcd.printStringToLCD(7, 2, "FULL ");
 		} 
 		else
 		{
 			switch(styleCounter)
 			{
-				case 0: _lcd.printStringToLCD(7, 1, ".    "); break;
-				case 1: _lcd.printStringToLCD(7, 1, "..   "); break;
-				case 2: _lcd.printStringToLCD(7, 1, "...  "); break;
-				case 3: _lcd.printStringToLCD(7, 1, ".... "); break;
-				case 4: _lcd.printStringToLCD(7, 1, "....."); break;
+				case 0: _lcd.printStringToLCD(7, 1, "BATT "); break;
+				case 1: _lcd.printStringToLCD(7, 1, ".    "); break;
+				case 2: _lcd.printStringToLCD(7, 1, "..   "); break;
+				case 3: _lcd.printStringToLCD(7, 1, "...  "); break;
+				case 4: _lcd.printStringToLCD(7, 1, ".... "); break;
+				case 5: _lcd.printStringToLCD(7, 1, "....."); break;
 				default:
 				break;
 			}
@@ -482,11 +483,12 @@ void Inverter::__text_battery()
 			_lcd.send_A_String("v");
 			_lcd.send_A_String(" ");
 						
-			(styleCounter > 4) ? styleCounter = 0 : styleCounter++;
+			(styleCounter == 5) ? styleCounter = 0 : styleCounter++;
 		}
 	}
 	else
 	{
+		_lcd.printStringToLCD(7, 1, "BATT ");
 		_lcd.printDoubleToLCD(7, 2, getBattInputReadings(), 4, 1);
 		_lcd.send_A_String("v");
 		_lcd.send_A_String(" ");

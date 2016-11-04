@@ -8,9 +8,9 @@
 
 #include "Lcd.h"
 
-
 //NOTE THAT THE CLOCK FREQ WITH THIS LCD IS 270KHz......
 //PLEASE PERFORM NECESSARY CONVERTIONS FOR DIFFERENT CRYSTAL OSCILATOR
+//Also make sure the F_CPU is defined in the main.cpp
 
 //int Lcd::firstColumnPositions[2] = {0, 64};
 

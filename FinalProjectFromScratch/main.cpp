@@ -5,6 +5,7 @@
  * Author : Ayodeji
  */ 
 
+#define F_CPU 16000000UL
 
 #include <avr/io.h>
 #include <avr/interrupt.h>
@@ -25,6 +26,7 @@ int main(void)
 	cli(); //clear global interrupt
 	sei(); //Enable Global Interrupt
 	my_timer_setup();
+	_delay_ms(500); //allow boot time
 	inverter.setSwitch(true); //power on the inverter
 	
     while (1) 
