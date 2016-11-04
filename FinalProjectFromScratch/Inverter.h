@@ -5,6 +5,7 @@
 * Author: Ayodeji
 */
 
+
 #ifndef __INVERTER_H__
 #define __INVERTER_H__
 
@@ -35,18 +36,17 @@
 #define INV_LOAD		PINA2 // overload input
 
 
+enum Event {
+	NO_INT_vect = 0x0,
+	CLEAR_SCR_INT_vect = 0x12,
+	INT_BATTERY_LOW_vect = 0x23,
+	MAINS_INT_vect = 0x24,
+};
 
 class Inverter
 {
 
 public:
-	enum Event {
-		NO_INT_vect = 0x0,
-		CLEAR_SCR_INT_vect = 0x12,
-		INT_BATTERY_LOW_vect = 0x23,
-		MAINS_INT_vect = 0x24,
-	};
-
 
 //functions
 public:
