@@ -22,19 +22,23 @@
 void my_timer_setup();
 
 int main(void)
-{
-	cli(); //clear global interrupt
+{		
+	DDRB |= 1<<PINB3;
+	
+	//cli(); //clear global interrupt
 	sei(); //Enable Global Interrupt
-	my_timer_setup();
+	//my_timer_setup();
 	_delay_ms(500); //allow boot time
+	PORTB |= 1<<PINB3;
 	//inverter.setSwitch(true); //power on the inverter
 	
 	// Initialize UART modules
 	for (int i = 0; i < serialAvailable(); i++) {
-		serialInit(i, BAUD(38400, F_CPU));
+		serialInit(i, BAUD(9600, F_CPU));
 	}
 	
 	// Print Welcome Message
+	
 	for (int i = 0; i < serialAvailable(); i++) {
 		serialWriteString(i, "Hello from UART");
 		serialWrite(i, i + '0');
@@ -44,9 +48,18 @@ int main(void)
     while (1) 
     {		
 		//inverter.monitor();
+			
+		for (int i = 0; i < serialAvailable(); i++) {
+			if (serialHasChar(i)) {
+				serialWrite(i, serialGet(i));
+			}
+		}
+		
+		//serialWrite(0, 'A');
+		//PORTB ^= 1<<PINB3;
+		//_delay_ms(2000);
     }
 }
-
 
 //ISR(TIMER1_COMPA_vect)
 //{
