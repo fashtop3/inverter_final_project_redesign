@@ -47,9 +47,6 @@ class Inverter
 {
 
 public:
-
-//functions
-public:
 	Inverter(Lcd &lcd);
 	~Inverter();
 	
