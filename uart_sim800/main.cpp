@@ -23,24 +23,30 @@ ISR(TIMER1_COMPA_vect)
 	//USART_Transmit_string((unsigned char*)rx_buffer);
 }
 
-int getstring(char *data, char size, bool *ok = false)
+int getstring(char *data, char size, bool *ok = 0)
 {
-	memset(data, 0x00 , size);
 	char i = 0;
 	volatile char c;
-	while (i < (size-2))
+	if(serialHasChar(0))
 	{
-		if(serialHasChar(0))
+		if (i==0) memset(data, 0x00 , size); 
+		
+		while (i < (size-2))
 		{
-			c = serialGet(0);
-			if (c == '\0' || c == '\n') {
-				 break;
-				 *ok = true;
+			if(serialHasChar(0))
+			{
+				c = serialGet(0);
+				if (c == '\0' || c == '\n') {
+					*ok = true;
+					break;
+				}
+				data[i++] = c;
 			}
-			data[i++] = c;
 		}
+		return i;
 	}
-	return i == 0 ? i : i + 1;
+	
+	return 0;
 }
 
 
@@ -72,30 +78,26 @@ int main(void)
 			PORTB ^= 1<<PINB3;
 		}
 		
-		if(display == 0)
-		{
-			if (getstring(data, 20))
+		if (getstring(data, 20))
+		{				
+			serialWriteString(0, "\nBefore\n");
+			serialWriteString(0, "Returning: ");
+			serialWriteString(0, data);
+			serialWriteString(0, "\nAfter\n");
+			PORTB ^= 1<<PINB4;
+			int8_t cmp = strcmp(data, match);
+			if (cmp == 0)
 			{
-				
-				serialWriteString(0, "\nBefore\n");
-				serialWriteString(0, "Returning: ");
-				serialWriteString(0, data);
-				serialWriteString(0, "\nAfter\n");
-				PORTB ^= 1<<PINB4;
-				int8_t cmp = strcmp(data, match);
-				if (cmp == 0)
-				{
-					display = 1;
-					serialWriteString(0, "\nFound a match\n");
-				}
-				else if(cmp > 0)
-				{
-					serialWriteString(0, "Data sent is less than Match");
-				}
-				else if(cmp < 0)
-				{
-					serialWriteString(0, "Match is greater than data sent");
-				}
+				display = 1;
+				serialWriteString(0, "\nFound a match\n");
+			}
+			else if(cmp > 0)
+			{
+				serialWriteString(0, "Data sent is less than Match");
+			}
+			else if(cmp < 0)
+			{
+				serialWriteString(0, "Match is greater than data sent");
 			}
 		}
 				
