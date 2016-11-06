@@ -68,7 +68,6 @@ int main(void)
 	uint8_t read = 30;
 	char match[] = "Ayodeji";
 	char data[read] = {0};
-	char display = 0;
 		
     while (true) 
     {
@@ -88,7 +87,6 @@ int main(void)
 			int8_t cmp = strcmp(data, match);
 			if (cmp == 0)
 			{
-				display = 1;
 				serialWriteString(0, "\nFound a match\n");
 			}
 			else if(cmp > 0)
