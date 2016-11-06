@@ -36,10 +36,8 @@ int getstring(char *data, char size, bool *ok = 0)
 			if(serialHasChar(0))
 			{
 				c = serialGet(0);
-				if (c == '\0' || c == '\n') {
-					*ok = true;
-					break;
-				}
+				if (c == '\r') continue;
+				if (c == '\0' || c == '\n') { *ok = true; break; }
 				data[i++] = c;
 			}
 		}
@@ -68,6 +66,7 @@ int main(void)
 	uint8_t read = 30;
 	char match[] = "Ayodeji";
 	char data[read] = {0};
+		char *ret = 0;
 		
     while (true) 
     {
@@ -84,19 +83,26 @@ int main(void)
 			serialWriteString(0, data);
 			serialWriteString(0, "\nAfter\n");
 			PORTB ^= 1<<PINB4;
-			int8_t cmp = strcmp(data, match);
-			if (cmp == 0)
+			if (ret = strstr(data, match))
 			{
-				serialWriteString(0, "\nFound a match\n");
+				serialWriteString(0, "Match: ");
+				serialWriteString(0, ret);
+				serialWriteString(0, "\n");
+				ret = 0;
 			}
-			else if(cmp > 0)
-			{
-				serialWriteString(0, "Data sent is less than Match");
-			}
-			else if(cmp < 0)
-			{
-				serialWriteString(0, "Match is greater than data sent");
-			}
+			//int8_t cmp = strcmp(data, match);
+			//if (cmp == 0)
+			//{
+				//serialWriteString(0, "\nFound a match\n");
+			//}
+			//else if(cmp > 0)
+			//{
+				//serialWriteString(0, "Data sent is less than Match");
+			//}
+			//else if(cmp < 0)
+			//{
+				//serialWriteString(0, "Match is greater than data sent");
+			//}
 		}
 				
     }
