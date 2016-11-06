@@ -7,8 +7,6 @@ Project("{E66E83B9-2572-4076-B26E-6BE79FF3018A}") = "FinalProjectFromScratch", "
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{38BBD1DE-0341-4840-A82A-72E0AD7CE9B8}"
 EndProject
-Project("{E66E83B9-2572-4076-B26E-6BE79FF3018A}") = "uart_sim800", "uart_sim800\uart_sim800.cppproj", "{22F00B0C-6DC8-4484-BD11-05E05054A1CA}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|AVR = Debug|AVR
@@ -19,10 +17,6 @@ Global
 		{DCE6C7E3-EE26-4D79-826B-08594B9AD897}.Debug|AVR.Build.0 = Debug|AVR
 		{DCE6C7E3-EE26-4D79-826B-08594B9AD897}.Release|AVR.ActiveCfg = Release|AVR
 		{DCE6C7E3-EE26-4D79-826B-08594B9AD897}.Release|AVR.Build.0 = Release|AVR
-		{22F00B0C-6DC8-4484-BD11-05E05054A1CA}.Debug|AVR.ActiveCfg = Debug|AVR
-		{22F00B0C-6DC8-4484-BD11-05E05054A1CA}.Debug|AVR.Build.0 = Debug|AVR
-		{22F00B0C-6DC8-4484-BD11-05E05054A1CA}.Release|AVR.ActiveCfg = Release|AVR
-		{22F00B0C-6DC8-4484-BD11-05E05054A1CA}.Release|AVR.Build.0 = Release|AVR
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
