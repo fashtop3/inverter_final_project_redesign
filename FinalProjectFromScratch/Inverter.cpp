@@ -14,7 +14,7 @@ volatile uint16_t Inverter::__analog_ac_value__ = 0;
 volatile uint16_t Inverter::__analog_batt_value__ = 0;
 volatile uint16_t Inverter::__analog_overload_value__ = 0;
 
-int Inverter::getEntryCounter()
+uint8_t Inverter::getEntryCounter()
 {
 	return _entryCounter1;
 }
@@ -562,7 +562,7 @@ void Inverter::__resetEventFor(Event e)
  * 
  * \return int
  */
-int Inverter::getAcInputReadings()
+uint16_t Inverter::getAcInputReadings()
 {
 	double readings = static_cast<double> (this->__analog_ac_value__);
 	return ( ( readings / 51 ) * 100 );
@@ -586,7 +586,7 @@ double Inverter::getBattInputReadings()
  * 
  * \return int
  */
-int Inverter::getOverloadInputReadings()
+uint8_t Inverter::getOverloadInputReadings()
 {
 	double readings = static_cast<double> (this->__analog_overload_value__);
 	return ( ( readings / 51 ) * 20 );

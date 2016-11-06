@@ -180,12 +180,6 @@
     <Compile Include="serial_device.h">
       <SubType>compile</SubType>
     </Compile>
-    <Compile Include="SIM800.cpp">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="SIM800.h">
-      <SubType>compile</SubType>
-    </Compile>
   </ItemGroup>
   <Import Project="$(AVRSTUDIO_EXE_PATH)\\Vs\\Compiler.targets" />
 </Project>

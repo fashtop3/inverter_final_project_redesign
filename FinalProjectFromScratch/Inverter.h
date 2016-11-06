@@ -49,47 +49,37 @@ class Inverter
 public:
 	Inverter(Lcd &lcd);
 	~Inverter();
-	
 	Inverter* setSwitch(bool on);
 	Inverter* switchToMains(bool mainsOrInverter);
 	Inverter* monitor();
-	
-	int getAcInputReadings();
+	uint16_t getAcInputReadings();
 	double getBattInputReadings();
-	int getOverloadInputReadings();
+	uint8_t getOverloadInputReadings();
 	Inverter* analogPinSwitching();
-	
-	int getEntryCounter();
+	uint8_t getEntryCounter();
 	void incrementEntryCounter();
-	
 	void emitMessage();
 	
 protected:
-
 	Inverter* __setLoad(bool attach);
 	Inverter* __setChargeEnable(bool enable);
 	Inverter* __chargingMode(bool upgrade = false);
-	
 	bool __isBattLow();
 	bool __isBattFull();
-	
 	bool __AcInputVoltageCheck();
 	bool __isOverload();
-	
 	Inverter* __setAcAnalogValue(uint16_t value);
 	Inverter* __setBattAnalogValue(uint16_t value);
 	Inverter* __setOverloadAnalogValue(uint16_t value);
-	
 	void __messageBattLow();
 	void __mainInformation();
-	
 	void __text_load();
 	void __text_battery();
 	void __text_mains();
-
 	void __saveCurrentEventFor(Event e);
 	void __restoreEventFor(Event e);
 	void __resetEventFor(Event e);
+	
 private:
 	Inverter( const Inverter &c );
 	Inverter& operator=( const Inverter &c );
@@ -97,9 +87,9 @@ private:
 
 private:
 	Lcd &_lcd;
-	int __OVERLOAD_VAL__;
-	int __INVERTER_INT__;
-	int __INVERTER_INT_CP__;
+	uint8_t __OVERLOAD_VAL__;
+	uint8_t __INVERTER_INT__;
+	uint8_t __INVERTER_INT_CP__;
 	const double __BATT_LOW_LEVEL__;
 	const double __BATT_FULL_LEVEL__;
 	volatile bool _chargeUpgrade = true;
@@ -111,18 +101,16 @@ private:
 	volatile bool _isModeSet;
 	volatile bool _isMains;
 	volatile bool _isCharging;
-	volatile int _entryCounter1;
-	volatile int _entryCounter2;
-	volatile int _entryCounter4;
-	volatile int _entryCounter3;
-	volatile int _entryCounter5;
+	volatile uint8_t _entryCounter1;
+	volatile uint8_t _entryCounter2;
+	volatile uint8_t _entryCounter4;
+	volatile uint8_t _entryCounter3;
+	volatile uint8_t _entryCounter5;
 
 	//analog readings
 	volatile static uint16_t __analog_ac_value__;
 	volatile static uint16_t __analog_batt_value__;
 	volatile static uint16_t __analog_overload_value__;
-	
-	int mainsStandby;
 }; //Inverter
 
 #endif //__INVERTER_H__

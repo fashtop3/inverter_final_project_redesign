@@ -163,13 +163,10 @@
     <Compile Include="serial_device.h">
       <SubType>compile</SubType>
     </Compile>
+    <Compile Include="SIM800.cpp">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="SIM800.h">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="UbirchSIM800.cpp">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="UbirchSIM800.h">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="usart.cpp">
