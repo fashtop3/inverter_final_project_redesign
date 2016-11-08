@@ -151,6 +151,12 @@
     </ToolchainSettings>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="InvSIM800.cpp">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="InvSIM800.h">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="main.cpp">
       <SubType>compile</SubType>
     </Compile>
