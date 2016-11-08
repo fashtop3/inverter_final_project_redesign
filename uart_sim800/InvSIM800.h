@@ -9,28 +9,68 @@
 #ifndef __INVSIM800_H__
 #define __INVSIM800_H__
 #include <avr/pgmspace.h>
+#include <util/delay.h>
+#include "serial.h"
+#include <stdbool.h>
 
 #ifdef F
 #undef F
 #define F(s) (s)
+#else
+#define F(s) (s)
 #endif
+
+#define SIM800_BAUD 9600 //115200
+#define SIM800_CMD_TIMEOUT 30000
+#define SIM800_SERIAL_TIMEOUT 1000
+#define SIM800_BUFSIZE 64
 
 class InvSIM800
 {
-//variables
-public:
-protected:
-private:
 
 //functions
 public:
 	InvSIM800();
-	~InvSIM800();
-protected:
+	
+	void setAPN(const char *apn, const char *user, const char *pass);
+	bool expect_AT(const char *cmd, const char *expected, uint16_t timeout = SIM800_SERIAL_TIMEOUT);
+	bool expect_AT_OK(const char *cmd, uint16_t timeout = SIM800_SERIAL_TIMEOUT);
+	bool expect_OK(uint16_t timeout = SIM800_SERIAL_TIMEOUT);
+	bool expect_scan(const char *pattern, void *ref, uint16_t timeout = SIM800_SERIAL_TIMEOUT);
+	bool expect_scan(const char *pattern, void *ref, void *ref1, uint16_t timeout = SIM800_SERIAL_TIMEOUT);
+	bool expect_scan(const char *pattern, void *ref, void *ref1, void *ref2, uint16_t timeout = SIM800_SERIAL_TIMEOUT);
+
+	bool reset(bool fona);
+	
+	size_t read(char *buffer, size_t length);
 	size_t readline(char *buffer, size_t max, uint16_t timeout);
-private:
-	InvSIM800( const InvSIM800 &c );
-	InvSIM800& operator=( const InvSIM800 &c );
+	
+	void print(uint8_t s);
+	void println(uint8_t s);
+	void print(const char *s);
+	void println(const char *s);
+	
+	bool time(char *date, char *time, char *tz);
+	
+	bool enableGPRS(uint16_t timeout);
+	bool disableGPRS();
+	
+	// HTTP GET request, returns the status and puts length in the referenced variable
+	unsigned short int HTTP_get(const char *url, unsigned long int &length);
+	// manually read the payload after a request, returns the amount read, call multiple times to read whole
+	size_t HTTP_read(char *buffer, uint32_t start, size_t length);
+
+protected:
+	void eat_echo();
+	bool expect(const char *expected, uint16_t timeout  = SIM800_SERIAL_TIMEOUT);
+	bool is_urc(const char *line, size_t len);
+
+protected:
+	uint8_t urc_status = 0xff;
+	const uint32_t _serialSpeed = SIM800_BAUD;
+	const char *_apn;
+	const char *_user;
+	const char *_pass;
 
 }; //InvSIM800
 
@@ -39,7 +79,7 @@ const char apn_u_p[] PROGMEM = "web";
 const char mtn_apn[] PROGMEM = "web.gprs.mtnnigeria.net";
 const char eti_apn[] PROGMEM = "etisalat";
 const char air_apn[] PROGMEM = "internet.ng.airtel.com";
-PGM_P apn[] PROGMEM = { mtn_apn, eti_apn, air_apn };
+PGM_P const apn[] PROGMEM = { mtn_apn, eti_apn, air_apn };
 
 /* incoming socket data notification */
 const char * const urc_01 PROGMEM = "+CIPRXGET: 1,";

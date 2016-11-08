@@ -15,6 +15,11 @@
 
 unsigned volatile char blink = 0;
 
+#ifdef F
+#undef F
+#endif
+#define F(s) (s)
+
 
 ISR(TIMER1_COMPA_vect)
 {
@@ -29,11 +34,11 @@ int getstring(char *data, char size, bool *ok = 0)
 	volatile char c;
 	if(serialHasChar(0))
 	{
-		if (i==0) memset(data, 0x00 , size); 
+		//if (i==0) memset(data, 0x00 , size); 
 		
 		while (i < (size-2))
 		{
-			if(serialHasChar(0))
+			while(serialHasChar(0))
 			{
 				c = serialGet(0);
 				if (c == '\r') continue;
@@ -61,15 +66,15 @@ int main(void)
 
 	
 	serialInit(0, BAUD(9600, F_CPU));
-	serialWriteString(0, "Welcome to IoT Inverter Config:\n");
+	serialWriteString(0, F("Welcome to IoT Inverter Config:\n"));
 	//
 	uint8_t read = 30;
 	char match[] = "Ayodeji";
-	char data[read] = {0};
-		char *ret = 0;
+	char *ret = 0;
 		
     while (true) 
     {
+		char data[read] = {0};
 		if(blink == 1)
 		{
 			blink = 0;
