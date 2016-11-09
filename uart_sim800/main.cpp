@@ -5,13 +5,17 @@
  * Author : Ayodeji
  */ 
 
+#ifndef F_CPU
+#define F_CPU 16000000UL // Clock Speed
+#endif
+
+
 #include <avr/io.h>
 #include <avr/interrupt.h>
 //#include "usart.h"
 #include <string.h>
+#include <util/delay.h>
 #include "serial.h"
-
-#define F_CPU 16000000UL // Clock Speed
 
 unsigned volatile char blink = 0;
 
@@ -38,7 +42,7 @@ int getstring(char *data, char size, bool *ok = 0)
 		
 		while (i < (size-2))
 		{
-			while(serialHasChar(0))
+			if(serialHasChar(0))
 			{
 				c = serialGet(0);
 				if (c == '\r') continue;
@@ -50,6 +54,32 @@ int getstring(char *data, char size, bool *ok = 0)
 	}
 	
 	return 0;
+}
+
+size_t readline(char *buffer, size_t max, uint16_t timeout)
+{
+	uint16_t idx = 0;
+	while (--timeout) {
+		if (serialHasChar(0))
+		{
+			while (serialHasChar(0)) {
+				char c = (char) serialGet(0);
+				if (c == '\r') continue;
+				if (c == '\n') {
+					if (!idx) continue;
+					timeout = 0;
+					break;
+				}
+				if ((max) - idx) buffer[idx++] = c;
+			}
+		}
+
+		_delay_ms(1);
+		if (timeout == 0) break;
+		
+	}
+	buffer[idx] = 0;
+	return idx;
 }
 
 
@@ -68,20 +98,20 @@ int main(void)
 	serialInit(0, BAUD(9600, F_CPU));
 	serialWriteString(0, F("Welcome to IoT Inverter Config:\n"));
 	//
-	uint8_t read = 30;
+	uint8_t size = 64;
 	char match[] = "Ayodeji";
-	char *ret = 0;
 		
     while (true) 
     {
-		char data[read] = {0};
+		char data[size] = {0};
+		char *ret = 0;
 		if(blink == 1)
 		{
 			blink = 0;
 			PORTB ^= 1<<PINB3;
 		}
 		
-		if (getstring(data, 20))
+		if (readline(data, size, 30000))
 		{				
 			serialWriteString(0, "\nBefore\n");
 			serialWriteString(0, "Returning: ");

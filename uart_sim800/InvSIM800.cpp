@@ -5,7 +5,6 @@
 * Author: Ayodeji
 */
 
-#define F_CPU 16000000UL
 #include <stdio.h>
 #include <string.h>
 #include "InvSIM800.h"
@@ -31,7 +30,7 @@ void InvSIM800::eat_echo()
 		serialGet(0);
 		// don't be too quick or we might not have anything available
 		// when there actually is...
-		_delay_ms(10);
+		_delay_ms(1);
 	 }
 }
 
@@ -228,7 +227,7 @@ size_t InvSIM800::readline(char *buffer, size_t max, uint16_t timeout)
 {
 	 uint16_t idx = 0;
 	 while (--timeout) {
-		 if (serialHasChar(0)) {
+		 while (serialHasChar(0)) {
 			 char c = (char) serialGet(0);
 			 if (c == '\r') continue;
 			 if (c == '\n') {
@@ -240,7 +239,7 @@ size_t InvSIM800::readline(char *buffer, size_t max, uint16_t timeout)
 		 }
 
 		 if (timeout == 0) break;
-		 _delay_ms(1000);
+		 _delay_ms(1);
 	 }
 	 buffer[idx] = 0;
 	 return idx;
