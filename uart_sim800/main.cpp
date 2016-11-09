@@ -5,9 +5,14 @@
  * Author : Ayodeji
  */ 
 
-#ifndef F_CPU
+//AT
+//AT
+//AT
+//ATE0
+//AT+IFC=0,0
+//AT+CIURC=0
+
 #define F_CPU 16000000UL // Clock Speed
-#endif
 
 
 #include <avr/io.h>
@@ -15,7 +20,9 @@
 //#include "usart.h"
 #include <string.h>
 #include <util/delay.h>
+#include <stdlib.h>
 #include "serial.h"
+#include "InvSIM800.h"
 
 unsigned volatile char blink = 0;
 
@@ -28,58 +35,6 @@ unsigned volatile char blink = 0;
 ISR(TIMER1_COMPA_vect)
 {
 	blink=1;
-	//if(*rx_buffer != 0)
-	//USART_Transmit_string((unsigned char*)rx_buffer);
-}
-
-int getstring(char *data, char size, bool *ok = 0)
-{
-	char i = 0;
-	volatile char c;
-	if(serialHasChar(0))
-	{
-		//if (i==0) memset(data, 0x00 , size); 
-		
-		while (i < (size-2))
-		{
-			if(serialHasChar(0))
-			{
-				c = serialGet(0);
-				if (c == '\r') continue;
-				if (c == '\0' || c == '\n') { *ok = true; break; }
-				data[i++] = c;
-			}
-		}
-		return i;
-	}
-	
-	return 0;
-}
-
-size_t readline(char *buffer, size_t max, uint16_t timeout)
-{
-	uint16_t idx = 0;
-	while (--timeout) {
-		if (serialHasChar(0))
-		{
-			while (serialHasChar(0)) {
-				char c = (char) serialGet(0);
-				if (c == '\r') continue;
-				if (c == '\n') {
-					if (!idx) continue;
-					timeout = 0;
-					break;
-				}
-				if ((max) - idx) buffer[idx++] = c;
-			}
-		}
-
-		_delay_ms(1);
-		if (timeout == 0) break;
-		
-	}
-	buffer[idx] = 0;
-	return idx;
 }
 
 
@@ -93,52 +48,70 @@ int main(void)
 	TCCR1B |= (1<<WGM12) | (1<<CS12) | (1<<CS10);
 	TIMSK |= (1<<OCIE1A);
 	OCR1A = 15624; //timer overflow value set to 1sec
-
-	
 	serialInit(0, BAUD(9600, F_CPU));
-	serialWriteString(0, F("Welcome to IoT Inverter Config:\n"));
-	//
-	uint8_t size = 64;
-	char match[] = "Ayodeji";
+
+	_delay_ms(3000);
+		
+	//serialWriteString(0, F("Welcome to IoT Inverter Config:\n"));
+	
+	InvSIM800 sim800 = InvSIM800();
+	
+	if (sim800.reset(true))
+	{
+		sim800.setAPN(F("etisalat"), F("web"), F("web"));
+		//sim800.println(F("SIM800 waiting for network registration..."));
+		
+		//sim800.println(F("SIM800 enabling GPRS..."));
+		if (!sim800.enableGPRS(5000)) {
+			//sim800.println("SIM800 can't enable GPRS");
+			while (1);
+		}
+		
+		char buffer[20];
+		static const char* const url = "iot.rockcityfmradio.com/api/report/1?type=project&ac_in=190&battery_level=78&charging=1&load=40";
+		static uint32_t length = 0;
+		uint16_t status = sim800.HTTP_get(url, length);
+		if (status == 200)
+		{
+			uint16_t idx = sim800.HTTP_read(buffer, 0, length);
+		}
+	}
+	
+	////NOW WORKING
+	//if(sim800.expect_AT_OK(F("")))
+	//{
+		//PORTB ^= 1<<PINB4;
+	//}
+	
+	//////tested ok
+	////char str1[10];
+	////char str2[10];
+	////
+	////unsigned long int length;
+	////unsigned short int status;
+	//////+HTTPACTION: 0,200,1
+	////if(sim800.expect_scan(F("+HTTPACTION: 0,%hu,%lu"), &status, &length, 60000))
+	////{
+		////itoa(length, str1, 10);
+		////itoa(status, str2, 10);
+		////serialWriteString(0, "Length: ");
+		////serialWriteString(0, str1);
+		////
+		////serialWriteString(0, "\nStatus: ");
+		////serialWriteString(0, str2);
+		////
+		////PORTB ^= 1<<PINB4;
+	////}
+	
+	//sim800.println("SIM800 initialized");
+	
 		
     while (true) 
     {
-		char data[size] = {0};
-		char *ret = 0;
 		if(blink == 1)
 		{
 			blink = 0;
 			PORTB ^= 1<<PINB3;
-		}
-		
-		if (readline(data, size, 30000))
-		{				
-			serialWriteString(0, "\nBefore\n");
-			serialWriteString(0, "Returning: ");
-			serialWriteString(0, data);
-			serialWriteString(0, "\nAfter\n");
-			PORTB ^= 1<<PINB4;
-			if (ret = strstr(data, match))
-			{
-				serialWriteString(0, "Match: ");
-				serialWriteString(0, ret);
-				serialWriteString(0, "\n");
-				ret = 0;
-			}
-			//int8_t cmp = strcmp(data, match);
-			//if (cmp == 0)
-			//{
-				//serialWriteString(0, "\nFound a match\n");
-			//}
-			//else if(cmp > 0)
-			//{
-				//serialWriteString(0, "Data sent is less than Match");
-			//}
-			//else if(cmp < 0)
-			//{
-				//serialWriteString(0, "Match is greater than data sent");
-			//}
-		}
-				
+		}	
     }
 }

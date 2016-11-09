@@ -9,7 +9,6 @@
 #ifndef __INVSIM800_H__
 #define __INVSIM800_H__
 #include <avr/pgmspace.h>
-#include <util/delay.h>
 #include "serial.h"
 #include <stdbool.h>
 
@@ -52,7 +51,7 @@ public:
 	
 	bool time(char *date, char *time, char *tz);
 	
-	bool enableGPRS(uint16_t timeout);
+	bool enableGPRS(uint16_t timeout = SIM800_CMD_TIMEOUT);
 	bool disableGPRS();
 	
 	// HTTP GET request, returns the status and puts length in the referenced variable
@@ -66,8 +65,7 @@ protected:
 	bool is_urc(const char *line, size_t len);
 
 protected:
-	uint8_t urc_status = 0xff;
-	const uint32_t _serialSpeed = SIM800_BAUD;
+	uint8_t urc_status;
 	const char *_apn;
 	const char *_user;
 	const char *_pass;

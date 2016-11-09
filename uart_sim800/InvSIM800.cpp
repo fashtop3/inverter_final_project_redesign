@@ -5,8 +5,11 @@
 * Author: Ayodeji
 */
 
+#define F_CPU 16000000UL // Clock Speed
+
 #include <stdio.h>
 #include <string.h>
+#include <util/delay.h>
 #include "InvSIM800.h"
 
 #define println_param(prefix, p) print(F(prefix)); print(F(",\"")); print(p); println(F("\""));
@@ -14,6 +17,7 @@
 // default constructor
 InvSIM800::InvSIM800()
 {
+	urc_status = 0xff;
 } //InvSIM800
 
 void InvSIM800::setAPN(const char *apn, const char *user, const char *pass)
@@ -38,8 +42,11 @@ bool InvSIM800::expect(const char *expected, uint16_t timeout)
 {
 	char buf[SIM800_BUFSIZE];
 	size_t len;
+	
 	do len = readline(buf, SIM800_BUFSIZE, timeout); while (is_urc(buf, len));
-	return strcmp_P(buf, (const char PROGMEM *) expected) == 0;
+	
+	return strcmp(buf, (const char *) expected) == 0;
+	//return strcmp_P(buf, (const char PROGMEM *) expected) == 0;
 }
 
 bool InvSIM800::expect_AT(const char *cmd, const char *expected, uint16_t timeout)
@@ -54,7 +61,8 @@ bool InvSIM800::expect_scan(const char *pattern, void *ref, uint16_t timeout)
 	char buf[SIM800_BUFSIZE];
 	size_t len;
 	do len = readline(buf, SIM800_BUFSIZE, timeout); while (is_urc(buf, len));
-	return sscanf_P(buf, (const char PROGMEM *) pattern, ref) == 1;
+	return sscanf(buf, (const char *) pattern, ref) == 1;
+	//return sscanf_P(buf, (const char PROGMEM *) pattern, ref) == 1;
 }
 
 bool InvSIM800::expect_scan(const char *pattern, void *ref, void *ref1, uint16_t timeout)
@@ -62,7 +70,8 @@ bool InvSIM800::expect_scan(const char *pattern, void *ref, void *ref1, uint16_t
 	char buf[SIM800_BUFSIZE];
 	size_t len;
 	do len = readline(buf, SIM800_BUFSIZE, timeout); while (is_urc(buf, len));
-	return sscanf_P(buf, (const char PROGMEM *) pattern, ref, ref1) == 2;
+	return sscanf(buf, (const char *) pattern, ref, ref1) == 2;
+	//return sscanf_P(buf, (const char PROGMEM *) pattern, ref, ref1) == 2;
 }
 
 bool InvSIM800::expect_scan(const char *pattern, void *ref, void *ref1, void *ref2, uint16_t timeout)
@@ -70,7 +79,8 @@ bool InvSIM800::expect_scan(const char *pattern, void *ref, void *ref1, void *re
 	char buf[SIM800_BUFSIZE];
 	size_t len;
 	do len = readline(buf, SIM800_BUFSIZE, timeout); while (is_urc(buf, len));
-	return sscanf_P(buf, (const char PROGMEM *) pattern, ref, ref1, ref2) == 3;
+	return sscanf(buf, (const char *) pattern, ref, ref1, ref2) == 3;
+	//return sscanf_P(buf, (const char PROGMEM *) pattern, ref, ref1, ref2) == 3;
 }
 
 bool InvSIM800::is_urc(const char *line, size_t len)
@@ -189,22 +199,22 @@ bool InvSIM800::reset(bool fona) {
 	PORTD |= 1<<PIND2;
 	_delay_ms(10);
 	PORTD &= ~1<<PIND2;
-	_delay_ms(100);
+	_delay_ms(200);
 	PORTD |= 1<<PIND2;
-	_delay_ms(7000);
+	_delay_ms(25000);
 
 	// RST high keeps the chip in reset without a diode, so put to low
 	if (!fona) PORTD &= ~1<<PIND2;
 
 	while (serialHasChar(0)) serialGet(0);
 
-	expect_AT_OK(F(""));
-	expect_AT_OK(F(""));
-	expect_AT_OK(F(""));
-	bool ok = expect_AT_OK(F("E0"));
+	expect_AT_OK(F(""), 2000);
+	expect_AT_OK(F(""), 2000);
+	expect_AT_OK(F(""), 2000);
+	bool ok = expect_AT_OK(F("E0"), 2000);
 
-	expect_AT_OK(F("+IFC=0,0")); // No hardware flow control
-	expect_AT_OK(F("+CIURC=0")); // No "Call Ready"
+	expect_AT_OK(F("+IFC=0,0"), 2000); // No hardware flow control
+	expect_AT_OK(F("+CIURC=0"), 2000); // No "Call Ready"
 
 	while (serialHasChar(0)) serialGet(0);
 
@@ -260,8 +270,8 @@ unsigned short int InvSIM800::HTTP_get(const char *url, unsigned long int &lengt
 
 	if (!expect_AT_OK(F("+HTTPINIT"))) return 1000;
 	if (!expect_AT_OK(F("+HTTPPARA=\"CID\",1"))) return 1101;
-	if (!expect_AT_OK(F("+HTTPPARA=\"UA\",\"IOTINV#1 r0.1\""))) return 1102;
-	if (!expect_AT_OK(F("+HTTPPARA=\"REDIR\",1"))) return 1103; //1 allows reirect , o means no redirection
+	//if (!expect_AT_OK(F("+HTTPPARA=\"UA\",\"IOTINV#1 r0.1\""))) return 1102;
+	//if (!expect_AT_OK(F("+HTTPPARA=\"REDIR\",1"))) return 1103; //1 allows reirect , o means no redirection
 	println_param("AT+HTTPPARA=\"URL\"", url);
 	if (!expect_OK()) return 1110;
 
@@ -275,10 +285,12 @@ unsigned short int InvSIM800::HTTP_get(const char *url, unsigned long int &lengt
 
 size_t InvSIM800::HTTP_read(char *buffer, uint32_t start, size_t length)
 {
-	print(F("AT+HTTPREAD="));
-	print(start);
-	print(F(","));
-	println((uint32_t) length);
+	//print(F("AT+HTTPREAD="));
+	//print(start);
+	//print(F(","));
+	//println((uint32_t) length);
+	
+	println(F("AT+HTTPREAD=0,1"));
 
 	unsigned long int available;
 	expect_scan(F("+HTTPREAD: %lu"), &available);
