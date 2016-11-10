@@ -157,6 +157,12 @@
     <Compile Include="InvSIM800.h">
       <SubType>compile</SubType>
     </Compile>
+    <Compile Include="Lcd.cpp">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="Lcd.h">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="main.cpp">
       <SubType>compile</SubType>
     </Compile>

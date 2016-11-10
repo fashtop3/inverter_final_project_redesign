@@ -23,6 +23,7 @@
 #include <stdlib.h>
 #include "serial.h"
 #include "InvSIM800.h"
+#include "Lcd.h"
 
 unsigned volatile char blink = 0;
 
@@ -40,9 +41,13 @@ ISR(TIMER1_COMPA_vect)
 
 int main(void)
 {
+	Lcd lcd;//= Lcd();
+	lcd.send_A_String("hELLO");
+	_delay_ms(3000);
+	lcd.clScr();
+	
 	DDRB |= 1<<PINB3 | 1<<PINB4;
-	PORTB |= 1<<PINB3 | 1<<PINB4;
-
+	
 	sei();
 	
 	TCCR1B |= (1<<WGM12) | (1<<CS12) | (1<<CS10);
@@ -51,6 +56,7 @@ int main(void)
 	serialInit(0, BAUD(9600, F_CPU));
 
 	_delay_ms(3000);
+	PORTB |= 1<<PINB3 | 1<<PINB4;
 		
 	//serialWriteString(0, F("Welcome to IoT Inverter Config:\n"));
 	
@@ -58,7 +64,7 @@ int main(void)
 	
 	if (sim800.reset(true))
 	{
-		sim800.setAPN(F("etisalat"), F("web"), F("web"));
+		sim800.setAPN(F("web.gprs.mtnnigeria.net"), F("web"), F("web"));
 		//sim800.println(F("SIM800 waiting for network registration..."));
 		
 		//sim800.println(F("SIM800 enabling GPRS..."));
@@ -67,13 +73,23 @@ int main(void)
 			while (1);
 		}
 		
-		char buffer[20];
+		
 		static const char* const url = "iot.rockcityfmradio.com/api/report/1?type=project&ac_in=190&battery_level=78&charging=1&load=40";
 		static uint32_t length = 0;
 		uint16_t status = sim800.HTTP_get(url, length);
 		if (status == 200)
 		{
-			uint16_t idx = sim800.HTTP_read(buffer, 0, length);
+			char buffer[20] = {0};
+			uint16_t idx = sim800.HTTP_read(buffer, 0, 4);
+			if (idx)
+			{
+				lcd.send_A_String(buffer);
+				char control = buffer[0];
+				if (control == '1')
+				{
+					PORTB ^= 1<<PINB4;
+				}	
+			}
 		}
 	}
 	

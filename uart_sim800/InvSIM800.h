@@ -21,7 +21,7 @@
 
 #define SIM800_BAUD 9600 //115200
 #define SIM800_CMD_TIMEOUT 30000
-#define SIM800_SERIAL_TIMEOUT 1000
+#define SIM800_SERIAL_TIMEOUT 4000
 #define SIM800_BUFSIZE 64
 
 class InvSIM800
@@ -44,8 +44,8 @@ public:
 	size_t read(char *buffer, size_t length);
 	size_t readline(char *buffer, size_t max, uint16_t timeout);
 	
-	void print(uint8_t s);
-	void println(uint8_t s);
+	void print(uint32_t s);
+	void println(uint32_t s);
 	void print(const char *s);
 	void println(const char *s);
 	

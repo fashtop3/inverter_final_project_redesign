@@ -158,12 +158,12 @@ bool InvSIM800::enableGPRS(uint16_t timeout)
 	return attached;
 }
 
-void InvSIM800::print(uint8_t s)
+void InvSIM800::print(uint32_t s)
 {
 	serialWrite(0, s);
 }
 
-void InvSIM800::println(uint8_t s)
+void InvSIM800::println(uint32_t s)
 {
 	serialWrite(0, s);
 	eat_echo();
@@ -270,8 +270,8 @@ unsigned short int InvSIM800::HTTP_get(const char *url, unsigned long int &lengt
 
 	if (!expect_AT_OK(F("+HTTPINIT"))) return 1000;
 	if (!expect_AT_OK(F("+HTTPPARA=\"CID\",1"))) return 1101;
-	//if (!expect_AT_OK(F("+HTTPPARA=\"UA\",\"IOTINV#1 r0.1\""))) return 1102;
-	//if (!expect_AT_OK(F("+HTTPPARA=\"REDIR\",1"))) return 1103; //1 allows reirect , o means no redirection
+	if (!expect_AT_OK(F("+HTTPPARA=\"UA\",\"IOTINV#1 r0.1\""))) return 1102;
+	if (!expect_AT_OK(F("+HTTPPARA=\"REDIR\",1"))) return 1103; //1 allows reirect , o means no redirection
 	println_param("AT+HTTPPARA=\"URL\"", url);
 	if (!expect_OK()) return 1110;
 
@@ -288,7 +288,7 @@ size_t InvSIM800::HTTP_read(char *buffer, uint32_t start, size_t length)
 	//print(F("AT+HTTPREAD="));
 	//print(start);
 	//print(F(","));
-	//println((uint32_t) length);
+	//println(length);
 	
 	println(F("AT+HTTPREAD=0,1"));
 
