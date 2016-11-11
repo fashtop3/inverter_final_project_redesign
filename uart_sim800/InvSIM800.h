@@ -58,6 +58,14 @@ public:
 	unsigned short int HTTP_get(const char *url, unsigned long int &length);
 	// manually read the payload after a request, returns the amount read, call multiple times to read whole
 	size_t HTTP_read(char *buffer, uint32_t start, size_t length);
+	
+	bool shutdown();
+	bool wakeup();
+	bool registerNetwork(uint16_t timeout);
+	void setHostname(const char* h);
+	void setParam(const char* p);
+	char* getUrl();
+
 
 protected:
 	void eat_echo();
@@ -69,6 +77,9 @@ protected:
 	const char *_apn;
 	const char *_user;
 	const char *_pass;
+	char *url;
+	char *hostname;
+	char *param;
 
 }; //InvSIM800
 

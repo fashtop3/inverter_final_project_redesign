@@ -42,7 +42,7 @@ ISR(TIMER1_COMPA_vect)
 int main(void)
 {
 	Lcd lcd;//= Lcd();
-	lcd.send_A_String("hELLO");
+	lcd.send_A_String("HELLO");
 	_delay_ms(3000);
 	lcd.clScr();
 	
@@ -61,6 +61,8 @@ int main(void)
 	//serialWriteString(0, F("Welcome to IoT Inverter Config:\n"));
 	
 	InvSIM800 sim800 = InvSIM800();
+	sim800.setHostname("iot.rockcityfmradio.com/api/report/1");
+	sim800.setParam("?type=project&ac_in=190&battery_level=78&charging=1&load=40");
 	
 	if (sim800.reset(true))
 	{
@@ -74,9 +76,9 @@ int main(void)
 		}
 		
 		
-		static const char* const url = "iot.rockcityfmradio.com/api/report/1?type=project&ac_in=190&battery_level=78&charging=1&load=40";
+		//static const char* const url = "iot.rockcityfmradio.com/api/report/1?type=project&ac_in=190&battery_level=78&charging=1&load=40";
 		static uint32_t length = 0;
-		uint16_t status = sim800.HTTP_get(url, length);
+		uint16_t status = sim800.HTTP_get(sim800.getUrl(), length);
 		if (status == 200)
 		{
 			char buffer[20] = {0};

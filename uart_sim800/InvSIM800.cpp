@@ -11,6 +11,7 @@
 #include <string.h>
 #include <util/delay.h>
 #include "InvSIM800.h"
+#include <stdlib.h>
 
 #define println_param(prefix, p) print(F(prefix)); print(F(",\"")); print(p); println(F("\""));
 
@@ -18,6 +19,8 @@
 InvSIM800::InvSIM800()
 {
 	urc_status = 0xff;
+	hostname = 0;
+	param = 0;
 } //InvSIM800
 
 void InvSIM800::setAPN(const char *apn, const char *user, const char *pass)
@@ -298,5 +301,98 @@ size_t InvSIM800::HTTP_read(char *buffer, uint32_t start, size_t length)
 	size_t idx = read(buffer, (size_t) available);
 	if (!expect_OK()) return 0;
 	return idx;
+}
+
+bool InvSIM800::shutdown()
+{
+	disableGPRS();
+	expect_AT_OK(F("+CPOWD=1"));
+	if (expect(F("NORMAL POWER DOWN"), 5000))
+	{
+		return true;
+	}
+	
+
+	//if (urc_status != 12 && digitalRead(SIM800_PS) == HIGH) {
+		//PRINTLN("!!! SIM800 shutdown using PWRKEY");
+		//pinMode(SIM800_KEY, OUTPUT);
+		//pinMode(SIM800_PS, INPUT);
+		//digitalWrite(SIM800_KEY, LOW);
+		//for (uint8_t s = 30; s > 0 && digitalRead(SIM800_PS) != LOW; --s) delay(1000);
+		//digitalWrite(SIM800_KEY, HIGH);
+		//pinMode(SIM800_KEY, INPUT);
+		//pinMode(SIM800_KEY, INPUT_PULLUP);
+	//}
+	return false;
+}
+
+bool InvSIM800::wakeup()
+{
+	expect_AT_OK(F(""));
+	// check if the chip is already awake, otherwise start wakeup
+	if (!expect_AT_OK(F(""), 5000))
+	{
+		// SIM800 using PWRKEY wakeup procedure"
+		//pinMode(SIM800_KEY, OUTPUT);
+		//pinMode(SIM800_PS, INPUT);
+		//do {
+			//digitalWrite(SIM800_KEY, HIGH);
+			//delay(10);
+			//digitalWrite(SIM800_KEY, LOW);
+			//delay(1100);
+			//digitalWrite(SIM800_KEY, HIGH);
+			//delay(2000);
+		//} while (digitalRead(SIM800_PS) == LOW);
+		//// make pin unused (do not leak)
+		//pinMode(SIM800_KEY, INPUT_PULLUP);
+		//PRINTLN("!!! SIM800 ok");
+	} 
+// 	else 
+// 	{
+// 		PRINTLN("!!! SIM800 already awake");
+// 	}
+
+	return reset(true);
+}
+
+bool InvSIM800::registerNetwork(uint16_t timeout)
+{
+	expect_AT_OK(F(""));
+	while (timeout -= 1000) {
+		unsigned short int n = 0;
+		println(F("AT+CREG?"));
+		expect_scan(F("+CREG: 0,%hu"), &n);
+		if ((n == 1 || n == 5)) 
+		{
+			return true;
+		}
+		_delay_ms(1000);
+	}
+	return false;
+}
+
+void InvSIM800::setHostname(const char *h)
+{
+	hostname = (char*)h;
+}
+
+void InvSIM800::setParam(const char* p)
+{
+	param = (char*)p;
+}
+
+char* InvSIM800::getUrl()
+{
+	uint16_t h = (hostname)?strlen(hostname):0;
+	uint16_t p = (param)?strlen(param):0;
+	char *dest = (char *)malloc((h+p)+1);
+	
+	if(!h) return "Invalid Hostname";
+	strcpy(dest, hostname);
+	if (param) strcat(dest, param);
+	/*serialWriteString(0, dest);*/
+	strcpy(url, dest);
+	free(dest);
+	return url;
 }
 
