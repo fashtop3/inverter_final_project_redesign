@@ -59,6 +59,7 @@ public:
 	uint8_t getEntryCounter();
 	void incrementEntryCounter();
 	void emitMessage();
+	void setServerResponse(char param1);
 	
 protected:
 	Inverter* __setLoad(bool attach);
@@ -92,6 +93,7 @@ private:
 	uint8_t __INVERTER_INT_CP__;
 	const double __BATT_LOW_LEVEL__;
 	const double __BATT_FULL_LEVEL__;
+	volatile char serverPort = NULL;
 	volatile bool _chargeUpgrade = true;
 	volatile bool _isUpgraded = true;
 	volatile bool _isOverloaded = false;
@@ -111,6 +113,7 @@ private:
 	volatile static uint16_t __analog_ac_value__;
 	volatile static uint16_t __analog_batt_value__;
 	volatile static uint16_t __analog_overload_value__;
+
 }; //Inverter
 
 #endif //__INVERTER_H__

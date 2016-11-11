@@ -5,7 +5,7 @@
 * Author: Ayodeji
 */
 
-
+#define F_CPU 16000000UL
 #include "Lcd.h"
 
 //NOTE THAT THE CLOCK FREQ WITH THIS LCD IS 270KHz......

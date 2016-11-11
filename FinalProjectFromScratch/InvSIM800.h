@@ -23,6 +23,16 @@
 #define SIM800_CMD_TIMEOUT 30000
 #define SIM800_SERIAL_TIMEOUT 4000
 #define SIM800_BUFSIZE 64
+#define SIM800_RS PIND2
+
+
+enum EventSync {
+	SYNC_WAKEUP = 0x0,
+	SYNC_REG_NTWK,
+	SYNC_SET_APN,
+	SYNC_ENABLE_GPRS,
+	SYNC_HTTP_REQUEST
+};
 
 class InvSIM800
 {
@@ -65,24 +75,36 @@ public:
 	void setHostname(const char* h);
 	void setParam(const char* p);
 	char* getUrl();
+	
+	void setup();
+	void setSwitchAPN();
+	void httpRequest();
+	char getServerResponse();
+	
+	void incrementInSec();
 
 protected:
-	uint8_t eventsync;
+	void switchEventSync(EventSync sync);
 	void eat_echo();
 	bool expect(const char *expected, uint16_t timeout  = SIM800_SERIAL_TIMEOUT);
 	bool is_urc(const char *line, size_t len);
 
 protected:
+	volatile static uint8_t _reset_delay;
+	volatile static uint8_t _request_delay;
+	uint8_t eventsync;
 	uint8_t urc_status;
 	const char *_apn;
 	const char *_user;
 	const char *_pass;
-	char *url;
+	char url[100];
 	char *hostname;
 	char *param;
+	mutable char serverResponse = NULL;
+	
+	volatile bool _sim_is_waked = false;
+	volatile bool _is_connected = false;
 
-private:
-void httpRequest();
 }; //InvSIM800
 
 /* access point configurations */

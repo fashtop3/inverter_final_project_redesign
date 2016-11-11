@@ -162,6 +162,12 @@
     <Compile Include="Inverter.h">
       <SubType>compile</SubType>
     </Compile>
+    <Compile Include="InvSIM800.cpp">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="InvSIM800.h">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="Lcd.cpp">
       <SubType>compile</SubType>
     </Compile>

@@ -5,7 +5,7 @@
 * Author: Ayodeji
 */
 
-
+#define F_CPU 16000000UL
 #include <avr/interrupt.h>
 #include <util/delay.h>
 #include "Inverter.h"
@@ -13,6 +13,11 @@
 volatile uint16_t Inverter::__analog_ac_value__ = 0;
 volatile uint16_t Inverter::__analog_batt_value__ = 0;
 volatile uint16_t Inverter::__analog_overload_value__ = 0;
+
+void Inverter::setServerResponse(char serverSwitch)
+{
+	serverPort = serverSwitch;
+}
 
 uint8_t Inverter::getEntryCounter()
 {

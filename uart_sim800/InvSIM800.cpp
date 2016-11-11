@@ -21,6 +21,7 @@ InvSIM800::InvSIM800()
 	urc_status = 0xff;
 	hostname = 0;
 	param = 0;
+	eventsync = 0;
 } //InvSIM800
 
 void InvSIM800::setAPN(const char *apn, const char *user, const char *pass)
@@ -104,6 +105,11 @@ bool InvSIM800::is_urc(const char *line, size_t len)
 	return false;
 }
 
+
+void InvSIM800::httpRequest()
+{
+	throw std::logic_error("The method or operation is not implemented.");
+}
 
 bool InvSIM800::time(char *date, char *time, char *tz)
 {
@@ -395,4 +401,3 @@ char* InvSIM800::getUrl()
 	free(dest);
 	return url;
 }
-
