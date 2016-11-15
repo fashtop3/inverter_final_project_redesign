@@ -162,30 +162,38 @@ Inverter::~Inverter()
  */
 Inverter* Inverter::setSwitch(bool on)
 {
-	if(on) 
-	{		
+	if(on)
+	{
 		if (__isBattLow())
 		{
-			//Todo: emit message here
-			if(!_isMains)
-			{
-				__saveCurrentEventFor(INT_BATTERY_LOW_vect);
-			}
+// 			if(!_isMains)
+// 			{
+// 				__saveCurrentEventFor(INT_BATTERY_LOW_vect);
+// 			}
+			
 			if (_entryCounter5 == 5)
 			{
 				setSwitch(false);
 			}
-		} 
+		}
 		else
 		{
-			__restoreEventFor(INT_BATTERY_LOW_vect);
+			//__restoreEventFor(INT_BATTERY_LOW_vect);
 			INV_CTR |= 1<<POWER;
 		}
 		
 	}
-	else 
+	else
 	{
-		INV_CTR &= ~(1<<POWER);		
+		if (_hasLowBatt)
+		{
+			__saveCurrentEventFor(INT_CHARGE_REQ_vect);
+		}
+		else
+		{
+			__restoreEventFor(INT_CHARGE_REQ_vect);
+		}
+		INV_CTR &= ~(1<<POWER);
 	}
 	
 	return this;
@@ -240,6 +248,7 @@ Inverter* Inverter::switchToMains(bool mainsOrInverter)
 	if (mainsOrInverter)
 	{
 		_isMains = true;
+		_hasLowBatt = false; //clear tag
 		setSwitch(false); //switch off inverter
 		INV_MODE_CTR |=	(1<<CHANGE_OVER);
 		if (_entryCounter2 == 8)
@@ -339,7 +348,7 @@ Inverter* Inverter::__remoteSourceOrBypass()
 	{
 		if (_serverPort == '1')
 		{
-			return setSwitch(true);
+			return setSwitch(!_hasLowBatt);
 		}
 		else if (_serverPort == '0')
 		{
@@ -349,7 +358,7 @@ Inverter* Inverter::__remoteSourceOrBypass()
 		return this;
 	}
 
-	return setSwitch(true);
+	return setSwitch(!_hasLowBatt);
 }
 
 bool Inverter::isModuleAvailable()
@@ -468,6 +477,9 @@ void Inverter::emitMessage()
 		case MAINS_INT_vect:
 			__mainInformation();
 			break;
+		case INT_CHARGE_REQ_vect:
+			__chargeRequired();
+			break;
 		
 		default:
 			//lcd.clScr();
@@ -485,13 +497,22 @@ void Inverter::__messageBattLow()
 {
 	if(!_isMains) //only emit message when source is inverter
 	{
-		_lcd.printStringToLCD(1, 1, "Battery Low!!!");
+		_lcd.printStringToLCD(1, 1, "BATTERY LOW!!!");
 		_lcd.printStringToLCD(1, 2, "BATT:");
 		
 		//Todo: if value flickers try introducing a variable to delay
 		_lcd.printDoubleToLCD(7, 2, getBattInputReadings(), 4, 1);
 		_lcd.send_A_String("v");
 		_lcd.send_A_String(" ");
+	}
+}
+
+void Inverter::__chargeRequired()
+{
+	if(!_isMains) //only emit message when source is inverter
+	{
+		_lcd.printStringToLCD(1, 1, "BATTERY LOW!!!");
+		_lcd.printStringToLCD(1, 2, "CHARGE REQUIRED");
 	}
 }
 

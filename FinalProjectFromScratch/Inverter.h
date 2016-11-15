@@ -45,6 +45,7 @@ enum Event {
 	CLEAR_SCR_INT_vect = 0x12,
 	INT_BATTERY_LOW_vect = 0x23,
 	MAINS_INT_vect = 0x24,
+	INT_CHARGE_REQ_vect = 0x33,
 };
 
 class Inverter
@@ -81,6 +82,7 @@ protected:
 	Inverter* __setBattAnalogValue(uint16_t value);
 	Inverter* __setOverloadAnalogValue(uint16_t value);
 	void __messageBattLow();
+	void __chargeRequired();
 	void __mainInformation();
 	void __text_load();
 	void __text_battery();

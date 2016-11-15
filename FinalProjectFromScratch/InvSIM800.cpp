@@ -26,7 +26,7 @@ uint8_t InvSIM800::__called_grps__ = 0;
 InvSIM800::InvSIM800()
 {
 	SIM_RST_DDR |= 1<<SIM800_RS; //SIM800_RS // reset pin -> output
-	SIM_RST_CTRL |= 1<<SIM800_RS;
+	SIM_RST_CTRL &= ~(1<<SIM800_RS);
 	
 	serialInit(0, BAUD(SIM800_BAUD, F_CPU)); // INITIALIZE UART
 	
@@ -562,13 +562,13 @@ void InvSIM800::setup()
 			wakeup();
 			break;
 		case SYNC_REG_NTWK:
-			if(registerNetwork(5000)) { _switchEventSync(SYNC_SET_APN); } else { __soft_reset__(__called_reg_ntwk__, 10); }
+			if(registerNetwork(3000)) { _switchEventSync(SYNC_SET_APN); } else { __soft_reset__(__called_reg_ntwk__, 10); }
 			break;
 		case SYNC_SET_APN:
 			if(setSwitchAPN()) { _switchEventSync(SYNC_ENABLE_GPRS); } else { __soft_reset__(__called_apn__, 15); }
 			break;
 		case SYNC_ENABLE_GPRS:
-			if(enableGPRS())  { _switchEventSync(SYNC_HTTP_REQUEST);} else { __soft_reset__(__called_grps__, 5); };
+			if(enableGPRS())  { _switchEventSync(SYNC_HTTP_REQUEST);} else { __soft_reset__(__called_grps__, 8); };
 			break;
 		case SYNC_HTTP_REQUEST:
 			__called_grps__ = __called_apn__ = __called_reg_ntwk__ = 0;
