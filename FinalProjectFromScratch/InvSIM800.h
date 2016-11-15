@@ -23,8 +23,10 @@
 #define SIM800_CMD_TIMEOUT 30000
 #define SIM800_SERIAL_TIMEOUT 4000
 #define SIM800_BUFSIZE 64
-#define SIM800_RS PIND2
 
+#define SIM_RST_DDR		DDRD
+#define SIM_RST_CTRL	PORTD
+#define SIM800_RS PIND2
 
 enum EventSync {
 	SYNC_WAKEUP = 0x0,
@@ -54,8 +56,8 @@ public:
 	size_t read(char *buffer, size_t length);
 	size_t readline(char *buffer, size_t max, uint16_t timeout);
 	
-	void print(uint32_t s);
-	void println(uint32_t s);
+	void print(uint8_t s);
+	void println(uint8_t s);
 	void print(const char *s);
 	void println(const char *s);
 	
@@ -67,7 +69,7 @@ public:
 	// HTTP GET request, returns the status and puts length in the referenced variable
 	unsigned short int HTTP_get(const char *url, unsigned long int &length);
 	// manually read the payload after a request, returns the amount read, call multiple times to read whole
-	size_t HTTP_read(char *buffer, uint32_t start, size_t length);
+	size_t HTTP_read(char *buffer, uint16_t start, uint16_t length);
 	
 	bool shutdown();
 	bool wakeup();
@@ -77,19 +79,29 @@ public:
 	char* getUrl();
 	
 	void setup();
-	void setSwitchAPN();
+	bool setSwitchAPN();
 	void httpRequest();
 	char getServerResponse();
+	void nullServerResponse();
 	
 	void incrementInSec();
+	void externalReset();
 
 protected:
-	void switchEventSync(EventSync sync);
-	void eat_echo();
+	void _switchEventSync(EventSync sync);
+	bool _checkConnected();
+	void _eat_echo();
 	bool expect(const char *expected, uint16_t timeout  = SIM800_SERIAL_TIMEOUT);
 	bool is_urc(const char *line, size_t len);
+	void _syncServerTime();
+	bool __hard_reset__();
+	bool __soft_reset__(uint8_t &called, uint8_t limits);
 
 protected:
+	bool _isModuleTimeSet;
+	bool _is_ntwk_reg;
+	volatile bool _sim_is_waked;
+	volatile bool _is_connected;
 	volatile static uint8_t _reset_delay;
 	volatile static uint8_t _request_delay;
 	uint8_t eventsync;
@@ -100,10 +112,11 @@ protected:
 	char url[100];
 	char *hostname;
 	char *param;
-	mutable char serverResponse = NULL;
+	mutable char serverResponse;
 	
-	volatile bool _sim_is_waked = false;
-	volatile bool _is_connected = false;
+	static uint8_t __called_reg_ntwk__;
+	static uint8_t __called_apn__;
+	static uint8_t __called_grps__;
 
 }; //InvSIM800
 

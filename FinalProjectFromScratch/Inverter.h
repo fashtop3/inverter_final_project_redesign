@@ -21,14 +21,18 @@
 #define OVERLOAD		PIND5
 #define POWER			PIND6
 #define LOAD			PIND7
-#define INV_DIR			DDRD	//Data Direction Register controlling inverter functions
-#define INV_CTR			PORTD	//Voltage level IO Register
+#define INV_DIR			DDRD //module control pin	//Data Direction Register controlling inverter functions
+#define INV_CTR			PORTD //module port	//Voltage level IO Register
+#define INV_CTR_READ	PIND
 
 #define CHANGE_OVER		PINB3
 #define CHARGE_MODE		PINB4
 #define CHARGE_SELECT	PINB5
 #define INV_MODE_DIR	DDRB
 #define INV_MODE_CTR	PORTB
+
+//sim module
+#define SIM_MODULE		PIND3 //to check if sim module is accessible
 
 //Analog conversion pins
 #define AC_OP			PINA0 // main input
@@ -51,7 +55,7 @@ public:
 	~Inverter();
 	Inverter* setSwitch(bool on);
 	Inverter* switchToMains(bool mainsOrInverter);
-	Inverter* monitor();
+	Inverter* monitor(char serverResponse);
 	uint16_t getAcInputReadings();
 	double getBattInputReadings();
 	uint8_t getOverloadInputReadings();
@@ -60,11 +64,15 @@ public:
 	void incrementEntryCounter();
 	void emitMessage();
 	void setServerResponse(char param1);
+	bool isModuleAvailable();
 	
+	char *data();
 protected:
 	Inverter* __setLoad(bool attach);
 	Inverter* __setChargeEnable(bool enable);
 	Inverter* __chargingMode(bool upgrade = false);
+	Inverter* __remoteSourceOrBypass();
+	
 	bool __isBattLow();
 	bool __isBattFull();
 	bool __AcInputVoltageCheck();
@@ -93,7 +101,7 @@ private:
 	uint8_t __INVERTER_INT_CP__;
 	const double __BATT_LOW_LEVEL__;
 	const double __BATT_FULL_LEVEL__;
-	volatile char serverPort = NULL;
+	volatile char _serverPort;
 	volatile bool _chargeUpgrade = true;
 	volatile bool _isUpgraded = true;
 	volatile bool _isOverloaded = false;

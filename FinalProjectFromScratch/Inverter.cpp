@@ -9,6 +9,7 @@
 #include <avr/interrupt.h>
 #include <util/delay.h>
 #include "Inverter.h"
+#include <string.h>
 
 volatile uint16_t Inverter::__analog_ac_value__ = 0;
 volatile uint16_t Inverter::__analog_batt_value__ = 0;
@@ -16,7 +17,10 @@ volatile uint16_t Inverter::__analog_overload_value__ = 0;
 
 void Inverter::setServerResponse(char serverSwitch)
 {
-	serverPort = serverSwitch;
+	if (serverSwitch != 0)
+	{
+		_serverPort = serverSwitch;
+	}
 }
 
 uint8_t Inverter::getEntryCounter()
@@ -83,7 +87,8 @@ Inverter::Inverter(Lcd &lcd)
 	 _entryCounter2(1),
 	 _entryCounter3(1),
 	 _entryCounter4(1),
-	 _entryCounter5(1)
+	 _entryCounter5(1),
+	 _serverPort(0)
 {
 	//initialize analog holding variables
 	this->__setAcAnalogValue(0)
@@ -101,7 +106,11 @@ Inverter::Inverter(Lcd &lcd)
 	INV_DIR |= (1<<POWER) | (1<<LOAD);
 		
 	//enable pins for input
-	INV_DIR &= ~( (1<<BATT_LOW) | (1<<BATT_FULL) | (1<<AC_PIN) | (1<<OVERLOAD) );
+	//INV_DIR &= ~( (1<<BATT_LOW) | (1<<BATT_FULL) | (1<<AC_PIN) | (1<<OVERLOAD) );
+	
+	//module control
+	INV_DIR &= ~(1<<SIM_MODULE);
+	INV_CTR &= ~(1<<SIM_MODULE); //set it to low
 		
 	//enable analog conversions
 	//configure ADC
@@ -322,6 +331,61 @@ Inverter* Inverter::__chargingMode(bool upgrade /*= false*/)
 	}
 	
 	return this;
+}
+
+Inverter* Inverter::__remoteSourceOrBypass()
+{
+	if (isModuleAvailable())
+	{
+		if (_serverPort == '1')
+		{
+			return setSwitch(true);
+		}
+		else if (_serverPort == '0')
+		{
+			return setSwitch(false);
+		}
+		
+		return this;
+	}
+
+	return setSwitch(true);
+}
+
+bool Inverter::isModuleAvailable()
+{
+	//return true;
+	if ( (INV_CTR_READ & (1<<SIM_MODULE)) ) 
+	{ 
+		return true;
+	}
+	
+	return false;
+}
+
+char * Inverter::data()
+{
+	char ac_str[4];
+	char batt_str[4];
+	char load_str[4];
+	itoa(getAcInputReadings(), ac_str, 10); 
+	itoa(getBattInputReadings(), batt_str, 10);
+	itoa(getOverloadInputReadings(), load_str, 10);
+	
+	char paradata[100] = "?type=project"; // &ac_in=190 &battery_level=78&charging=1&load=40";
+	strcat(paradata, "&ac_in=");  
+	strcat(paradata, ac_str);
+	
+	strcat(paradata, "&battery_level=");
+	strcat(paradata, batt_str);
+	
+	strcat(paradata, "&charging=");
+	strcat(paradata, (_isCharging)?"1":"0");
+	
+	strcat(paradata, "&load=");
+	strcat(paradata, load_str);
+	
+	return paradata;	
 }
 
 bool Inverter::__isBattLow()
@@ -648,13 +712,14 @@ Inverter* Inverter::analogPinSwitching()
  *
  * \return Inverter::Inverter*
  */
-Inverter* Inverter::monitor()
+Inverter* Inverter::monitor(char serverResponse)
 {
+	setServerResponse(serverResponse);
 		
 	if (__AcInputVoltageCheck()) //check low or high voltage
 	{
 		switchToMains(false)
-			->setSwitch(true)
+			->__remoteSourceOrBypass()
 			->__setLoad(true);
 				
 		_entryCounter1 = 1;

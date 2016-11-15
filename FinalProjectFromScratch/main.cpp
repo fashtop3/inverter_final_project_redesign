@@ -21,33 +21,26 @@
  InvSIM800 sim800 = InvSIM800();
 
 //function prototype
-void my_timer_setup();
+void myTimerSetup();
+void checkModuleToggled();
 
 int main(void)
 {		
-	DDRB |= 1<<PINB3 | 1<<PINB4;
+	lcd.clScr(); // clear screen
 	sim800.setHostname("iot.rockcityfmradio.com/api/report/1");
-	sim800.setParam("?type=project&ac_in=190&battery_level=78&charging=1&load=40");
 	
 	//cli(); //clear global interrupt
 	sei(); //Enable Global Interrupt
-	my_timer_setup();
+	myTimerSetup();
 	_delay_ms(500); //allow boot time
-	PORTB |= 1<<PINB3;
-	inverter.setSwitch(true); //power on the inverter
-	
-	// Initialize UART modules
-	//for (int i = 0; i < serialAvailable(); i++) {
-		//serialInit(i, BAUD(9600, F_CPU));
-	//}
-	
-	
+	//inverter.setSwitch(true); //power on the inverter
 		
     while (1) 
     {		
-		sim800.setup();
-		inverter.setServerResponse(sim800.getServerResponse());
-		inverter.monitor();
+		if (inverter.isModuleAvailable())
+		{
+			sim800.setup();
+		}
     }
 	
 }
@@ -59,12 +52,15 @@ ISR(TIMER1_COMPA_vect)
 	count++;
 	
 	//PORTB ^= 1<<PINB3; //do this every 100ms;	
+	inverter.monitor(sim800.getServerResponse());
+	checkModuleToggled();
 	
 	if (count > 10) //do this every 1sec
 	{
 		sim800.incrementInSec();
 		inverter.incrementEntryCounter();
 		inverter.emitMessage();
+		sim800.setParam(inverter.data());
 		count = 0;
 	}
 }
@@ -76,11 +72,25 @@ ISR(ADC_vect)
 	ADCSRA |= 1<<ADSC; //start new conversion
 }
 
-void my_timer_setup()
+void myTimerSetup()
 {
 	//16000000/1024 = 15625 //FOR 1sec
 	TCCR1B |= (1<<WGM12) | (1<<CS12) | (1<<CS10);
 	TIMSK |= (1<<OCIE1A);
 	//OCR1A = 15624; //timer overflow value set to 1sec
 	OCR1A = 1562; //timer overflow value set to 1sec
+}
+
+void checkModuleToggled()
+{
+	static bool cur = false;
+	if (inverter.isModuleAvailable())
+	{
+		if (!cur) sim800.externalReset();
+		cur = true;
+	}
+	else
+	{
+		cur = false;
+	}
 }
