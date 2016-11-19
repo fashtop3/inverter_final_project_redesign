@@ -179,7 +179,7 @@ Inverter* Inverter::setSwitch(bool on)
 		else
 		{
 			//__restoreEventFor(INT_BATTERY_LOW_vect);
-			INV_CTR |= 1<<POWER;
+			INV_CTR &= ~(1<<POWER);
 		}
 		
 	}
@@ -193,7 +193,7 @@ Inverter* Inverter::setSwitch(bool on)
 		{
 			__restoreEventFor(INT_CHARGE_REQ_vect);
 		}
-		INV_CTR &= ~(1<<POWER);
+		INV_CTR |= 1<<POWER;
 	}
 	
 	return this;
