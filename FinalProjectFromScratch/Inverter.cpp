@@ -5,7 +5,7 @@
 * Author: Ayodeji
 */
 
-#define F_CPU 16000000UL
+//#define F_CPU 16000000UL
 #include <avr/interrupt.h>
 #include <util/delay.h>
 #include "Inverter.h"
@@ -126,14 +126,14 @@ Inverter::Inverter(Lcd &lcd)
 	ADCSRA |= (1<<ADEN); //enable ADC
 		
 	sei();	//Enable global interrupt
-		
+// 		
 	ADCSRA |= 1<<ADSC; //start first conversion
-		
-		
+// 		
+// 		
 	//powerOn(); //power the
 	//changeToInverter();
 		
-	_delay_ms(500); //delays for 500ms for stabilize
+	_delay_ms(50); //delays for 500ms for stabilize
 	//outputLoad(); //put load on by default
 
 } //Inverter

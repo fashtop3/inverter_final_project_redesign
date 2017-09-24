@@ -37,7 +37,7 @@ public:
 	
 	Lcd* send_A_Command(unsigned char command);
 	Lcd* send_A_Character(unsigned char character);
-	Lcd* send_A_String(char *str);
+	Lcd* send_A_String(const char *str);
 	Lcd* printStringToLCD(uint8_t x, uint8_t y, char *str);
 	Lcd* printIntToLCD(uint8_t x, uint8_t y, int val, uint8_t len);
 	Lcd* printDoubleToLCD(uint8_t x, uint8_t y, double val, uint8_t len, char prec);

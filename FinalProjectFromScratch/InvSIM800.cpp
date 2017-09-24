@@ -5,7 +5,7 @@
 * Author: Ayodeji
 */
 
-#define F_CPU 16000000UL // Clock Speed
+//#define F_CPU 16000000UL // Clock Speed
 
 #include <stdio.h>
 #include <string.h>

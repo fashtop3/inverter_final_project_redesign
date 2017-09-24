@@ -5,7 +5,7 @@
  * Author : Ayodeji
  */ 
 
-#define F_CPU 16000000UL
+//#define F_CPU 16000000UL
 
 #include <avr/io.h>
 #include <avr/interrupt.h>
@@ -16,9 +16,9 @@
 #include "serial.h"
 #include "InvSIM800.h"
 
- Lcd lcd;
- Inverter inverter(lcd); //initialize inverter
- InvSIM800 sim800 = InvSIM800();
+Lcd lcd;
+Inverter inverter(lcd); //initialize inverter
+InvSIM800 sim800 = InvSIM800();
 
 //function prototype
 void myTimerSetup();
@@ -26,14 +26,18 @@ void checkModuleToggled();
 
 int main(void)
 {		
-	lcd.clScr(); // clear screen
+// 	lcd.clScr(); // clear screen
+//  	DDRB = 0b11111111;
+//  	PORTB = 0b11111111;
+//  	_delay_ms(1000);
+	//lcd.send_A_String("Hello World2");
 	sim800.setHostname("iot.rockcityfmradio.com/api/report/1");
 	
-	//cli(); //clear global interrupt
+	cli(); //clear global interrupt
 	sei(); //Enable Global Interrupt
 	myTimerSetup();
 	_delay_ms(500); //allow boot time
-	//inverter.setSwitch(true); //power on the inverter
+	inverter.setSwitch(true); //power on the inverter
 		
     while (1) 
     {		

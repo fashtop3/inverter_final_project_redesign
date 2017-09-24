@@ -17,21 +17,22 @@
 // default constructor
 Lcd::Lcd()
 {
-	//firstColumnPositions[0] = 0;
-	//firstColumnPositions[1] = 64;
-		
 	LCDsControlDirection |= (1<<RS) | (1<<RW) | (1<<ENABLE);
 	
-	_delay_ms(100); 
+	//_delay_ms(15); //allow lcd to get ready FOR 1MHz
+	
+	_delay_ms(500); //allow lcd to get ready FOR 1MHz
 	
 	send_A_Command(0x01); 	// 0x01 clears the screen
-	_delay_ms(2.5); //2 for 1MHz
+	_delay_ms(100); //FOR 16MHz
+	//_delay_ms(2);
 	
 	send_A_Command(0x38);		//8 bit mood
-	_delay_ms(2.5); //50 for 1MHz
+	_delay_us(100);
 	
-	send_A_Command(0b00001100);
-	_delay_ms(2.5); //50 for 1MHz
+	send_A_Command(0b00001110);
+	_delay_us(100);
+	
 } //Lcd
 
 // default destructor
@@ -71,7 +72,7 @@ Lcd* Lcd::send_A_Character(unsigned char character)
 /** Write  string on the LCD
 * \param str String of bytes to LCD
 */
-Lcd* Lcd::send_A_String(char *str)
+Lcd* Lcd::send_A_String(const char *str)
 {
 	while(*str != '\0')
 	{
@@ -155,10 +156,10 @@ Lcd* Lcd::gotoLocation(uint8_t x, uint8_t y)
 Lcd* Lcd::clScr()
 {
 	send_A_Command(0x01);
-	_delay_ms(2.5); //2 for 1MHz
+	_delay_ms(200); //2 for 1MHz
 	//send_A_Command(0b00001110);
 	send_A_Command(0b00001100); //hiding cursor
-	_delay_ms(2.5); //100 for 1MHz //allow the command to execute to avoid screen flicker
+	_delay_ms(200); //100 for 1MHz //allow the command to execute to avoid screen flicker
 
 	return this;
 }
@@ -187,10 +188,11 @@ Lcd* Lcd::check_If_Busy()
 */
 Lcd* Lcd::peek_A_Boo(void)
 {
+	_delay_ms(10);
 	LCDsControl |= 1<<ENABLE;
 	asm volatile ("nop");
 	asm volatile ("nop");
-	_delay_ms(2.5);
+	//_delay_ms(2.5);
 	LCDsControl &= ~(1<<ENABLE);
 
 	return this;
