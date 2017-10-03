@@ -39,6 +39,8 @@
 #define AC_IP			PINA1 // inverter input
 #define INV_LOAD		PINA2 // overload input
 
+#define  OVERLOAD_DEFAULT	75
+
 
 enum Event {
 	NO_INT_vect = 0x0,
@@ -60,6 +62,8 @@ public:
 	uint16_t getAcInputReadings();
 	double getBattInputReadings();
 	uint8_t getOverloadInputReadings();
+	uint8_t getOverloadDefault();
+	void setOverload(uint8_t val);
 	Inverter* analogPinSwitching();
 	uint8_t getEntryCounter();
 	void incrementEntryCounter();

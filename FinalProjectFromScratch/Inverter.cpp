@@ -22,7 +22,7 @@ void Inverter::setServerResponse(const char &serverSwitch)
 		_serverPort = serverSwitch;
 		//return;
 	//}
-	
+	//
 	//_serverPort = 0;
 }
 
@@ -82,7 +82,7 @@ void Inverter::incrementEntryCounter()
 Inverter::Inverter(Lcd &lcd)
 	:__BATT_LOW_LEVEL__(10.5),
 	 __BATT_FULL_LEVEL__(14.5),
-	 __OVERLOAD_VAL__(75),
+	 __OVERLOAD_VAL__(OVERLOAD_DEFAULT),
 	 _lcd(lcd),
 	 _isCharging(false), 
 	 _isModeSet(false),
@@ -680,6 +680,22 @@ uint8_t Inverter::getOverloadInputReadings()
 {
 	double readings = static_cast<double> (this->__analog_overload_value__);
 	return ( ( readings / 51 ) * 20 );
+}
+
+
+/**
+ * \brief returns the default 
+ *  Overload Level
+ * \return uint8_t
+ */
+uint8_t Inverter::getOverloadDefault()
+{
+	return OVERLOAD_DEFAULT;
+}
+
+void Inverter::setOverload(uint8_t val)
+{
+	__OVERLOAD_VAL__ = val > 75 ? 75 : val;
 }
 
 /**

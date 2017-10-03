@@ -32,7 +32,8 @@ void checkModuleToggled();
 size_t readline(char *buffer, size_t max, uint16_t timeout);
 volatile char inByte = 0;
 char power_state = 0;
-unsigned short int internet, load_protect; char load_protect_str[4];
+unsigned short int internet = 0;
+unsigned short int load_protect = inverter.getOverloadDefault(); //char load_protect_str[4];
 
 bool is_urc(const char *line, size_t len);
 bool expect_scan(const char *pattern, void *ref, uint16_t timeout = SIM800_SERIAL_TIMEOUT);
@@ -64,17 +65,13 @@ int main(void)
 			if (internet) {
 				serialWriteString(0, inverter.data());
 				serialWrite(0, '\n');
+			}else {
+				serialWriteString(0, "\nOut of service\n");
 			}
+			
+			len = 0;
+			*buf = 0;
 		}
-		
-		//if (len)
-		//{
-			//serialWrite(0, '\n');
-			//serialWriteString(0, buf);
-			//serialWrite(0, '\n');
-			//len = 0;
-			//*buf = 0;
-		//}
     }
 	
 }
@@ -159,13 +156,27 @@ ISR(TIMER1_COMPA_vect)
 {
 	//this ISR runs every 100ms;
 	static volatile uint8_t count = 0;
+	static volatile uint16_t internet_delay_check = 0;
 	count++;
 	
 	//PORTB ^= 1<<PINB3; //do this every 100ms;	
-	inverter.monitor(0);
+	inverter.setOverload(load_protect);
+	inverter.monitor(power_state);
 	
 	if (count > 10) //do this every 1sec
 	{
+		if (!internet) {
+			if (internet_delay_check >= 1800) //equals 30 mins delay
+			{
+				power_state = 0; // set power state to off
+				load_protect = inverter.getOverloadDefault();
+				internet_delay_check = 0;
+			}
+			internet_delay_check++;
+		} else {
+			internet_delay_check = 0;
+		}
+		
 		inverter.incrementEntryCounter();
 		inverter.emitMessage();
 		count = 0;

@@ -8,7 +8,7 @@ char inByte, inByte2 = 0;
 SoftwareSerial mySerial(9, 10);
 
 void setup() {
-  //STATE:1,1,"70"
+  //STATE:1,1,70
   // initialize both serial ports:
   Serial.begin(9600);
   Serial.println("Module testing");
