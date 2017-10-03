@@ -15,10 +15,10 @@
 #include "Lcd.h"
 
 //inverter io controls pin configurations
-#define BATT_LOW		PIND2
-#define BATT_FULL		PIND3
-#define AC_PIN			PIND4
-#define OVERLOAD		PIND5
+//#define BATT_LOW		PIND2
+//#define BATT_FULL		PIND3
+//#define AC_PIN			PIND4
+//#define OVERLOAD		PIND5
 #define POWER			PIND6
 #define LOAD			PIND7
 #define INV_DIR			DDRD //module control pin	//Data Direction Register controlling inverter functions
@@ -32,7 +32,7 @@
 #define INV_MODE_CTR	PORTB
 
 //sim module
-#define SIM_MODULE		PIND3 //to check if sim module is accessible
+#define SIM_MODULE		PIND2 //to check if sim module is accessible
 
 //Analog conversion pins
 #define AC_OP			PINA0 // main input
@@ -64,7 +64,7 @@ public:
 	uint8_t getEntryCounter();
 	void incrementEntryCounter();
 	void emitMessage();
-	void setServerResponse(char param1);
+	void setServerResponse(const char &param1);
 	bool isModuleAvailable();
 	
 	char *data();

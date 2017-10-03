@@ -11,43 +11,149 @@
 #include <avr/interrupt.h>
 #include <stdint.h>
 #include <util/delay.h>
+#include <string.h>
 #include "Inverter.h"
 #include "Lcd.h"
 #include "serial.h"
 #include "InvSIM800.h"
+#include "f_cpu.h"
 
 Lcd lcd;
 Inverter inverter(lcd); //initialize inverter
-InvSIM800 sim800 = InvSIM800();
+//InvSIM800 sim800 = InvSIM800();
+
+uint8_t urc_status;
+char buf[SIM800_BUFSIZE];
+size_t len = 0;
 
 //function prototype
 void myTimerSetup();
 void checkModuleToggled();
+size_t readline(char *buffer, size_t max, uint16_t timeout);
+volatile char inByte = 0;
+char power_state = 0;
+unsigned short int internet, load_protect; char load_protect_str[4];
+
+bool is_urc(const char *line, size_t len);
+bool expect_scan(const char *pattern, void *ref, uint16_t timeout = SIM800_SERIAL_TIMEOUT);
+bool expect_scan(const char *pattern, void *ref, void *ref1, uint16_t timeout = SIM800_SERIAL_TIMEOUT);
+bool expect_scan(const char *pattern, void *ref, void *ref1, void *ref2, uint16_t timeout = SIM800_SERIAL_TIMEOUT);
 
 int main(void)
 {		
-// 	lcd.clScr(); // clear screen
-//  	DDRB = 0b11111111;
-//  	PORTB = 0b11111111;
-//  	_delay_ms(1000);
 	//lcd.send_A_String("Hello World2");
-	sim800.setHostname("iot.rockcityfmradio.com/api/report/1");
+	//sim800.setHostname("52.170.211.220/api/report/1");
 	
 	cli(); //clear global interrupt
 	sei(); //Enable Global Interrupt
 	myTimerSetup();
 	_delay_ms(500); //allow boot time
 	inverter.setSwitch(true); //power on the inverter
+	serialInit(0, BAUD(57600, F_CPU));
 		
     while (1) 
-    {		
-		if (inverter.isModuleAvailable())
-		{
-			sim800.setup();
+    {	
+		//len = readline(buf, SIM800_BUFSIZE, 3000);
+		if(expect_scan(F("STATE:%hu,%hu,%hu"), &internet, &power_state, &load_protect, 3000)){
+			//if (internet) { serialWriteString(0, "...\n DEVICE IS CONNECTED. \n");	} else { serialWriteString(0, "...\n DEVICE IS NOT CONNECTED. \n");	}
+			//if (power_state) { serialWriteString(0, "...\n DEVICE IS POWERED ON. \n");	} else { serialWriteString(0, "...\n DEVICE IS POWERED OFF. \n");}
+//
+			//serialWriteString(0, "...\n INVERTER LOAD PROTECT. ");
+			//itoa(load_protect, load_protect_str, 10);
+			//serialWriteString(0, load_protect_str);
+			if (internet) {
+				serialWriteString(0, inverter.data());
+				serialWrite(0, '\n');
+			}
 		}
+		
+		//if (len)
+		//{
+			//serialWrite(0, '\n');
+			//serialWriteString(0, buf);
+			//serialWrite(0, '\n');
+			//len = 0;
+			//*buf = 0;
+		//}
     }
 	
 }
+
+bool expect_scan(const char *pattern, void *ref, uint16_t timeout)
+{
+	//char buf[SIM800_BUFSIZE];
+	size_t len;
+	do len = readline(buf, SIM800_BUFSIZE, timeout); while (is_urc(buf, len));
+	return sscanf(buf, (const char *) pattern, ref) == 1;
+	//return sscanf_P(buf, (const char PROGMEM *) pattern, ref) == 1;
+}
+
+bool expect_scan(const char *pattern, void *ref, void *ref1, uint16_t timeout)
+{
+	//char buf[SIM800_BUFSIZE];
+	//size_t len;
+	do len = readline(buf, SIM800_BUFSIZE, timeout); while (is_urc(buf, len));
+	return sscanf(buf, (const char *) pattern, ref, ref1) == 2;
+	//return sscanf_P(buf, (const char PROGMEM *) pattern, ref, ref1) == 2;
+}
+
+bool expect_scan(const char *pattern, void *ref, void *ref1, void *ref2, uint16_t timeout)
+{
+	//char buf[SIM800_BUFSIZE];
+	//size_t len;
+	do len = readline(buf, SIM800_BUFSIZE, timeout); while (is_urc(buf, len));
+	return sscanf(buf, (const char *) pattern, ref, ref1, ref2) == 3;
+	//return sscanf_P(buf, (const char PROGMEM *) pattern, ref, ref1, ref2) == 3;
+}
+
+bool is_urc(const char *line, size_t len)
+{
+	urc_status = 0xff;
+	
+	for (uint8_t i = 0; i < 17; i++)
+	{
+		char urc[30];
+		strcpy(urc, (PGM_P)pgm_read_word(&(_urc_messages[i])));
+		uint8_t urc_len = strlen(urc);
+		if (len >= urc_len && !strncmp(urc, line, urc_len))
+		{
+			urc_status = i;
+			return true;
+		}
+	}
+
+	return false;
+}
+
+
+size_t readline(char *buffer, size_t max, uint16_t timeout)
+{
+	static volatile uint16_t idx = 0;
+	volatile char c;
+	uint16_t rx = 0;
+	
+	while (--timeout) {
+		while (serialHasChar(0)) {
+			c = serialGet(0);
+			if (c == '\r') continue;
+			if (c == '\n') {
+				if (!idx) continue;
+				timeout = 0;
+				rx = idx;
+				break;
+			}
+			if (max - idx) buffer[idx++] = c;
+		}
+
+		if (timeout == 0) break;
+		_delay_ms(1);
+	}
+	
+	buffer[idx] = 0;
+	idx = 0;
+	return rx;
+}
+
 
 ISR(TIMER1_COMPA_vect)
 {
@@ -56,15 +162,12 @@ ISR(TIMER1_COMPA_vect)
 	count++;
 	
 	//PORTB ^= 1<<PINB3; //do this every 100ms;	
-	inverter.monitor(sim800.getServerResponse());
-	checkModuleToggled();
+	inverter.monitor(0);
 	
 	if (count > 10) //do this every 1sec
 	{
-		sim800.incrementInSec();
 		inverter.incrementEntryCounter();
 		inverter.emitMessage();
-		sim800.setParam(inverter.data());
 		count = 0;
 	}
 }
@@ -83,18 +186,4 @@ void myTimerSetup()
 	TIMSK |= (1<<OCIE1A);
 	//OCR1A = 15624; //timer overflow value set to 1sec
 	OCR1A = 1562; //timer overflow value set to 1sec
-}
-
-void checkModuleToggled()
-{
-	static bool cur = false;
-	if (inverter.isModuleAvailable())
-	{
-		if (!cur) sim800.externalReset();
-		cur = true;
-	}
-	else
-	{
-		cur = false;
-	}
 }

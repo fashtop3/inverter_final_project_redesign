@@ -15,12 +15,15 @@ volatile uint16_t Inverter::__analog_ac_value__ = 0;
 volatile uint16_t Inverter::__analog_batt_value__ = 0;
 volatile uint16_t Inverter::__analog_overload_value__ = 0;
 
-void Inverter::setServerResponse(char serverSwitch)
+void Inverter::setServerResponse(const char &serverSwitch)
 {
-	if (serverSwitch != 0)
-	{
+	//if (serverSwitch != 0)
+	//{
 		_serverPort = serverSwitch;
-	}
+		//return;
+	//}
+	
+	//_serverPort = 0;
 }
 
 uint8_t Inverter::getEntryCounter()
@@ -185,12 +188,9 @@ Inverter* Inverter::setSwitch(bool on)
 	}
 	else
 	{
-		if (_hasLowBatt)
-		{
+		if (_hasLowBatt) {
 			__saveCurrentEventFor(INT_CHARGE_REQ_vect);
-		}
-		else
-		{
+		} else {
 			__restoreEventFor(INT_CHARGE_REQ_vect);
 		}
 		INV_CTR |= 1<<POWER;
@@ -346,11 +346,11 @@ Inverter* Inverter::__remoteSourceOrBypass()
 {
 	if (isModuleAvailable())
 	{
-		if (_serverPort == '1')
+		if (_serverPort == 1)
 		{
 			return setSwitch(!_hasLowBatt);
 		}
-		else if (_serverPort == '0')
+		else if (_serverPort == 0)
 		{
 			return setSwitch(false);
 		}
@@ -375,13 +375,13 @@ bool Inverter::isModuleAvailable()
 char * Inverter::data()
 {
 	char ac_str[4];
-	char batt_str[4];
+	char batt_str[6];
 	char load_str[4];
 	itoa(getAcInputReadings(), ac_str, 10); 
-	itoa(getBattInputReadings(), batt_str, 10);
+	dtostrf(getBattInputReadings(), 5, 2, batt_str);
 	itoa(getOverloadInputReadings(), load_str, 10);
 	
-	char paradata[100] = "?type=project"; // &ac_in=190 &battery_level=78&charging=1&load=40";
+	char paradata[100] = "?type=project"; // &ac_in=190&battery_level=78&charging=1&load=40";
 	strcat(paradata, "&ac_in=");  
 	strcat(paradata, ac_str);
 	

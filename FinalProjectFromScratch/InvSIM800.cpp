@@ -227,7 +227,7 @@ bool InvSIM800::__soft_reset__(uint8_t &called, uint8_t limits)
 bool InvSIM800::time(char *date, char *time, char *tz)
 {
 	println(F("AT+CCLK?"));
-	return expect_scan(F("+CCLK: \"%8s,%8s%3s\""), date, time, tz) == 3;
+	return expect_scan(F("+CCLK: \"%8s,%8s,%3s\""), date, time, tz) == 3;
 }
 
 bool InvSIM800::enableGPRS(uint16_t timeout)
