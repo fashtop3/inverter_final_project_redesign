@@ -57,9 +57,14 @@ class Sim800l
     bool expect_AT_OK(const char *cmd, uint16_t timeout);
     bool expect_AT(const char *cmd, const char *expected, uint16_t timeout);
     bool expect(const char *expected, uint16_t timeout);
-    
+
     void setAPN(const char *apn, const char *user, const char *pass);
     bool wakeup();
+    bool registerNetwork(uint16_t timeout);
+    bool Sim800l::expect_scan(const char *pattern, void *ref, uint16_t timeout = SIM800_SERIAL_TIMEOUT);
+    bool Sim800l::expect_scan(const char *pattern, void *ref, void *ref1, uint16_t timeout = SIM800_SERIAL_TIMEOUT);
+    bool Sim800l::expect_scan(const char *pattern, void *ref, void *ref1, void *ref2, uint16_t timeout = SIM800_SERIAL_TIMEOUT);
+
 
     void print(uint8_t s);
     void println(uint8_t s);
@@ -69,7 +74,7 @@ class Sim800l
     void setup();
 
   protected:
-  void _eat_echo();
+    void _eat_echo();
     bool _isModuleTimeSet;
     bool _is_ntwk_reg;
     volatile bool _sim_is_waked;

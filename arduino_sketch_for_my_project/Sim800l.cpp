@@ -193,6 +193,51 @@ void Sim800l::_eat_echo()
 void Sim800l::setup()
 {
   wakeup();
+  registerNetwork(2000);
+}
+
+bool Sim800l::registerNetwork(uint16_t timeout)
+{
+  _is_ntwk_reg = false;
+  Serial.println("Check Registered Network?...");
+  _eat_echo();
+  unsigned short int n = 0;
+//  println(F("AT+CREG?"));
+  if (expect_scan(F("+CREG: 0,%hu"), &n), timeout) {
+    if ((n == 1 || n == 5))
+    {
+      _is_ntwk_reg = true;
+      Serial.println("Registered Network");
+      return true;
+    }
+  }
+
+  Serial.println("No Registered Network Found?...");
+  return false;
+}
+
+bool Sim800l::expect_scan(const char *pattern, void *ref, uint16_t timeout)
+{
+  String resp = _readSerial(timeout);
+  char buf[resp.length()];
+  resp.toCharArray(buf, resp.length());
+  return sscanf(buf, (const char *) pattern, ref) == 1;
+}
+
+bool Sim800l::expect_scan(const char *pattern, void *ref, void *ref1, uint16_t timeout)
+{
+  String resp = _readSerial(timeout);
+  char buf[resp.length()];
+  resp.toCharArray(buf, resp.length());
+  return sscanf(buf, pattern, ref, ref1) == 2;
+}
+
+bool Sim800l::expect_scan(const char *pattern, void *ref, void *ref1, void *ref2, uint16_t timeout)
+{
+  String resp = _readSerial(timeout);
+  char buf[resp.length()];
+  resp.toCharArray(buf, resp.length());
+  return sscanf(buf, (const char *) pattern, ref, ref1, ref2) == 3;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -215,7 +260,7 @@ String Sim800l::_readSerial(uint16_t timeout) {
   while  (!SIM.available() && --timeout)
   {
     delay(1);
-//    Serial.println(timeout);
+    //    Serial.println(timeout);
   }
   if (SIM.available()) {
     return SIM.readString();
