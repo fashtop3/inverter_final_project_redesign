@@ -168,12 +168,7 @@ Inverter* Inverter::setSwitch(bool on)
 	if(on)
 	{
 		if (__isBattLow())
-		{
-// 			if(!_isMains)
-// 			{
-// 				__saveCurrentEventFor(INT_BATTERY_LOW_vect);
-// 			}
-			
+		{			
 			if (_entryCounter5 == 5)
 			{
 				setSwitch(false);

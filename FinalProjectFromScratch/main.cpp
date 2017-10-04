@@ -156,7 +156,7 @@ ISR(TIMER1_COMPA_vect)
 {
 	//this ISR runs every 100ms;
 	static volatile uint8_t count = 0;
-	static volatile uint16_t internet_delay_check = 0;
+	static volatile uint16_t internet_delay_check = 1;
 	count++;
 	
 	//PORTB ^= 1<<PINB3; //do this every 100ms;	
@@ -170,11 +170,11 @@ ISR(TIMER1_COMPA_vect)
 			{
 				power_state = 0; // set power state to off
 				load_protect = inverter.getOverloadDefault();
-				internet_delay_check = 0;
+				internet_delay_check = 1;
 			}
 			internet_delay_check++;
 		} else {
-			internet_delay_check = 0;
+			internet_delay_check = 1;
 		}
 		
 		inverter.incrementEntryCounter();
