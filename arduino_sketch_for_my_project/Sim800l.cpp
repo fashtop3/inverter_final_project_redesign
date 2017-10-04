@@ -36,10 +36,26 @@ SoftwareSerial SIM(SIM_RX_PIN, SIM_TX_PIN);
 SoftwareSerial INV(INV_RX_PIN, INV_TX_PIN);
 
 
-Sim800l::Sim800l()
+volatile uint8_t Sim800l::_reset_delay = 0;
+volatile uint8_t Sim800l::_request_delay = 0;
+
+uint8_t Sim800l::__called_reg_ntwk__ = 0;
+uint8_t Sim800l::__called_apn__ = 0;
+uint8_t Sim800l::__called_grps__ = 0;
+
+
+Sim800l::init()
 {
+  Serial.begin(115200);
+  while (!Serial);
+  Serial.println("Initializing sim module....");
+
   SIM.begin(9600); // INITIALIZE UART
-  INV.begin(57600);
+  //  INV.begin(57600);
+
+  pinMode(LED_PIN, OUTPUT);
+  pinMode(RESET_PIN, OUTPUT);
+  digitalWrite(RESET_PIN, HIGH);
 
   urc_status = 0xff;
   hostname = 0;
@@ -67,98 +83,53 @@ bool Sim800l::wakeup()
   digitalWrite(LED_PIN, 1);
 #endif
   //TODO: CHECK WAIT FOR OK IF NOT .... SHUTDOWN AND RESTART
-
-  SIM.print(F("AT\r\n"));
-  while (_readSerial().indexOf("OK") == -1 ) {
-    SIM.print(F("AT\r\n"));
-  }
   //// check if the chip is already awake, otherwise start wakeup
-  //if (!expect_AT_OK(F(""), 1000))
-  //{
-  //// SIM800 using PWRKEY wakeup procedure"
-  ////pinMode(SIM800_KEY, OUTPUT);
-  ////pinMode(SIM800_PS, INPUT);
-  ////do {
-  ////digitalWrite(SIM800_KEY, HIGH);
-  ////delay(10);
-  ////digitalWrite(SIM800_KEY, LOW);
-  ////delay(1100);
-  ////digitalWrite(SIM800_KEY, HIGH);
-  ////delay(2000);
-  ////} while (digitalRead(SIM800_PS) == LOW);
-  ////// make pin unused (do not leak)
-  ////pinMode(SIM800_KEY, INPUT_PULLUP);
-  ////PRINTLN("!!! SIM800 ok");
-  //}
-  //  else
-  //  {
-  //    PRINTLN("!!! SIM800 already awake");
-  //  }
-
-
-  if (reset())
+  if (!expect_AT_OK(F(""), 2000))
+  {
+    Serial.println("!!! SIM800 Unavailable.... Restarting....");
+    _sim_is_waked = false;
+    if (!reset())
+    {
+      _sim_is_waked = false;
+      Serial.println("!!! SIM800 Reset Error");
+    } else {
+      _sim_is_waked = true;
+      Serial.println("SIM800 Restarted!!!");
+    }
+  }
+  else
   {
     _sim_is_waked = true;
-    _reset_delay = 0;
-    _switchEventSync(SYNC_REG_NTWK);
-    return true;
+    Serial.println("!!! SIM800 already awake");
   }
 
 #if (LED)
   digitalWrite(LED_PIN, 0);
 #endif
-
-  return false;
+  return _sim_is_waked;
 }
 
 
 bool Sim800l::reset() {
   bool ok = false;
 
-  if (!_sim_is_waked && _reset_delay == 5)
-  {
-    SIM_RST_DDR &= ~1 << SIM800_RS;
-    _delay_ms(500);
-    SIM_RST_CTRL |= 1 << SIM800_RS;
-  }
-
-  // RST high keeps the chip in reset without a diode, so put to low
-  //if (!fona) PORTD &= ~1<<PIND2;
-  //
-  if (!_sim_is_waked && _reset_delay == 30)
-  {
-    while (serialHasChar(0)) serialGet(0);
-
-    expect_AT_OK(F(""), 2000);
-    expect_AT_OK(F(""), 2000);
-    expect_AT_OK(F(""), 2000);
-    ok = expect_AT_OK(F("E0"), 2000); //TODO: PUT RETRIES HERE
-
-    expect_AT_OK(F("+IFC=0,0"), 2000); // No hardware flow control
-    expect_AT_OK(F("+CIURC=0"), 2000); // No "Call Ready"
-
-    while (serialHasChar(0)) serialGet(0);
-    _reset_delay = 25;
-  }
-
-
 #if (LED)
   digitalWrite(LED_PIN, 1);
 #endif
-  digitalWrite(RESET_PIN, 1);
-  delay(1000);
+
   digitalWrite(RESET_PIN, 0);
   delay(1000);
+  digitalWrite(RESET_PIN, 1);
   // wait for the module response
 
-  SIM.print(F("AT\r\n"));
-  while (_readSerial().indexOf("OK") == -1 ) {
-    SIM.print(F("AT\r\n"));
-  }
+  _eat_echo();
+  expect_AT_OK(F(""), 2000);
+  expect_AT_OK(F(""), 2000);
+  expect_AT_OK(F(""), 2000);
+  ok = expect_AT_OK(F("E0"), 2000); //TODO: PUT RETRIES HERE
+  _eat_echo();
 
-  //wait for sms ready
-  while (_readSerial().indexOf("SMS") == -1 ) {
-  }
+
 #if (LED)
   digitalWrite(LED_PIN, 0);
 #endif
@@ -166,6 +137,63 @@ bool Sim800l::reset() {
   return ok;
 }
 
+
+bool Sim800l::expect_AT_OK(const char *cmd, uint16_t timeout)
+{
+  return expect_AT(cmd, F("OK"), timeout);
+}
+
+bool Sim800l::expect_AT(const char *cmd, const char *expected, uint16_t timeout)
+{
+  print(F("AT"));
+  println(cmd);
+  return expect(expected, timeout);
+}
+
+bool Sim800l::expect(const char *expected, uint16_t timeout)
+{
+  return _readSerial(timeout).indexOf(expected) != -1 ? true : false;
+}
+
+
+void Sim800l::print(uint8_t s)
+{
+  SIM.print(s);
+}
+
+void Sim800l::println(uint8_t s)
+{
+  SIM.print(s);
+  _eat_echo();
+  SIM.print('\n');
+}
+
+void Sim800l::print(const char *s)
+{
+  SIM.print(s);
+}
+
+void Sim800l::println(const char *s)
+{
+  SIM.print(s);
+  _eat_echo();
+  SIM.print('\n');
+}
+
+void Sim800l::_eat_echo()
+{
+  while (SIM.available())
+  {
+    SIM.read();
+    delay(1);
+  }
+}
+
+
+void Sim800l::setup()
+{
+  wakeup();
+}
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -183,20 +211,17 @@ void Sim800l::begin() {
 //
 //PRIVATE METHODS
 //
-String Sim800l::_readSerial() {
-  _timeout = 0;
-  while  (!SIM.available() && _timeout < 12000  )
+String Sim800l::_readSerial(uint16_t timeout) {
+  while  (!SIM.available() && --timeout)
   {
-    delay(13);
-    _timeout++;
-
-
+    delay(1);
+//    Serial.println(timeout);
   }
   if (SIM.available()) {
     return SIM.readString();
   }
 
-
+  return "";
 }
 
 

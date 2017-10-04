@@ -28,6 +28,14 @@
 #define LED true // used for indicator led, in case that you don want set to false . 
 #define LED_PIN 13 //pin to indicate states. 
 
+#ifdef F
+#undef F
+#define F(s) (s)
+#else
+#define F(s) (s)
+#endif
+
+#define SIM800_SERIAL_TIMEOUT 4000
 
 enum EventSync {
   SYNC_WAKEUP = 0x0,
@@ -38,15 +46,30 @@ enum EventSync {
 };
 
 
+
 class Sim800l
 {
 
   public:
-    Sim800l();
+    init();
 
     bool reset();
+    bool expect_AT_OK(const char *cmd, uint16_t timeout);
+    bool expect_AT(const char *cmd, const char *expected, uint16_t timeout);
+    bool expect(const char *expected, uint16_t timeout);
+    
+    void setAPN(const char *apn, const char *user, const char *pass);
+    bool wakeup();
+
+    void print(uint8_t s);
+    void println(uint8_t s);
+    void print(const char *s);
+    void println(const char *s);
+
+    void setup();
 
   protected:
+  void _eat_echo();
     bool _isModuleTimeSet;
     bool _is_ntwk_reg;
     volatile bool _sim_is_waked;
@@ -70,13 +93,12 @@ class Sim800l
   private:
     int _timeout;
     String _buffer;
-    String _readSerial();
+    String _readSerial(uint16_t timeout = SIM800_SERIAL_TIMEOUT);
 
 
   public:
 
     void begin();
-    void reset();
 
     // Methods for calling || Funciones de llamadas.
     bool answerCall();
@@ -106,7 +128,7 @@ const char eti_apn[] PROGMEM = "etisalat";
 const char air_apn[] PROGMEM = "internet.ng.airtel.com";
 PGM_P const apn[] PROGMEM = { mtn_apn, eti_apn, air_apn };
 
-/* incoming socket data notification */
+///* incoming socket data notification */
 const char * const urc_01 PROGMEM = "+CIPRXGET: 1,";
 /* FTP state change notification */
 const char * const urc_02 PROGMEM = "+FTPGET: 1,";
@@ -134,7 +156,7 @@ const char * const urc_15 PROGMEM = "UNDER-VOLTAGE POWER DOWN";
 const char * const urc_16 PROGMEM = "UNDER-VOLTAGE WARNNING";
 const char * const urc_17 PROGMEM = "OVER-VOLTAGE POWER DOWN";
 const char * const urc_18 PROGMEM = "OVER-VOLTAGE WARNNING";
-
+//
 const char * const _urc_messages[] PROGMEM = {
   urc_01, urc_02, urc_03, urc_04, urc_06, urc_07, urc_08, urc_09, urc_10,
   urc_11, urc_12, urc_13, urc_14, urc_15, urc_16, urc_17, urc_18
