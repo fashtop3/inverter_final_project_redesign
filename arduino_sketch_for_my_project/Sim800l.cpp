@@ -101,6 +101,8 @@ bool Sim800l::wakeup()
   {
     _sim_is_waked = true;
     Serial.println("!!! SIM800 already awake");
+    expect_AT_OK(F("E0"), 2000); //TODO: PUT RETRIES HERE
+    _eat_echo();
   }
 
 #if (LED)
@@ -192,8 +194,10 @@ void Sim800l::_eat_echo()
 
 void Sim800l::setup()
 {
-  wakeup();
-  registerNetwork(2000);
+  if (wakeup()) {
+    delay(2000);
+    registerNetwork(30000);
+  }
 }
 
 bool Sim800l::registerNetwork(uint16_t timeout)
@@ -202,7 +206,7 @@ bool Sim800l::registerNetwork(uint16_t timeout)
   Serial.println("Check Registered Network?...");
   _eat_echo();
   unsigned short int n = 0;
-//  println(F("AT+CREG?"));
+  println(F("AT+CREG?"));
   if (expect_scan(F("+CREG: 0,%hu"), &n), timeout) {
     if ((n == 1 || n == 5))
     {
@@ -219,6 +223,7 @@ bool Sim800l::registerNetwork(uint16_t timeout)
 bool Sim800l::expect_scan(const char *pattern, void *ref, uint16_t timeout)
 {
   String resp = _readSerial(timeout);
+  Serial.println(resp);
   char buf[resp.length()];
   resp.toCharArray(buf, resp.length());
   return sscanf(buf, (const char *) pattern, ref) == 1;
