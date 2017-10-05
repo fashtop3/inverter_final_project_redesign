@@ -222,10 +222,12 @@ bool Sim800l::registerNetwork(uint16_t timeout)
 
 bool Sim800l::expect_scan(const char *pattern, void *ref, uint16_t timeout)
 {
-  String resp = _readSerial(timeout);
-  Serial.println(resp);
-  char buf[resp.length()];
-  resp.toCharArray(buf, resp.length());
+//  String resp = _readSerial(timeout);
+//  Serial.println(resp);
+  char buf[64];
+  size_t len;
+//  resp.toCharArray(buf, resp.length());
+  len = readline(buf, 64, timeout);
   return sscanf(buf, (const char *) pattern, ref) == 1;
 }
 
@@ -244,6 +246,29 @@ bool Sim800l::expect_scan(const char *pattern, void *ref, void *ref1, void *ref2
   resp.toCharArray(buf, resp.length());
   return sscanf(buf, (const char *) pattern, ref, ref1, ref2) == 3;
 }
+
+size_t Sim800l::readline(char *buf, size_t maxIdx, uint16_t timeout)
+{
+   uint16_t idx = 0;
+   while (--timeout) {
+     while (SIM.available()) {
+       char c = (char) SIM.read();
+       if (c == '\r') continue;
+       if (c == '\n') {
+         if (!idx) continue;
+         timeout = 0;
+         break;
+       }
+       if (maxIdx - idx) buf[idx++] = c;
+     }
+
+     if (timeout == 0) break;
+     _delay_ms(1);
+   }
+   buf[idx] = 0;
+   return idx;
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 

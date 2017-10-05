@@ -73,6 +73,8 @@ class Sim800l
 
     void setup();
 
+    size_t readline(char *buf, size_t maxIdx, uint16_t timeout);
+
   protected:
     void _eat_echo();
     bool _isModuleTimeSet;
