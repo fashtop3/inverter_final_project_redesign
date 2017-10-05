@@ -35,7 +35,11 @@
 #define F(s) (s)
 #endif
 
+#define println_param(prefix, p) print(F(prefix)); print(F(",\"")); print(p); println(F("\""));
+
+#define SIM800_CMD_TIMEOUT 30000
 #define SIM800_SERIAL_TIMEOUT 4000
+#define SIM800_BUFSIZE 64
 
 enum EventSync {
   SYNC_WAKEUP = 0x0,
@@ -51,19 +55,21 @@ class Sim800l
 {
 
   public:
+  
     init();
 
     bool reset();
-    bool expect_AT_OK(const char *cmd, uint16_t timeout);
-    bool expect_AT(const char *cmd, const char *expected, uint16_t timeout);
-    bool expect(const char *expected, uint16_t timeout);
+    bool expect_AT_OK(const char *cmd, uint16_t timeout = SIM800_SERIAL_TIMEOUT);
+    bool expect_AT(const char *cmd, const char *expected, uint16_t timeout = SIM800_SERIAL_TIMEOUT);
+    bool expect(const char *expected, uint16_t timeout = SIM800_SERIAL_TIMEOUT);
+    bool expect_OK(uint16_t timeout = SIM800_SERIAL_TIMEOUT);
 
     void setAPN(const char *apn, const char *user, const char *pass);
     bool wakeup();
     bool registerNetwork(uint16_t timeout);
-    bool Sim800l::expect_scan(const char *pattern, void *ref, uint16_t timeout = SIM800_SERIAL_TIMEOUT);
-    bool Sim800l::expect_scan(const char *pattern, void *ref, void *ref1, uint16_t timeout = SIM800_SERIAL_TIMEOUT);
-    bool Sim800l::expect_scan(const char *pattern, void *ref, void *ref1, void *ref2, uint16_t timeout = SIM800_SERIAL_TIMEOUT);
+    bool expect_scan(const char *pattern, void *ref, uint16_t timeout = SIM800_SERIAL_TIMEOUT);
+    bool expect_scan(const char *pattern, void *ref, void *ref1, uint16_t timeout = SIM800_SERIAL_TIMEOUT);
+    bool expect_scan(const char *pattern, void *ref, void *ref1, void *ref2, uint16_t timeout = SIM800_SERIAL_TIMEOUT);
 
 
     void print(uint8_t s);
@@ -72,39 +78,49 @@ class Sim800l
     void println(const char *s);
 
     void setup();
+    bool setSwitchAPN();
+    bool enableGPRS(uint16_t timeout = SIM800_CMD_TIMEOUT);
+    bool disableGPRS();
 
     size_t readline(char *buf, size_t maxIdx, uint16_t timeout);
+    size_t read(char *buffer, size_t length, SoftwareSerial &serial);
+    bool is_urc(const char *line, size_t len);
+    void setHostname(const String &h);
+    void setParam(const String &p);
+    char* getUrl();
+    bool checkConnected();
+    bool shutdown();
+    bool sendInverterReq();
+    void httpRequest();
+    unsigned short int HTTP_get(const char *url, unsigned long int &length);
+    size_t HTTP_read(char *buffer, uint16_t start, uint16_t length);
 
   protected:
     void _eat_echo();
+    bool __hard_reset__();
     bool _isModuleTimeSet;
     bool _is_ntwk_reg;
-    volatile bool _sim_is_waked;
+    volatile bool _awake_;
     volatile bool _is_connected;
-    volatile static uint8_t _reset_delay;
-    volatile static uint8_t _request_delay;
-    uint8_t eventsync;
+    mutable bool power;
+    mutable uint16_t load_max;
+    mutable String inv_data;
+    
     uint8_t urc_status;
     const char *_apn;
     const char *_user;
     const char *_pass;
-    char url[100];
-    char *hostname;
-    char *param;
-    mutable char serverResponse;
-
-    static uint8_t __called_reg_ntwk__;
-    static uint8_t __called_apn__;
-    static uint8_t __called_grps__;
+    String hostname;
+    String param;
 
   private:
     int _timeout;
     String _buffer;
     String _readSerial(uint16_t timeout = SIM800_SERIAL_TIMEOUT);
+    String _readSerial(const SoftwareSerial &serial, uint16_t timeout = SIM800_SERIAL_TIMEOUT);
 
 
   public:
-
     void begin();
 
     // Methods for calling || Funciones de llamadas.
@@ -117,11 +133,7 @@ class Sim800l
     String readSms(uint8_t index); //return all the content of sms
     String getNumberSms(uint8_t index); //return the number of the sms..
     bool delAllSms();     // return :  OK or ERROR ..
-
-    void signalQuality();
-    void setPhoneFunctionality();
-    void activateBearerProfile();
-    void deactivateBearerProfile();
+    
     //get time with the variables by reference
     void RTCtime(int *day, int *month, int *year, int *hour, int *minute, int *second);
     String dateNet(); //return date,time, of the network
@@ -129,11 +141,11 @@ class Sim800l
 };
 
 /* access point configurations */
-const char apn_u_p[] PROGMEM = "web";
-const char mtn_apn[] PROGMEM = "web.gprs.mtnnigeria.net";
-const char eti_apn[] PROGMEM = "etisalat";
-const char air_apn[] PROGMEM = "internet.ng.airtel.com";
-PGM_P const apn[] PROGMEM = { mtn_apn, eti_apn, air_apn };
+//const char apn_u_p[] PROGMEM = "web";
+//const char mtn_apn[] PROGMEM = "web.gprs.mtnnigeria.net";
+//const char eti_apn[] PROGMEM = "etisalat";
+//const char air_apn[] PROGMEM = "internet.ng.airtel.com";
+//PGM_P const apn[] PROGMEM = { mtn_apn, eti_apn, air_apn };
 
 ///* incoming socket data notification */
 const char * const urc_01 PROGMEM = "+CIPRXGET: 1,";

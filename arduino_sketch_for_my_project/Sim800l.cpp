@@ -36,36 +36,31 @@ SoftwareSerial SIM(SIM_RX_PIN, SIM_TX_PIN);
 SoftwareSerial INV(INV_RX_PIN, INV_TX_PIN);
 
 
-volatile uint8_t Sim800l::_reset_delay = 0;
-volatile uint8_t Sim800l::_request_delay = 0;
-
-uint8_t Sim800l::__called_reg_ntwk__ = 0;
-uint8_t Sim800l::__called_apn__ = 0;
-uint8_t Sim800l::__called_grps__ = 0;
-
-
 Sim800l::init()
 {
   Serial.begin(115200);
   while (!Serial);
   Serial.println("Initializing sim module....");
 
+  INV.begin(57600);
   SIM.begin(9600); // INITIALIZE UART
-  //  INV.begin(57600);
+
 
   pinMode(LED_PIN, OUTPUT);
   pinMode(RESET_PIN, OUTPUT);
   digitalWrite(RESET_PIN, HIGH);
 
   urc_status = 0xff;
-  hostname = 0;
-  param = 0;
+  hostname = "";
+  param = "";
   _isModuleTimeSet = false;
-  _sim_is_waked = false;
+  _awake_ = false;
   _is_connected = false;
   _is_ntwk_reg = 0;
-  eventsync = SYNC_WAKEUP;
-  serverResponse = 0;
+
+  power = 0;
+  load_max = 75;
+  inv_data = "";
 }
 
 
@@ -82,39 +77,45 @@ bool Sim800l::wakeup()
 #if (LED)
   digitalWrite(LED_PIN, 1);
 #endif
-  //TODO: CHECK WAIT FOR OK IF NOT .... SHUTDOWN AND RESTART
-  //// check if the chip is already awake, otherwise start wakeup
+
+  _awake_ = false;
   if (!expect_AT_OK(F(""), 2000))
   {
     Serial.println("!!! SIM800 Unavailable.... Restarting....");
-    _sim_is_waked = false;
-    if (!reset())
-    {
-      _sim_is_waked = false;
-      Serial.println("!!! SIM800 Reset Error");
-    } else {
-      _sim_is_waked = true;
+    if (reset()) {
+      _awake_ = true;
       Serial.println("SIM800 Restarted!!!");
+      delay(5000);
     }
+    wakeup();
   }
   else
   {
-    _sim_is_waked = true;
-    Serial.println("!!! SIM800 already awake");
+    _awake_ = true;
+    Serial.println("!!! SIM800 awake");
+    delay(1000);
     expect_AT_OK(F("E0"), 2000); //TODO: PUT RETRIES HERE
     _eat_echo();
+    if (!registerNetwork(2000)) {
+      if (reset()) {
+        delay(5000);
+        wakeup();
+      }
+    }
   }
 
 #if (LED)
   digitalWrite(LED_PIN, 0);
 #endif
-  return _sim_is_waked;
+
+  return _awake_;
 }
 
 
 bool Sim800l::reset() {
   bool ok = false;
 
+  Serial.println("Reset Called...");
 #if (LED)
   digitalWrite(LED_PIN, 1);
 #endif
@@ -152,9 +153,19 @@ bool Sim800l::expect_AT(const char *cmd, const char *expected, uint16_t timeout)
   return expect(expected, timeout);
 }
 
+bool Sim800l::expect_OK(uint16_t timeout)
+{
+  return expect(F("OK"), timeout);
+}
+
 bool Sim800l::expect(const char *expected, uint16_t timeout)
 {
-  return _readSerial(timeout).indexOf(expected) != -1 ? true : false;
+  char buf[SIM800_BUFSIZE];
+  size_t len;
+  do len = readline(buf, SIM800_BUFSIZE, timeout); while (is_urc(buf, len));
+  //  Serial.println(buf);
+  return strcmp(buf, (const char *) expected) == 0;
+  //  return _readSerial(timeout).indexOf(expected) != -1 ? true : false;
 }
 
 
@@ -195,8 +206,24 @@ void Sim800l::_eat_echo()
 void Sim800l::setup()
 {
   if (wakeup()) {
-    delay(2000);
-    registerNetwork(30000);
+    Serial.println("switching APN configuration..");
+    if (setSwitchAPN()) {
+      Serial.println("APN Saved..");
+      Serial.println(_apn);
+      Serial.println("ENABLING GPRS...");
+      if (enableGPRS()) {
+        Serial.println("GPRS ENABLED");
+
+        delay(1000);
+        //get initial internet state here
+        sendInverterReq();
+        delay(1000);
+        sendInverterReq();
+        delay(1000);
+        httpRequest();
+        //        __hard_reset__();
+      }
+    }
   }
 }
 
@@ -205,6 +232,7 @@ bool Sim800l::registerNetwork(uint16_t timeout)
   _is_ntwk_reg = false;
   Serial.println("Check Registered Network?...");
   _eat_echo();
+  delay(20000);
   unsigned short int n = 0;
   println(F("AT+CREG?"));
   if (expect_scan(F("+CREG: 0,%hu"), &n), timeout) {
@@ -220,55 +248,335 @@ bool Sim800l::registerNetwork(uint16_t timeout)
   return false;
 }
 
+bool Sim800l::setSwitchAPN()
+{
+  //TODO:  ADD RETRIES
+  char cs[15];
+  println(F("AT+CSCA?"));
+  //+CSCA: "+234803000000",145
+  if (expect_scan(F("+CSCA: \"%13s\",%*lu"), &cs), 5000)
+  {
+    _eat_echo();
+
+    if (strcmp(cs, (char*)"+234803000000") == 0) //mtn
+    {
+      setAPN("web.gprs.mtnnigeria.net", "web", "web"); return true;
+    }
+    else if (strcmp(cs, (char*)"+234809000151") == 0) //etisalat correct is +2348090001518
+    {
+      setAPN("etisalat", "web", "web"); return true;
+    }
+    else if (strcmp(cs, (char*)"+234802000000") == 0) //airtel correct is +2348020000009
+    {
+      setAPN("internet.ng.airtel.com", "web", "web"); return true;
+    }
+    else if (strcmp(cs, (char*)"+234805000150") == 0) //glo  correct is +2348050001501
+    {
+      setAPN("gloflat", "web", "web"); return true;
+    }
+    else
+    {
+      //__hard_reset__();
+    }
+  }
+
+  return false;
+}
+
+bool Sim800l::enableGPRS(uint16_t timeout)
+{
+  disableGPRS();
+  expect_AT(F("+CIPSHUT"), F("SHUT OK"), 5000);
+  expect_AT_OK(F("+CIPMUX=1")); // enable multiplex mode
+  expect_AT_OK(F("+CIPRXGET=1")); // we will receive manually
+
+  bool attached = false;
+  while (!attached && timeout > 0) {
+    attached = expect_AT_OK(F("+CGATT=1"), 5000);
+    delay(1000);
+    timeout -= 1000;
+  }
+
+  if (!attached) return false;
+
+  if (!expect_AT_OK(F("+SAPBR=3,1,\"CONTYPE\",\"GPRS\""), 10000)) return false;
+
+  // set bearer profile access point name
+  if (_apn) {
+    print(F("AT+SAPBR=3,1,\"APN\",\""));
+    print(_apn);
+    println(F("\""));
+    if (!expect_OK()) return false;
+
+    if (_user) {
+      print(F("AT+SAPBR=3,1,\"USER\",\""));
+      print(_user);
+      println(F("\""));
+      if (!expect_OK()) return false;
+    }
+    if (_pass) {
+      print(F("AT+SAPBR=3,1,\"PWD\",\""));
+      print(_pass);
+      println(F("\""));
+      if (!expect_OK()) return false;
+    }
+  }
+
+  // open GPRS context
+  if (!expect_AT_OK(F("+SAPBR=1,1"), 30000)) return false;
+  _is_connected = true;
+
+  do {
+    println(F("AT+CGATT?"));
+    attached = expect(F("+CGATT: 1"));
+    _delay_ms(10);
+  } while (--timeout && !attached);
+
+  //_gprs_enable_delay = 0;
+
+  return attached;
+}
+
+bool Sim800l::disableGPRS()
+{
+  expect_AT(F("+CIPSHUT"), F("SHUT OK"));
+  if (!expect_AT_OK(F("+SAPBR=0,1"), 30000)) return false;
+
+  return expect_AT_OK(F("+CGATT=0"));
+}
+
+
+
 bool Sim800l::expect_scan(const char *pattern, void *ref, uint16_t timeout)
 {
-//  String resp = _readSerial(timeout);
-//  Serial.println(resp);
-  char buf[64];
+  char buf[SIM800_BUFSIZE];
   size_t len;
-//  resp.toCharArray(buf, resp.length());
-  len = readline(buf, 64, timeout);
+  do len = readline(buf, SIM800_BUFSIZE, timeout); while (is_urc(buf, len));
+  Serial.println(buf);
   return sscanf(buf, (const char *) pattern, ref) == 1;
 }
 
 bool Sim800l::expect_scan(const char *pattern, void *ref, void *ref1, uint16_t timeout)
 {
-  String resp = _readSerial(timeout);
-  char buf[resp.length()];
-  resp.toCharArray(buf, resp.length());
+  char buf[SIM800_BUFSIZE];
+  size_t len;
+  do len = readline(buf, SIM800_BUFSIZE, timeout); while (is_urc(buf, len));
+  Serial.println(buf);
   return sscanf(buf, pattern, ref, ref1) == 2;
 }
 
 bool Sim800l::expect_scan(const char *pattern, void *ref, void *ref1, void *ref2, uint16_t timeout)
 {
-  String resp = _readSerial(timeout);
-  char buf[resp.length()];
-  resp.toCharArray(buf, resp.length());
+  char buf[SIM800_BUFSIZE];
+  size_t len;
+  do len = readline(buf, SIM800_BUFSIZE, timeout); while (is_urc(buf, len));
+  Serial.println(buf);
   return sscanf(buf, (const char *) pattern, ref, ref1, ref2) == 3;
 }
 
 size_t Sim800l::readline(char *buf, size_t maxIdx, uint16_t timeout)
 {
-   uint16_t idx = 0;
-   while (--timeout) {
-     while (SIM.available()) {
-       char c = (char) SIM.read();
-       if (c == '\r') continue;
-       if (c == '\n') {
-         if (!idx) continue;
-         timeout = 0;
-         break;
-       }
-       if (maxIdx - idx) buf[idx++] = c;
-     }
+  uint16_t idx = 0;
+  while (--timeout) {
+    while (SIM.available()) {
+      char c = (char) SIM.read();
+      if (c == '\r') continue;
+      if (c == '\n') {
+        if (!idx) continue;
+        timeout = 0;
+        break;
+      }
+      if (maxIdx - idx) buf[idx++] = c;
+    }
 
-     if (timeout == 0) break;
-     _delay_ms(1);
-   }
-   buf[idx] = 0;
-   return idx;
+    if (timeout == 0) break;
+    _delay_ms(1);
+  }
+  buf[idx] = 0;
+  return idx;
 }
 
+size_t Sim800l::read(char *buffer, size_t length, SoftwareSerial &serial)
+{
+  uint32_t idx = 0;
+  while (length) {
+    while (length && serial.available()) {
+      buffer[idx++] = (char) serial.read();
+      length--;
+    }
+  }
+  return idx;
+}
+
+bool Sim800l::is_urc(const char *line, size_t len)
+{
+  urc_status = 0xff;
+
+  for (uint8_t i = 0; i < 17; i++)
+  {
+    char urc[30];
+    strcpy(urc, (PGM_P)pgm_read_word(&(_urc_messages[i])));
+    uint8_t urc_len = strlen(urc);
+    if (len >= urc_len && !strncmp(urc, line, urc_len))
+    {
+      urc_status = i;
+      return true;
+    }
+  }
+
+  return false;
+}
+
+void Sim800l::setHostname(const String &h)
+{
+  hostname = h;
+}
+
+void Sim800l::setParam(const String &p)
+{
+  param = p;
+}
+
+bool Sim800l::checkConnected()
+{
+  uint8_t status = 0;
+  println(F("AT+SAPBR=2,1")); //check if module is connected to Internet
+  expect_scan(F("+SAPBR: 1,%hu,\"%*hu.%*hu.%*hu.%*hu\""), &status, 3000); //+SAPBR: 1,1,"10.96.42.184"
+  if (status == 0)
+  {
+    __hard_reset__();
+    return false;
+  }
+  return true;
+}
+
+bool Sim800l::__hard_reset__()
+{
+  shutdown();
+  return true;
+}
+
+bool Sim800l::shutdown()
+{
+  disableGPRS();
+  _eat_echo();
+  delay(2000);
+  Serial.println("SHUTTING DOWN");
+  println(F("AT+CPOWD=1"));
+  _delay_ms(20);
+  //expect_AT_OK(F("+CPOWD=1"));
+  if (expect(F("NORMAL POWER DOWN"))) {
+    Serial.println("NORMAL POWER DOWN");
+  }
+  _awake_ = false;
+
+  return true;
+}
+
+
+bool Sim800l::sendInverterReq()
+{
+  //  STATE:1,1,70
+  param = "";
+
+  Serial.println("PUSHING DATA TO INVERTER...");
+  INV.listen();
+  INV.print("STATE:");
+  INV.print(_is_connected);
+  INV.print(',');
+  INV.print(power);
+  INV.print(',');
+  INV.print(load_max);
+  INV.print('\n');
+  //  INV.println("STATE:1,1,70");
+  delay(1000);
+  inv_data = _readSerial(INV, 3000);
+  Serial.println(inv_data);
+  SIM.listen();
+  if (inv_data.indexOf("?type=project")) {
+    param = inv_data;
+  }
+
+  Serial.println("PUSHING DATA FINISHED...");
+  return inv_data != "";
+}
+
+
+char* Sim800l::getUrl()
+{
+  String url = hostname += param;
+  char dest[(url.length()) + 1]; // = (char *)malloc((h+p)+1);
+  ////
+  if (hostname == "" || param == "") return (char *)"Invalid Hostname";
+
+  hostname.toCharArray(dest, url.length());
+  return dest;
+}
+
+void Sim800l::httpRequest()
+{
+  static uint32_t length = 0;
+  uint16_t status = HTTP_get(getUrl(), length);
+  if (status == 200 && length == 1)
+  {
+    char buffer[20];
+    uint16_t idx = HTTP_read(buffer, 0, 1);
+    if (idx)
+    {
+      char control = buffer[0];
+    }
+
+    return;
+  }
+}
+
+unsigned short int Sim800l::HTTP_get(const char *url, unsigned long int &length)
+{
+  //serialWriteString(0, "Debugging\n");
+
+  expect_AT_OK(F("+HTTPTERM"));
+  _delay_ms(100);
+
+  if (!expect_AT_OK(F("+HTTPINIT"))) return 1000;
+  if (!expect_AT_OK(F("+HTTPPARA=\"CID\",1"))) return 1101;
+  if (!expect_AT_OK(F("+HTTPPARA=\"UA\",\"IOTINV#1 r0.1\""))) return 1102;
+  //if (!expect_AT_OK(F("+HTTPPARA=\"REDIR\",1"))) return 1103; //1 allows reirect , o means no redirection
+  println_param("AT+HTTPPARA=\"URL\"", url);
+  if (!expect_OK()) return 1110;
+
+  if (!expect_AT_OK(F("+HTTPACTION=0"))) return 1004;
+
+  unsigned short int status;
+  expect_scan(F("+HTTPACTION: 0,%hu,%lu"), &status, &length, 30000);
+
+  return status;
+}
+
+
+size_t Sim800l::HTTP_read(char *buffer, uint16_t start, uint16_t length)
+{
+  char cmd[25];
+  char str[5];
+  char len[5];
+  itoa(start, str, 10);
+  itoa(length, len, 10);
+
+  strcpy(cmd, "AT+HTTPREAD=");
+  strcat(cmd, str);
+  strcat(cmd, ",");
+  strcat(cmd, len);
+
+  println(cmd);
+
+  //println(F("AT+HTTPREAD=0,1"));
+
+  unsigned long int available;
+  expect_scan(F("+HTTPREAD: %lu"), &available);
+
+  size_t idx = read(buffer, (size_t) available, SIM);
+  if (!expect_OK()) return 0;
+  return idx;
+}
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -286,6 +594,19 @@ void Sim800l::begin() {
 //
 //PRIVATE METHODS
 //
+String Sim800l::_readSerial(const SoftwareSerial &serial, uint16_t timeout) {
+  while  (!serial.available() && --timeout)
+  {
+    delay(1);
+  }
+  if (serial.available()) {
+    return serial.readString();
+  }
+
+  return "";
+}
+
+
 String Sim800l::_readSerial(uint16_t timeout) {
   while  (!SIM.available() && --timeout)
   {
@@ -298,79 +619,6 @@ String Sim800l::_readSerial(uint16_t timeout) {
 
   return "";
 }
-
-
-//
-//PUBLIC METHODS
-//
-
-//void Sim800l::reset() {
-//#if (LED)
-//  digitalWrite(LED_PIN, 1);
-//#endif
-//  digitalWrite(RESET_PIN, 1);
-//  delay(1000);
-//  digitalWrite(RESET_PIN, 0);
-//  delay(1000);
-//  // wait for the module response
-//
-//  SIM.print(F("AT\r\n"));
-//  while (_readSerial().indexOf("OK") == -1 ) {
-//    SIM.print(F("AT\r\n"));
-//  }
-//
-//  //wait for sms ready
-//  while (_readSerial().indexOf("SMS") == -1 ) {
-//  }
-//#if (LED)
-//  digitalWrite(LED_PIN, 0);
-//#endif
-//}
-
-void Sim800l::setPhoneFunctionality() {
-  /*AT+CFUN=<fun>[,<rst>]
-    Parameters
-    <fun> 0 Minimum functionality
-    1 Full functionality (Default)
-    4 Disable phone both transmit and receive RF circuits.
-    <rst> 1 Reset the MT before setting it to <fun> power level.
-  */
-  SIM.print (F("AT+CFUN=1\r\n"));
-}
-
-
-void Sim800l::signalQuality() {
-  /*Response
-    +CSQ: <rssi>,<ber>Parameters
-    <rssi>
-    0 -115 dBm or less
-    1 -111 dBm
-    2...30 -110... -54 dBm
-    31 -52 dBm or greater
-    99 not known or not detectable
-    <ber> (in percent):
-    0...7 As RXQUAL values in the table in GSM 05.08 [20]
-    subclause 7.2.4
-    99 Not known or not detectable
-  */
-  SIM.print (F("AT+CSQ\r\n"));
-  Serial.println(_readSerial());
-}
-
-
-void Sim800l::activateBearerProfile() {
-  SIM.print (F(" AT+SAPBR=3,1,\"CONTYPE\",\"GPRS\" \r\n" )); _buffer = _readSerial(); // set bearer parameter
-  SIM.print (F(" AT+SAPBR=3,1,\"APN\",\"internet\" \r\n" )); _buffer = _readSerial(); // set apn
-  SIM.print (F(" AT+SAPBR=1,1 \r\n")); delay(1200); _buffer = _readSerial(); // activate bearer context
-  SIM.print (F(" AT+SAPBR=2,1\r\n ")); delay(3000); _buffer = _readSerial(); // get context ip address
-}
-
-
-void Sim800l::deactivateBearerProfile() {
-  SIM.print (F("AT+SAPBR=0,1\r\n "));
-  delay(1500);
-}
-
 
 
 bool Sim800l::answerCall() {
@@ -414,11 +662,6 @@ bool Sim800l::hangoffCall() {
   if ( (_buffer.indexOf("OK") ) != -1) return true;
   else return false;
 }
-
-
-
-
-
 
 bool Sim800l::sendSms(char* number, char* text) {
 
@@ -520,11 +763,7 @@ String Sim800l::dateNet() {
 
 // Update the RTC of the module with the date of GSM.
 bool Sim800l::updateRtc(int utc) {
-
-  activateBearerProfile();
   _buffer = dateNet();
-  deactivateBearerProfile();
-
   _buffer = _buffer.substring(_buffer.indexOf(",") + 1, _buffer.length());
   String dt = _buffer.substring(0, _buffer.indexOf(","));
   String tm = _buffer.substring(_buffer.indexOf(",") + 1, _buffer.length()) ;
@@ -559,6 +798,5 @@ bool Sim800l::updateRtc(int utc) {
   if ( (_readSerial().indexOf("ER")) != -1) {
     return false;
   } else return true;
-
 
 }

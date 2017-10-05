@@ -56,12 +56,6 @@ int main(void)
     {	
 		//len = readline(buf, SIM800_BUFSIZE, 3000);
 		if(expect_scan(F("STATE:%hu,%hu,%hu"), &internet, &power_state, &load_protect, 3000)){
-			//if (internet) { serialWriteString(0, "...\n DEVICE IS CONNECTED. \n");	} else { serialWriteString(0, "...\n DEVICE IS NOT CONNECTED. \n");	}
-			//if (power_state) { serialWriteString(0, "...\n DEVICE IS POWERED ON. \n");	} else { serialWriteString(0, "...\n DEVICE IS POWERED OFF. \n");}
-//
-			//serialWriteString(0, "...\n INVERTER LOAD PROTECT. ");
-			//itoa(load_protect, load_protect_str, 10);
-			//serialWriteString(0, load_protect_str);
 			if (internet) {
 				serialWriteString(0, inverter.data());
 				serialWrite(0, '\n');
