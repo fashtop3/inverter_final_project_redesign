@@ -28,6 +28,9 @@
 #define LED true // used for indicator led, in case that you don want set to false . 
 #define LED_PIN 13 //pin to indicate states. 
 
+
+//#define DEBUG_MODE
+
 #ifdef F
 #undef F
 #define F(s) (s)
@@ -40,6 +43,7 @@
 #define SIM800_CMD_TIMEOUT 30000
 #define SIM800_SERIAL_TIMEOUT 4000
 #define SIM800_BUFSIZE 64
+#define hostname  "52.170.211.220/api/r/1"
 
 enum EventSync {
   SYNC_WAKEUP = 0x0,
@@ -49,13 +53,11 @@ enum EventSync {
   SYNC_HTTP_REQUEST
 };
 
-
-
 class Sim800l
 {
 
   public:
-  
+
     init();
 
     bool reset();
@@ -81,37 +83,38 @@ class Sim800l
     bool setSwitchAPN();
     bool enableGPRS(uint16_t timeout = SIM800_CMD_TIMEOUT);
     bool disableGPRS();
-
-    size_t readline(char *buf, size_t maxIdx, uint16_t timeout);
-    size_t read(char *buffer, size_t length, SoftwareSerial &serial);
-    bool is_urc(const char *line, size_t len);
-    void setHostname(const String &h);
-    void setParam(const String &p);
-    char* getUrl();
     bool checkConnected();
+
+    size_t readline(char *buf, uint8_t maxIdx, uint16_t timeout);
+    size_t read(char *buf, uint8_t len, SoftwareSerial &s);
+    bool is_urc(const char *line, size_t len);;
+    String getUrl();
+
     bool shutdown();
     bool sendInverterReq();
     void httpRequest();
-    unsigned short int HTTP_get(const char *url, unsigned long int &length);
-    size_t HTTP_read(char *buffer, uint16_t start, uint16_t length);
+    unsigned short int HTTP_get(const String &url, uint8_t &len);
+    bool HTTP_read(uint8_t start, uint8_t len);
+    size_t HTTP_read(char *b, uint8_t start, uint8_t len);
 
   protected:
     void _eat_echo();
+    void _eat_echo(SoftwareSerial &serial);
     bool __hard_reset__();
     bool _isModuleTimeSet;
     bool _is_ntwk_reg;
     volatile bool _awake_;
     volatile bool _is_connected;
-    mutable bool power;
-    mutable uint16_t load_max;
-    mutable String inv_data;
-    
+    mutable uint8_t power;
+    mutable uint8_t load_max;
+    mutable uint8_t output;
+
     uint8_t urc_status;
     const char *_apn;
     const char *_user;
     const char *_pass;
-    String hostname;
-    String param;
+    //    String hostname;
+    mutable String param = "";
 
   private:
     int _timeout;
@@ -133,7 +136,7 @@ class Sim800l
     String readSms(uint8_t index); //return all the content of sms
     String getNumberSms(uint8_t index); //return the number of the sms..
     bool delAllSms();     // return :  OK or ERROR ..
-    
+
     //get time with the variables by reference
     void RTCtime(int *day, int *month, int *year, int *hour, int *minute, int *second);
     String dateNet(); //return date,time, of the network
