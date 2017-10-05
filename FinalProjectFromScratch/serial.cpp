@@ -30,6 +30,7 @@
 #include <avr/io.h>
 #include <avr/interrupt.h>
 #include <stdint.h>
+#include <avr/delay.h>
 
 #include "serial.h"
 #include "serial_device.h"
@@ -279,6 +280,10 @@ void serialWrite(uint8_t uart, uint8_t data) {
         serialWrite(uart, '\r');
     }
 #endif
+
+	uint8_t oldSREG = SREG;
+	cli();  // turn off interrupts for a clean txmit
+
     while (serialTxBufferFull(uart));
 
     txBuffer[uart][txWrite[uart]] = data;
@@ -292,6 +297,8 @@ void serialWrite(uint8_t uart, uint8_t data) {
         *serialRegisters[uart][SERIALB] |= (1 << serialBits[uart][SERIALUDRIE]); // Enable Interrupt
         *serialRegisters[uart][SERIALA] |= (1 << serialBits[uart][SERIALUDRE]); // Trigger Interrupt
     }
+	SREG = oldSREG; // turn interrupts back on
+	_delay_ms(5);
 }
 
 void serialWriteString(uint8_t uart, const char *data) {
