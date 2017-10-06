@@ -29,17 +29,18 @@ size_t len = 0;
 //function prototype
 void myTimerSetup();
 void checkModuleToggled();
-size_t readline(char *buffer, size_t max, uint16_t timeout);
+size_t readline(char *buffer, size_t max, uint16_t timeout=SIM800_SERIAL_TIMEOUT);
 volatile char inByte = 0;
 char power_state = 0;
 unsigned short int internet = 0;
 unsigned short int load_protect = inverter.getOverloadDefault(); //char load_protect_str[4];
 
 bool is_urc(const char *line, size_t len);
+bool expect(const char *expected, uint16_t timeout=SIM800_SERIAL_TIMEOUT);
 bool expect_scan(const char *pattern, void *ref, uint16_t timeout = SIM800_SERIAL_TIMEOUT);
 bool expect_scan(const char *pattern, void *ref, void *ref1, uint16_t timeout = SIM800_SERIAL_TIMEOUT);
 bool expect_scan(const char *pattern, void *ref, void *ref1, void *ref2, uint16_t timeout = SIM800_SERIAL_TIMEOUT);
-
+bool expect_scan(const char *pattern, void *ref, void *ref1, void *ref2, void *ref3, uint16_t timeout=SIM800_SERIAL_TIMEOUT);
 int main(void)
 {		
 	//lcd.send_A_String("Hello World2");
@@ -51,18 +52,41 @@ int main(void)
 	_delay_ms(500); //allow boot time
 	inverter.setSwitch(true); //power on the inverter
 	serialInit(0, BAUD(57600, F_CPU));
+
+	char request = 0;
+	char data[30];
+
 		
     while (1) 
     {	
-		//len = readline(buf, SIM800_BUFSIZE, 3000);
-		if(expect_scan(F("STATE:%hu,%hu,%hu"), &internet, &power_state, &load_protect, 3000)){
-			if (internet) {
+		//len = readline(buf, SIM800_BUFSIZE);
+		if(expect_scan(F("DATA:%c:%s"), &request, data, 3000)){
+			//serialWriteString(0, data);
+			if (request == 'Q') //query
+			{
 				serialWriteString(0, inverter.data());
 				serialWrite(0, '\n');
-			}else {
-				serialWriteString(0, "\nOut of service\n");
 			}
-			
+			else if (request == 'D')
+			{
+				short unsigned int ref_internet = 0;
+				short unsigned int ref_power_state;
+				short unsigned int ref_load_protect;
+				if (sscanf(data, "%hu,%hu,%hu", &ref_internet, &ref_power_state, &ref_load_protect) == 3) //0,1,70
+				{ 
+					
+					if (!ref_internet) {
+						serialWriteString(0, "Out of service\n");
+						continue;
+					}
+					power_state = ref_internet;
+					load_protect = ref_load_protect;	
+					_delay_ms(500);
+					serialWriteString(0, inverter.data());
+					serialWrite(0, '\n');
+				}
+				
+			}
 			len = 0;
 			*buf = 0;
 		}
@@ -70,13 +94,20 @@ int main(void)
 	
 }
 
+bool expect(const char *expected, uint16_t timeout)
+{
+	//char buf[SIM800_BUFSIZE];
+	//size_t len;
+	do len = readline(buf, SIM800_BUFSIZE, timeout); while (is_urc(buf, len));	
+	return strcmp(buf, (const char *) expected) == 0;
+}
+
 bool expect_scan(const char *pattern, void *ref, uint16_t timeout)
 {
 	//char buf[SIM800_BUFSIZE];
-	size_t len;
+	//size_t len;
 	do len = readline(buf, SIM800_BUFSIZE, timeout); while (is_urc(buf, len));
 	return sscanf(buf, (const char *) pattern, ref) == 1;
-	//return sscanf_P(buf, (const char PROGMEM *) pattern, ref) == 1;
 }
 
 bool expect_scan(const char *pattern, void *ref, void *ref1, uint16_t timeout)
@@ -85,7 +116,6 @@ bool expect_scan(const char *pattern, void *ref, void *ref1, uint16_t timeout)
 	//size_t len;
 	do len = readline(buf, SIM800_BUFSIZE, timeout); while (is_urc(buf, len));
 	return sscanf(buf, (const char *) pattern, ref, ref1) == 2;
-	//return sscanf_P(buf, (const char PROGMEM *) pattern, ref, ref1) == 2;
 }
 
 bool expect_scan(const char *pattern, void *ref, void *ref1, void *ref2, uint16_t timeout)
@@ -94,7 +124,14 @@ bool expect_scan(const char *pattern, void *ref, void *ref1, void *ref2, uint16_
 	//size_t len;
 	do len = readline(buf, SIM800_BUFSIZE, timeout); while (is_urc(buf, len));
 	return sscanf(buf, (const char *) pattern, ref, ref1, ref2) == 3;
-	//return sscanf_P(buf, (const char PROGMEM *) pattern, ref, ref1, ref2) == 3;
+}
+
+bool expect_scan(const char *pattern, void *ref, void *ref1, void *ref2, void *ref3, uint16_t timeout)
+{
+	//char buf[SIM800_BUFSIZE];
+	//size_t len;
+	do len = readline(buf, SIM800_BUFSIZE, timeout); while (is_urc(buf, len));
+	return sscanf(buf, (const char *) pattern, ref, ref1, ref2, ref3) == 4;
 }
 
 bool is_urc(const char *line, size_t len)
