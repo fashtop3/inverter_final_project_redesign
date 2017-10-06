@@ -440,8 +440,11 @@ char * Inverter::data()
 	strcat(paradata, ",");
 	strcat(paradata, (_isCharging)?"1":"0");
 	
-;
+	strcat(paradata, ",");
+	strcat(paradata, (getSwitchSet())?"1":"0");	
 	
+	strcat(paradata, ",");
+	strcat(paradata, (getLoadSet())?"1":"0");
 	
 	//char ac_str[4];
 	//char batt_str[6];

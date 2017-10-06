@@ -480,7 +480,7 @@ bool Sim800l::sendInverterReq()
   Serial.println("PUSHING DATA TO INVERTER...");
   //#endif
   INV.listen();
-  delay(1000);
+  delay(3000);
   //  INV.println("DATA?");
   INV.println("DATA:D:1,1,50");
   delay(1000);
