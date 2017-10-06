@@ -50,16 +50,17 @@ enum Event {
 	INT_CHARGE_REQ_vect = 0x33,
 };
 
+
 class Inverter
 {
 
 public:
-	Inverter(Lcd &lcd);
+	Inverter();
 	~Inverter();
 	Inverter* setSwitch(bool on);
 	bool getSwitchSet();
 	Inverter* switchToMains(bool mainsOrInverter);
-	Inverter* monitor(char serverResponse);
+	Inverter* monitor();
 	uint16_t getAcInputReadings();
 	double getBattInputReadings();
 	uint8_t getOverloadInputReadings();
@@ -69,7 +70,7 @@ public:
 	uint8_t getEntryCounter();
 	void incrementEntryCounter();
 	void emitMessage();
-	void setServerResponse(const char &param1);
+	void setServerResponse(const uint8_t &param1);
 	bool isModuleAvailable();
 	
 	char *data();
@@ -102,8 +103,7 @@ private:
 	Inverter& operator=( const Inverter &c );
 	void __resetChargeSelectionControl();
 
-private:
-	Lcd &_lcd;
+
 	uint8_t __OVERLOAD_VAL__;
 	uint8_t __INVERTER_INT__;
 	uint8_t __INVERTER_INT_CP__;
@@ -124,6 +124,7 @@ private:
 	volatile uint8_t _entryCounter4;
 	volatile uint8_t _entryCounter3;
 	volatile uint8_t _entryCounter5;
+	volatile uint8_t _load_delay;
 
 	//analog readings
 	volatile static uint16_t __analog_ac_value__;

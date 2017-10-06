@@ -12,14 +12,14 @@
 #include <stdint.h>
 #include <util/delay.h>
 #include <string.h>
-#include "Inverter.h"
 #include "Lcd.h"
+#include "Inverter.h"
 #include "serial.h"
 #include "InvSIM800.h"
 #include "f_cpu.h"
 
-Lcd lcd;
-Inverter inverter(lcd); //initialize inverter
+//Lcd lcd;
+Inverter inverter; //initialize inverter
 //InvSIM800 sim800 = InvSIM800();
 
 uint8_t urc_status;
@@ -192,7 +192,7 @@ ISR(TIMER1_COMPA_vect)
 	
 	//PORTB ^= 1<<PINB3; //do this every 100ms;	
 	inverter.setOverload(load_protect);
-	inverter.monitor(power_state);
+	inverter.monitor();
 	
 	if (count > 10) //do this every 1sec
 	{
