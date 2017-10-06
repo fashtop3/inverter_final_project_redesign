@@ -39,8 +39,7 @@ bool is_urc(const char *line, size_t len);
 bool expect(const char *expected, uint16_t timeout=SIM800_SERIAL_TIMEOUT);
 bool expect_scan(const char *pattern, void *ref, uint16_t timeout = SIM800_SERIAL_TIMEOUT);
 bool expect_scan(const char *pattern, void *ref, void *ref1, uint16_t timeout = SIM800_SERIAL_TIMEOUT);
-bool expect_scan(const char *pattern, void *ref, void *ref1, void *ref2, uint16_t timeout = SIM800_SERIAL_TIMEOUT);
-bool expect_scan(const char *pattern, void *ref, void *ref1, void *ref2, void *ref3, uint16_t timeout=SIM800_SERIAL_TIMEOUT);
+
 int main(void)
 {		
 	//lcd.send_A_String("Hello World2");
@@ -116,22 +115,6 @@ bool expect_scan(const char *pattern, void *ref, void *ref1, uint16_t timeout)
 	//size_t len;
 	do len = readline(buf, SIM800_BUFSIZE, timeout); while (is_urc(buf, len));
 	return sscanf(buf, (const char *) pattern, ref, ref1) == 2;
-}
-
-bool expect_scan(const char *pattern, void *ref, void *ref1, void *ref2, uint16_t timeout)
-{
-	//char buf[SIM800_BUFSIZE];
-	//size_t len;
-	do len = readline(buf, SIM800_BUFSIZE, timeout); while (is_urc(buf, len));
-	return sscanf(buf, (const char *) pattern, ref, ref1, ref2) == 3;
-}
-
-bool expect_scan(const char *pattern, void *ref, void *ref1, void *ref2, void *ref3, uint16_t timeout)
-{
-	//char buf[SIM800_BUFSIZE];
-	//size_t len;
-	do len = readline(buf, SIM800_BUFSIZE, timeout); while (is_urc(buf, len));
-	return sscanf(buf, (const char *) pattern, ref, ref1, ref2, ref3) == 4;
 }
 
 bool is_urc(const char *line, size_t len)
