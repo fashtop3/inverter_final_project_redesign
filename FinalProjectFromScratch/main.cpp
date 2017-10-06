@@ -30,10 +30,8 @@ size_t len = 0;
 void myTimerSetup();
 void checkModuleToggled();
 size_t readline(char *buffer, size_t max, uint16_t timeout=SIM800_SERIAL_TIMEOUT);
-volatile char inByte = 0;
-char power_state = 0;
+
 unsigned short int internet = 0;
-unsigned short int load_protect = inverter.getOverloadDefault(); //char load_protect_str[4];
 
 bool is_urc(const char *line, size_t len);
 bool expect(const char *expected, uint16_t timeout=SIM800_SERIAL_TIMEOUT);
@@ -68,7 +66,6 @@ int main(void)
 			}
 			else if (request == 'D')
 			{
-				short unsigned int ref_internet = 0;
 				short unsigned int ref_power_state;
 				short unsigned int ref_load_protect;
 				if (sscanf(data, "%hu,%hu,%hu", &internet, &ref_power_state, &ref_load_protect) == 3) //0,1,70
@@ -175,7 +172,6 @@ ISR(TIMER1_COMPA_vect)
 	count++;
 	
 	//PORTB ^= 1<<PINB3; //do this every 100ms;	
-	inverter.setOverload(load_protect);
 	inverter.monitor();
 	
 	if (count > 10) //do this every 1sec
