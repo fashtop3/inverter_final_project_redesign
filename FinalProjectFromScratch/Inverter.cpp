@@ -389,6 +389,7 @@ Inverter* Inverter::__remoteSourceOrBypass()
 		else if (_serverPort == 0)
 		{
 			__setLoad(false);
+			_load_delay = 1;
 			return setSwitch(false);
 		}
 		
