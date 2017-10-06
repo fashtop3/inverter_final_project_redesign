@@ -57,6 +57,7 @@ public:
 	Inverter(Lcd &lcd);
 	~Inverter();
 	Inverter* setSwitch(bool on);
+	bool getSwitchSet();
 	Inverter* switchToMains(bool mainsOrInverter);
 	Inverter* monitor(char serverResponse);
 	uint16_t getAcInputReadings();
@@ -72,6 +73,7 @@ public:
 	bool isModuleAvailable();
 	
 	char *data();
+	bool getLoadSet();
 protected:
 	Inverter* __setLoad(bool attach);
 	Inverter* __setChargeEnable(bool enable);
