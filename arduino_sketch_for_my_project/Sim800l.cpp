@@ -1,3 +1,33 @@
+/* this library is writing by  Cristian Steib.
+        steibkhriz@gmail.com
+    Designed to work with the GSM Sim800l,maybe work with SIM900L
+
+       This library use SoftwareSerial, you can define de RX and TX pin
+       in the header "Sim800l.h" ,by default the pin is RX=10 TX=11..
+       be sure that gnd is attached to arduino too.
+       You can also change the other preferred RESET_PIN
+
+       Esta libreria usa SoftwareSerial, se pueden cambiar los pines de RX y TX
+       en el archivo header, "Sim800l.h", por defecto los pines vienen configurado en
+       RX=10 TX=11.
+       Tambien se puede cambiar el RESET_PIN por otro que prefiera
+
+      PINOUT:
+          _____________________________
+         |  ARDUINO UNO >>>   SIM800L  |
+          -----------------------------
+              GND      >>>   GND
+          RX  10       >>>   TX
+          TX  11       >>>   RX
+         RESET 2       >>>   RST
+
+     POWER SOURCE 4.2V >>> VCC
+
+      Created on: April 20, 2016
+          Author: Cristian Steib
+
+
+*/
 #include "Arduino.h"
 #include "Sim800l.h"
 
@@ -6,14 +36,12 @@ SoftwareSerial INV(INV_RX_PIN, INV_TX_PIN);
 
 Sim800l::init()
 {
-  Serial.begin(9600);
+  Serial.begin(115200);
   while (!Serial);
   Serial.println("Initializing sim module....");
 
   INV.begin(57600);
-  while (!INV);
   SIM.begin(9600); // INITIALIZE UART
-  while (!SIM);
 
 
   pinMode(LED_PIN, OUTPUT);
@@ -21,9 +49,10 @@ Sim800l::init()
   digitalWrite(RESET_PIN, HIGH);
 
   urc_status = 0xff;
+  param = ""; //.reserve(100);
   _isModuleTimeSet = false;
   _awake_ = false;
-  _is_connected = 1;
+  _is_connected = false;
   _is_ntwk_reg = 0;
 
   power = 0;
@@ -91,6 +120,7 @@ bool Sim800l::reset() {
 
   delay(3000);
   _eat_echo();
+  expect_AT_OK(F(""), 2000);
   expect_AT_OK(F(""), 2000);
   expect_AT_OK(F(""), 2000);
   ok = expect_AT_OK(F("E0"), 2000); //TODO: PUT RETRIES HERE
@@ -332,9 +362,9 @@ bool Sim800l::expect_scan(const char *pattern, void *ref, uint16_t timeout)
   char buf[SIM800_BUFSIZE];
   size_t len;
   do len = readline(buf, SIM800_BUFSIZE, timeout); while (is_urc(buf, len));
-//#ifdef DEBUG_MODE
+#ifdef DEBUG_MODE
   Serial.println(buf);
-//#endif
+#endif
   return sscanf(buf, (const char *) pattern, ref) == 1;
 }
 
@@ -343,9 +373,9 @@ bool Sim800l::expect_scan(const char *pattern, void *ref, void *ref1, uint16_t t
   char buf[SIM800_BUFSIZE];
   size_t len;
   do len = readline(buf, SIM800_BUFSIZE, timeout); while (is_urc(buf, len));
-//#ifdef DEBUG_MODE
+#ifdef DEBUG_MODE
   Serial.println(buf);
-//#endif
+#endif
   return sscanf(buf, pattern, ref, ref1) == 2;
 }
 
@@ -354,21 +384,10 @@ bool Sim800l::expect_scan(const char *pattern, void *ref, void *ref1, void *ref2
   char buf[SIM800_BUFSIZE];
   size_t len;
   do len = readline(buf, SIM800_BUFSIZE, timeout); while (is_urc(buf, len));
-//#ifdef DEBUG_MODE
+#ifdef DEBUG_MODE
   Serial.println(buf);
-//#endif
+#endif
   return sscanf(buf, (const char *) pattern, ref, ref1, ref2) == 3;
-}
-
-bool Sim800l::expect_scan(const char *pattern, void *ref, void *ref1, void *ref2, void *ref3, uint16_t timeout)
-{
-  char buf[SIM800_BUFSIZE];
-  size_t len;
-  do len = readline(buf, SIM800_BUFSIZE, timeout); while (is_urc(buf, len));
-//#ifdef DEBUG_MODE
-  Serial.println(buf);
-//#endif
-  return sscanf(buf, (const char *) pattern, ref, ref1, ref2, ref3) == 4;
 }
 
 size_t Sim800l::readline(char *buf, uint8_t maxIdx, uint16_t timeout)
@@ -383,15 +402,18 @@ size_t Sim800l::readline(char *buf, uint8_t maxIdx, uint16_t timeout)
         timeout = 0;
         break;
       }
-      if (maxIdx - idx) buf[idx++] = c; 
+      if (maxIdx - idx) {
+        buf[idx++] = c;
+      } else {
+        timeout = 0;
+        break;
+      }
     }
 
     if (timeout == 0) break;
     delay(1);
   }
   buf[idx] = 0;
-    Serial.println(buf);
-  //  while(1);
   return idx;
 }
 
@@ -414,17 +436,18 @@ size_t Sim800l::read(char *buf, uint8_t len, SoftwareSerial &s)
 bool Sim800l::is_urc(const char *line, size_t len)
 {
   urc_status = 0xff;
-//  for (uint8_t i = 0; i < 17; i++)
-//  {
-//    char urc[30];
-//    strcpy(urc, (PGM_P)pgm_read_word(&(_urc_messages[i])));
-//    uint8_t urc_len = strlen(urc);
-//    if (len >= urc_len && !strncmp(urc, line, urc_len))
-//    {
-//      urc_status = i;
-//      return true;
-//    }
-//  }
+
+  for (uint8_t i = 0; i < 17; i++)
+  {
+    char urc[30];
+    strcpy(urc, (PGM_P)pgm_read_word(&(_urc_messages[i])));
+    uint8_t urc_len = strlen(urc);
+    if (len >= urc_len && !strncmp(urc, line, urc_len))
+    {
+      urc_status = i;
+      return true;
+    }
+  }
 
   return false;
 }
@@ -468,27 +491,31 @@ bool Sim800l::shutdown()
 
 bool Sim800l::sendInverterReq()
 {
+  //  STATE:1,1,70
 #ifdef DEBUG_MODE
   Serial.println("PUSHING DATA TO INVERTER...");
 #endif
   INV.listen();
-  delay(3000);
-Serial.println("Rd.");
-  INV.print("DATA:D:");
+  param = "";
+  delay(1000);
+  INV.print("DATA:Q:");
   INV.print(_is_connected);
   INV.print(',');
   INV.print(power);
   INV.print(',');
-  INV.println(load_max);
+  INV.print(load_max);
+  INV.print('\n');
+  //  INV.println("STATE:1,1,70");
   delay(1000);
-  //response DATA:0,13.14,47,0,1,1 =>  DATA:<AC IN>,<BATTERY LEVEL>,<LOADING>,<CHARGING>,<CURRENT POWER STATE>,<CURRENT BACKUP STATE>
-//Serial.println(_readSerial(INV));
-  char str[50]; short unsigned int ab; //&inv_batt, &inv_load, &inv_charg,
-  if (expect_scan(F("DATA:%c:%s"), &ab, str, 3000)) {
-    Serial.print("Read Comp.");
-  } else {
-    INV.flush();
-    delay(1000);
+    param = _readSerial(INV, 3000); //DATA:0,13.14,38,0,1,1
+  Serial.println("Checking..");
+  
+//  expect_scan(F("+HTTPACTION: 0,%hu,%su"), &stat, &len, 30000);
+  
+  if (param.indexOf("DATA") != -1) {
+    Serial.println(param);
+  } 
+  else {
     sendInverterReq();
   }
   SIM.listen();
@@ -508,17 +535,18 @@ String Sim800l::getUrl()
 
 void Sim800l::httpRequest()
 {
-  static uint8_t calls = 0;
   uint8_t len = 0;
 #ifdef DEBUG_MODE
   Serial.print("SENDING HTTPREQUEST:.");
 #endif
-  uint8_t status = HTTP_get(len);
+  String url = getUrl();
+  uint8_t status = HTTP_get(url, len);
   if (status == 200)
   {
     if (HTTP_read(0, len)) {
       //DATA:1,56,1
       if (expect_scan(F("DATA:%hu,%hu,%hu"), &power, &load_max, &output, 3000)) {
+
         Serial.println("confirmed");
 #ifdef DEBUG_MODE
         Serial.println(power);
@@ -527,19 +555,12 @@ void Sim800l::httpRequest()
 #endif
         delay(100);
         sendInverterReq();
-        calls++;
       }
       _eat_echo();
     }
     //    return;
   }
   delay(1000);
-  if (calls >= 2) {
-    Serial.println("In delay");
-    delay(10000);
-    Serial.println("Out delay");
-    calls = 0;
-  }
   httpRequest();
 
 #ifdef DEBUG_MODE
@@ -548,31 +569,22 @@ void Sim800l::httpRequest()
 #endif
 }
 
-unsigned short int Sim800l::HTTP_get(uint8_t &len)
+unsigned short int Sim800l::HTTP_get(const String & url, uint8_t &len)
 {
   //serialWriteString(0, "Debugging\n");
   expect_AT_OK(F("+HTTPTERM"));
   delay(2000);
 
-  Serial.println("debug");
+  char bArr[url.length() + 1];
+  url.toCharArray(bArr, url.length());
 
   if (!expect_AT_OK(F("+HTTPINIT"))) return 100;
   if (!expect_AT_OK(F("+HTTPPARA=\"CID\",1"))) return 110;
   if (!expect_AT_OK(F("+HTTPPARA=\"UA\",\"IOTINV#1 r0.1\""))) return 102;
   //if (!expect_AT_OK(F("+HTTPPARA=\"REDIR\",1"))) return 1103; //1 allows reirect , o means no redirection
-  print("AT+HTTPPARA=\"URL\"");
-  print(hostname);
-  print("?t=p&a=");
-  print(inv_ac);
-  print("&b=");
-  print(inv_batt);
-  print("&l=");
-  print(inv_load);
-  print("&c=");
-  println(inv_charg);
-
-
+  println_param("AT+HTTPPARA=\"URL\"", bArr);
   delay(100);
+  Serial.println(bArr);
   if (!expect_OK()) return 111;
 
   if (!expect_AT_OK(F("+HTTPACTION=0"))) return 104;
@@ -587,23 +599,18 @@ unsigned short int Sim800l::HTTP_get(uint8_t &len)
 
 bool Sim800l::HTTP_read(uint8_t start, uint8_t len)
 {
-  //  char c[25];
-  //  char s[3];
-  //  char l[3];
-  //  itoa(start, s, 10);
-  //  itoa(len, l, 10);
-  //
-  //  strcpy(c, "AT+HTTPREAD=");
-  //  strcat(c, s);
-  //  strcat(c, ",");
-  //  strcat(c, l);
+  char c[25];
+  char s[3];
+  char l[3];
+  itoa(start, s, 10);
+  itoa(len, l, 10);
 
-  print("AT+HTTPREAD=");
-  print(start);
-  print(",");
-  println(len);
+  strcpy(c, "AT+HTTPREAD=");
+  strcat(c, s);
+  strcat(c, ",");
+  strcat(c, l);
 
-  //  println(c);
+  println(c);
   //println(F("AT+HTTPREAD=0,1"));
   delay(13);
 #ifdef DEBUG_MODE
@@ -616,24 +623,18 @@ bool Sim800l::HTTP_read(uint8_t start, uint8_t len)
 
 size_t Sim800l::HTTP_read(char *b, uint8_t start, uint8_t len)
 {
-  //  char c[25];
-  //  char s[3];
-  //  char l[3];
-  //  itoa(start, s, 10);
-  //  itoa(len, l, 10);
-  //
-  //  strcpy(c, "AT+HTTPREAD=");
-  //  strcat(c, s);
-  //  strcat(c, ",");
-  //  strcat(c, l);
-  //
-  //  println(c);
+  char c[25];
+  char s[3];
+  char l[3];
+  itoa(start, s, 10);
+  itoa(len, l, 10);
 
-  print("AT+HTTPREAD=");
-  print(start);
-  print(",");
-  println(len);
+  strcpy(c, "AT+HTTPREAD=");
+  strcat(c, s);
+  strcat(c, ",");
+  strcat(c, l);
 
+  println(c);
   //println(F("AT+HTTPREAD=0,1"));
   delay(13);
 #ifdef DEBUG_MODE
@@ -649,14 +650,6 @@ size_t Sim800l::HTTP_read(char *b, uint8_t start, uint8_t len)
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 //String _buffer;
-
-void Sim800l::begin() {
-  SIM.begin(9600);
-#if (LED)
-  pinMode(OUTPUT, LED_PIN);
-#endif
-  _buffer.reserve(255); //reserve memory to prevent intern fragmention
-}
 
 
 //
@@ -688,115 +681,6 @@ String Sim800l::_readSerial(uint16_t timeout) {
   return "";
 }
 
-
-bool Sim800l::answerCall() {
-  SIM.print (F("ATA\r\n"));
-  _buffer = _readSerial();
-  //Response in case of data call, if successfully connected
-  if ( (_buffer.indexOf("OK") ) != -1 ) return true;
-  else return false;
-}
-
-
-void  Sim800l::callNumber(char* number) {
-  SIM.print (F("ATD"));
-  SIM.print (number);
-  SIM.print (F("\r\n"));
-}
-
-
-
-uint8_t Sim800l::getCallStatus() {
-  /*
-    values of return:
-
-    0 Ready (MT allows commands from TA/TE)
-    2 Unknown (MT is not guaranteed to respond to tructions)
-    3 Ringing (MT is ready for commands from TA/TE, but the ringer is active)
-    4 Call in progress
-
-  */
-  SIM.print (F("AT+CPAS\r\n"));
-  _buffer = _readSerial();
-  return _buffer.substring(_buffer.indexOf("+CPAS: ") + 7, _buffer.indexOf("+CPAS: ") + 9).toInt();
-
-}
-
-
-
-bool Sim800l::hangoffCall() {
-  SIM.print (F("ATH\r\n"));
-  _buffer = _readSerial();
-  if ( (_buffer.indexOf("OK") ) != -1) return true;
-  else return false;
-}
-
-bool Sim800l::sendSms(char* number, char* text) {
-
-  SIM.print (F("AT+CMGF=1\r")); //set sms to text mode
-  _buffer = _readSerial();
-  SIM.print (F("AT+CMGS=\""));  // command to send sms
-  SIM.print (number);
-  SIM.print(F("\"\r"));
-  _buffer = _readSerial();
-  SIM.print (text);
-  SIM.print ("\r");
-  //change delay 100 to readserial
-  _buffer = _readSerial();
-  SIM.print((char)26);
-  _buffer = _readSerial();
-  //expect CMGS:xxx   , where xxx is a number,for the sending sms.
-  if (((_buffer.indexOf("CMGS") ) != -1 ) ) {
-    return true;
-  }
-  else {
-    return false;
-  }
-}
-
-
-String Sim800l::getNumberSms(uint8_t index) {
-  _buffer = readSms(index);
-  Serial.println(_buffer.length());
-  if (_buffer.length() > 10) //avoid empty sms
-  {
-    uint8_t _idx1 = _buffer.indexOf("+CMGR:");
-    _idx1 = _buffer.indexOf("\",\"", _idx1 + 1);
-    return _buffer.substring(_idx1 + 3, _buffer.indexOf("\",\"", _idx1 + 4));
-  } else {
-    return "";
-  }
-}
-
-
-
-String Sim800l::readSms(uint8_t index) {
-  SIM.print (F("AT+CMGF=1\r"));
-  if (( _readSerial().indexOf("ER")) == -1) {
-    SIM.print (F("AT+CMGR="));
-    SIM.print (index);
-    SIM.print("\r");
-    _buffer = _readSerial();
-    if (_buffer.indexOf("CMGR:") != -1) {
-      return _buffer;
-    }
-    else return "";
-  }
-  else
-    return "";
-}
-
-
-bool Sim800l::delAllSms() {
-  SIM.print(F("at+cmgda=\"del all\"\n\r"));
-  _buffer = _readSerial();
-  if (_buffer.indexOf("OK") != -1) {
-    return true;
-  } else {
-    return false;
-  }
-
-}
 
 
 void Sim800l::RTCtime(int *day, int *month, int *year, int *hour, int *minute, int *second) {

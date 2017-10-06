@@ -72,7 +72,6 @@ class Sim800l
     bool expect_scan(const char *pattern, void *ref, uint16_t timeout = SIM800_SERIAL_TIMEOUT);
     bool expect_scan(const char *pattern, void *ref, void *ref1, uint16_t timeout = SIM800_SERIAL_TIMEOUT);
     bool expect_scan(const char *pattern, void *ref, void *ref1, void *ref2, uint16_t timeout = SIM800_SERIAL_TIMEOUT);
-    bool expect_scan(const char *pattern, void *ref, void *ref1, void *ref2, void *ref3, uint16_t timeout = SIM800_SERIAL_TIMEOUT);
 
 
     void print(uint8_t s);
@@ -94,9 +93,13 @@ class Sim800l
     bool shutdown();
     bool sendInverterReq();
     void httpRequest();
-    unsigned short int HTTP_get(uint8_t &len);
+    unsigned short int HTTP_get(const String &url, uint8_t &len);
     bool HTTP_read(uint8_t start, uint8_t len);
     size_t HTTP_read(char *b, uint8_t start, uint8_t len);
+
+    void RTCtime(int *day, int *month, int *year, int *hour, int *minute, int *second);
+    String dateNet(); //return date,time, of the network
+    bool updateRtc(int utc);  //Update the RTC Clock with de Time AND Date of red-.
 
   protected:
     void _eat_echo();
@@ -122,30 +125,6 @@ class Sim800l
     String _buffer;
     String _readSerial(uint16_t timeout = SIM800_SERIAL_TIMEOUT);
     String _readSerial(const SoftwareSerial &serial, uint16_t timeout = SIM800_SERIAL_TIMEOUT);
-
-    mutable short unsigned int inv_ac;
-    mutable float inv_batt;
-    mutable short unsigned int inv_load;
-    mutable short unsigned int inv_charg;
-
-  public:
-    void begin();
-
-    // Methods for calling || Funciones de llamadas.
-    bool answerCall();
-    void callNumber(char* number);
-    bool hangoffCall();
-    uint8_t getCallStatus();
-    //Methods for sms || Funciones de SMS.
-    bool sendSms(char* number, char* text);
-    String readSms(uint8_t index); //return all the content of sms
-    String getNumberSms(uint8_t index); //return the number of the sms..
-    bool delAllSms();     // return :  OK or ERROR ..
-
-    //get time with the variables by reference
-    void RTCtime(int *day, int *month, int *year, int *hour, int *minute, int *second);
-    String dateNet(); //return date,time, of the network
-    bool updateRtc(int utc);  //Update the RTC Clock with de Time AND Date of red-.
 };
 
 /* access point configurations */
