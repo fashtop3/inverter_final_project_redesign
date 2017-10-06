@@ -80,9 +80,9 @@ class Sim800l
     bool is_urc(const char *line, size_t len);
 
     bool shutdown();
-    bool sendInverterReq();
+    bool sendInverterReq(const char req);
     void httpRequest();
-    unsigned short int HTTP_get(const String &url, uint8_t &len);
+    unsigned short int HTTP_get(uint8_t &len);
     bool HTTP_read(uint8_t start, uint8_t len);
     size_t HTTP_read(char *b, uint8_t start, uint8_t len);
 

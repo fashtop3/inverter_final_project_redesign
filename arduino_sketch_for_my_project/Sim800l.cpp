@@ -191,9 +191,13 @@ void Sim800l::setup()
 #endif
         delay(1000);
         //get initial internet state here
-        sendInverterReq();
-        delay(1000);
-        httpRequest();
+        if(sendInverterReq('Q')){
+          delay(1000);
+          httpRequest();
+        }  
+        else {
+          setup();        
+        }
         //        __hard_reset__();
       }
     }
@@ -454,7 +458,7 @@ bool Sim800l::shutdown()
 }
 
 
-bool Sim800l::sendInverterReq()
+bool Sim800l::sendInverterReq(const char req)
 {
   //  STATE:1,1,70
 #ifdef DEBUG_MODE
@@ -462,36 +466,33 @@ bool Sim800l::sendInverterReq()
 #endif
   INV.listen();
   delay(1000);
-  INV.print("DATA:Q:");
+  INV.print("DATA:");
+  INV.print(req);
+  INV.print(':');
   INV.print(_is_connected);
   INV.print(',');
   INV.print(power);
   INV.print(',');
   INV.print(load_max);
   INV.print('\n');
-  //  INV.println("STATE:1,1,70");
+  //  INV.println("DATA:<MODE:[Q|D]>:1,1,70");
   delay(1000);
   // Response format DATA:0,13.14,38,0,1,1 => DATA:<AC IN>,<BATTERY LEVEL>,<LOAD RANGE>,<CHARGING>,<CURRENT POWER STATE>,<CURRENT BACKUP STATE>
-  Serial.println("Checking..");
 
   char data[22];
 
   if (expect_scan(F("DATA:%s"), data, INV, 5000)) {
-    Serial.println(data); //, &b, &l, &c, &p, &k //,%hu,%hu,%hu,%hu,%hu
-    if(sscanf(data, "%hu,%[^,],%hu,%hu,%hu,%hu", &a, b, &l, &c, &p, &k) == 6){
-      Serial.println("data set");
+    //    Serial.println(data); //, &b, &l, &c, &p, &k //,%hu,%hu,%hu,%hu,%hu
+    if (sscanf(data, "%hu,%[^,],%hu,%hu,%hu,%hu", &a, b, &l, &c, &p, &k) == 6) {
+//#ifdef DEBUG_MODE
+      Serial.println("DATA SET...");
+//#endif
+      SIM.listen();
+      delay(1000);
+      return true;
     }
   }
-  else {
-    sendInverterReq();
-  }
-  SIM.listen();
-  delay(1000);
-  //  _eat_echo(INV);
-#ifdef DEBUG_MODE
-  Serial.println("PUSHING DATA FINISHED...");
-#endif
-  return true;
+  return false;
 }
 
 
@@ -501,8 +502,8 @@ void Sim800l::httpRequest()
 #ifdef DEBUG_MODE
   Serial.print("SENDING HTTPREQUEST:.");
 #endif
-  String url = hostname;
-  uint8_t status = HTTP_get(url, len);
+  Serial.println("H");
+  uint8_t status = HTTP_get(len);
   if (status == 200)
   {
     if (HTTP_read(0, len)) {
@@ -516,12 +517,15 @@ void Sim800l::httpRequest()
         Serial.println(output);
 #endif
         delay(100);
-        sendInverterReq();
+        if(sendInverterReq('D')) {
+          httpRequest();
+        }
       }
       _eat_echo();
     }
     //    return;
   }
+  Serial.println(status);
   delay(1000);
   httpRequest();
 
@@ -531,22 +535,32 @@ void Sim800l::httpRequest()
 #endif
 }
 
-unsigned short int Sim800l::HTTP_get(const String & url, uint8_t &len)
+unsigned short int Sim800l::HTTP_get(uint8_t &len)
 {
   //serialWriteString(0, "Debugging\n");
   expect_AT_OK(F("+HTTPTERM"));
-  delay(2000);
-
-  char bArr[url.length() + 1];
-  url.toCharArray(bArr, url.length());
+  delay(1000);
 
   if (!expect_AT_OK(F("+HTTPINIT"))) return 100;
   if (!expect_AT_OK(F("+HTTPPARA=\"CID\",1"))) return 110;
   if (!expect_AT_OK(F("+HTTPPARA=\"UA\",\"IOTINV#1 r0.1\""))) return 102;
   //if (!expect_AT_OK(F("+HTTPPARA=\"REDIR\",1"))) return 1103; //1 allows reirect , o means no redirection
-  println_param("AT+HTTPPARA=\"URL\"", bArr);
-  delay(100);
-  Serial.println(bArr);
+  print("AT+HTTPPARA=\"URL\"");
+  print(F(",\""));
+  print(hostname);
+  print("?t=p&a=");
+  print(a);
+  print("&b=");
+  print(b);
+  print("&c=");
+  print(c);
+  print("&l=");
+  print(l);
+  print("&p=");
+  print(p);
+  print("&k=");
+  print(k);
+  println(F(",\""));
   if (!expect_OK()) return 111;
 
   if (!expect_AT_OK(F("+HTTPACTION=0"))) return 104;
@@ -554,25 +568,30 @@ unsigned short int Sim800l::HTTP_get(const String & url, uint8_t &len)
   uint16_t stat;
   expect_scan(F("+HTTPACTION: 0,%hu,%su"), &stat, &len, SIM, 30000);
   delay(100);
-  Serial.println(stat);   //printing status
   //  Serial.println(len); //printing data length
   return stat;
 }
 
 bool Sim800l::HTTP_read(uint8_t start, uint8_t len)
 {
-  char c[25];
-  char s[3];
-  char l[3];
-  itoa(start, s, 10);
-  itoa(len, l, 10);
+  //  char c[25];
+  //  char s[3];
+  //  char l[3];
+  //  itoa(start, s, 10);
+  //  itoa(len, l, 10);
+  //
+  //  strcpy(c, "AT+HTTPREAD=");
+  //  strcat(c, s);
+  //  strcat(c, ",");
+  //  strcat(c, l);
+  //
+  //  println(c);
 
-  strcpy(c, "AT+HTTPREAD=");
-  strcat(c, s);
-  strcat(c, ",");
-  strcat(c, l);
+  print("AT+HTTPREAD=");
+  print(start);
+  print(",");
+  println(len);
 
-  println(c);
   //println(F("AT+HTTPREAD=0,1"));
   delay(13);
 #ifdef DEBUG_MODE
