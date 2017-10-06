@@ -12,12 +12,13 @@
 #include <stdint.h>
 #include <util/delay.h>
 #include <string.h>
+#include "Lcd.h"
 #include "Inverter.h"
-//#include "Lcd.h"
 #include "serial.h"
 #include "InvSIM800.h"
 #include "f_cpu.h"
 
+#define BAUD_RATE 57600
 //Lcd lcd;
 Inverter inverter; //initialize inverter
 //InvSIM800 sim800 = InvSIM800();
@@ -30,13 +31,12 @@ uint8_t urc_status;
 void myTimerSetup();
 void checkModuleToggled();
 size_t readline(char *buffer, size_t max, uint16_t timeout=SIM800_SERIAL_TIMEOUT);
-volatile char inByte = 0;
-unsigned short int internet = 0; //char load_protect_str[4];
+
+unsigned short int internet = 0;
 
 bool is_urc(const char *line, size_t len);
 bool expect(const char *expected, uint16_t timeout=SIM800_SERIAL_TIMEOUT);
 bool expect_scan(const char *pattern, void *ref, void *ref1, uint16_t timeout = SIM800_SERIAL_TIMEOUT);
-
 
 int main(void)
 {		
@@ -50,7 +50,7 @@ int main(void)
 	myTimerSetup();
 	_delay_ms(500); //allow boot time
 	inverter.setSwitch(true); //power on the inverter
-	serialInit(0, BAUD(57600, F_CPU));
+	serialInit(0, BAUD(BAUD_RATE, F_CPU));
 
 	char request = 0;
 	char data[30];
@@ -64,6 +64,7 @@ int main(void)
 			serialWriteString(0, data);
 			if (request == 'Q') //query
 			{
+				_delay_ms(200);
 				serialWriteString(0, inverter.data());
 				serialWrite(0, '\n');
 			}
@@ -72,14 +73,17 @@ int main(void)
 				short unsigned int ref_power_state;
 				short unsigned int ref_load_protect;
 				if (sscanf(data, "%hu,%hu,%hu", &internet, &ref_power_state, &ref_load_protect) == 3) //0,1,70
-				{  
+				{ 
+					
 					if (!internet) {
+						_delay_ms(200);
 						serialWriteString(0, "Out of service\n");
 						continue;
 					}
+
 					inverter.setOverload(ref_load_protect);
-					inverter.setServerResponse(ref_power_state);	
-					_delay_ms(500);
+					inverter.setServerResponse(ref_power_state);
+					_delay_ms(200);
 					serialWriteString(0, inverter.data());
 					serialWrite(0, '\n');
 				}
@@ -161,8 +165,7 @@ ISR(TIMER1_COMPA_vect)
 	static volatile uint8_t count = 0;
 	static volatile uint16_t internet_delay_check = 1;
 	count++;
-	
-	//PORTB ^= 1<<PINB3; //do this every 100ms
+
 	inverter.monitor();
 	
 	if (count > 10) //do this every 1sec

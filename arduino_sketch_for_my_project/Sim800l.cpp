@@ -6,7 +6,7 @@ SoftwareSerial INV(INV_RX_PIN, INV_TX_PIN);
 
 Sim800l::init()
 {
-  Serial.begin(115200);
+  Serial.begin(9600);
   while (!Serial);
   Serial.println("Initializing sim module....");
 
@@ -21,10 +21,9 @@ Sim800l::init()
   digitalWrite(RESET_PIN, HIGH);
 
   urc_status = 0xff;
-  param = ""; //.reserve(100);
   _isModuleTimeSet = false;
   _awake_ = false;
-  _is_connected = false;
+  _is_connected = 1;
   _is_ntwk_reg = 0;
 
   power = 0;
@@ -92,7 +91,6 @@ bool Sim800l::reset() {
 
   delay(3000);
   _eat_echo();
-  expect_AT_OK(F(""), 2000);
   expect_AT_OK(F(""), 2000);
   expect_AT_OK(F(""), 2000);
   ok = expect_AT_OK(F("E0"), 2000); //TODO: PUT RETRIES HERE
@@ -334,9 +332,9 @@ bool Sim800l::expect_scan(const char *pattern, void *ref, uint16_t timeout)
   char buf[SIM800_BUFSIZE];
   size_t len;
   do len = readline(buf, SIM800_BUFSIZE, timeout); while (is_urc(buf, len));
-#ifdef DEBUG_MODE
+//#ifdef DEBUG_MODE
   Serial.println(buf);
-#endif
+//#endif
   return sscanf(buf, (const char *) pattern, ref) == 1;
 }
 
@@ -345,9 +343,9 @@ bool Sim800l::expect_scan(const char *pattern, void *ref, void *ref1, uint16_t t
   char buf[SIM800_BUFSIZE];
   size_t len;
   do len = readline(buf, SIM800_BUFSIZE, timeout); while (is_urc(buf, len));
-#ifdef DEBUG_MODE
+//#ifdef DEBUG_MODE
   Serial.println(buf);
-#endif
+//#endif
   return sscanf(buf, pattern, ref, ref1) == 2;
 }
 
@@ -356,9 +354,9 @@ bool Sim800l::expect_scan(const char *pattern, void *ref, void *ref1, void *ref2
   char buf[SIM800_BUFSIZE];
   size_t len;
   do len = readline(buf, SIM800_BUFSIZE, timeout); while (is_urc(buf, len));
-#ifdef DEBUG_MODE
+//#ifdef DEBUG_MODE
   Serial.println(buf);
-#endif
+//#endif
   return sscanf(buf, (const char *) pattern, ref, ref1, ref2) == 3;
 }
 
@@ -367,9 +365,9 @@ bool Sim800l::expect_scan(const char *pattern, void *ref, void *ref1, void *ref2
   char buf[SIM800_BUFSIZE];
   size_t len;
   do len = readline(buf, SIM800_BUFSIZE, timeout); while (is_urc(buf, len));
-#ifdef DEBUG_MODE
+//#ifdef DEBUG_MODE
   Serial.println(buf);
-#endif
+//#endif
   return sscanf(buf, (const char *) pattern, ref, ref1, ref2, ref3) == 4;
 }
 
@@ -385,20 +383,15 @@ size_t Sim800l::readline(char *buf, uint8_t maxIdx, uint16_t timeout)
         timeout = 0;
         break;
       }
-      if (maxIdx - idx) {
-        buf[idx++] = c;
-      } else {
-        timeout = 0;
-        break;
-      }
+      if (maxIdx - idx) buf[idx++] = c; 
     }
 
     if (timeout == 0) break;
     delay(1);
   }
   buf[idx] = 0;
-//  Serial.println(buf);
-//  while(1);
+    Serial.println(buf);
+  //  while(1);
   return idx;
 }
 
@@ -421,17 +414,17 @@ size_t Sim800l::read(char *buf, uint8_t len, SoftwareSerial &s)
 bool Sim800l::is_urc(const char *line, size_t len)
 {
   urc_status = 0xff;
-  for (uint8_t i = 0; i < 17; i++)
-  {
-    char urc[30];
-    strcpy(urc, (PGM_P)pgm_read_word(&(_urc_messages[i])));
-    uint8_t urc_len = strlen(urc);
-    if (len >= urc_len && !strncmp(urc, line, urc_len))
-    {
-      urc_status = i;
-      return true;
-    }
-  }
+//  for (uint8_t i = 0; i < 17; i++)
+//  {
+//    char urc[30];
+//    strcpy(urc, (PGM_P)pgm_read_word(&(_urc_messages[i])));
+//    uint8_t urc_len = strlen(urc);
+//    if (len >= urc_len && !strncmp(urc, line, urc_len))
+//    {
+//      urc_status = i;
+//      return true;
+//    }
+//  }
 
   return false;
 }
@@ -475,53 +468,29 @@ bool Sim800l::shutdown()
 
 bool Sim800l::sendInverterReq()
 {
-  //  STATE:1,1,70
-  //#ifdef DEBUG_MODE
+#ifdef DEBUG_MODE
   Serial.println("PUSHING DATA TO INVERTER...");
-  //#endif
+#endif
   INV.listen();
   delay(3000);
-  //  INV.println("DATA?");
-  INV.println("DATA:D:1,1,50");
-  delay(1000);
-  param = _readSerial(INV, 3000);
-  Serial.println("Expect.");
-  Serial.println(param);
-  if (param.indexOf("DATA") != -1) {
-    Serial.println(param);
-  } else if (param.indexOf("Out") != -1) {
-    Serial.println(param);
-  }
-  else {
-    sendInverterReq();
-  }
-  while (1);
-
-  INV.print("STATE:");
+Serial.println("Rd.");
+  INV.print("DATA:D:");
   INV.print(_is_connected);
   INV.print(',');
   INV.print(power);
   INV.print(',');
-  INV.print(load_max);
-  INV.print('\n');
-  //  INV.println("STATE:1,1,70");
+  INV.println(load_max);
   delay(1000);
-  //response DATA:220,15.5,35,1
-  //  param = _readSerial(INV, 3000);
-  inv_ac = 0;
-  inv_batt = 25.5;
-  inv_load = 36;
-  inv_charg = 1;
-  if (expect_scan(F("DATA:%hu,%hu,%hu,%hu"), &inv_ac, &inv_batt, &inv_load, &inv_charg)) {
+  //response DATA:0,13.14,47,0,1,1 =>  DATA:<AC IN>,<BATTERY LEVEL>,<LOADING>,<CHARGING>,<CURRENT POWER STATE>,<CURRENT BACKUP STATE>
+//Serial.println(_readSerial(INV));
+  char str[50]; short unsigned int ab; //&inv_batt, &inv_load, &inv_charg,
+  if (expect_scan(F("DATA:%c:%s"), &ab, str, 3000)) {
     Serial.print("Read Comp.");
   } else {
+    INV.flush();
+    delay(1000);
     sendInverterReq();
   }
-  //  if (param.indexOf("?t=p") != -1) {
-  //    Serial.println(param);
-  //  } else {
-  //    sendInverterReq();
-  //  }
   SIM.listen();
   delay(1000);
   //  _eat_echo(INV);
