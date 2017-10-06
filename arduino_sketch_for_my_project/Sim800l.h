@@ -63,16 +63,15 @@ class Sim800l
     bool reset();
     bool expect_AT_OK(const char *cmd, uint16_t timeout = SIM800_SERIAL_TIMEOUT);
     bool expect_AT(const char *cmd, const char *expected, uint16_t timeout = SIM800_SERIAL_TIMEOUT);
-    bool expect(const char *expected, uint16_t timeout = SIM800_SERIAL_TIMEOUT);
+    bool expect(const char *expected, SoftwareSerial &s, uint16_t timeout = SIM800_SERIAL_TIMEOUT);
     bool expect_OK(uint16_t timeout = SIM800_SERIAL_TIMEOUT);
 
     void setAPN(const char *apn, const char *user, const char *pass);
     bool wakeup();
     bool registerNetwork(uint16_t timeout);
-    bool expect_scan(const char *pattern, void *ref, uint16_t timeout = SIM800_SERIAL_TIMEOUT);
-    bool expect_scan(const char *pattern, void *ref, void *ref1, uint16_t timeout = SIM800_SERIAL_TIMEOUT);
-    bool expect_scan(const char *pattern, void *ref, void *ref1, void *ref2, uint16_t timeout = SIM800_SERIAL_TIMEOUT);
-
+    bool expect_scan(const char *pattern, void *ref, SoftwareSerial &s, uint16_t timeout = SIM800_SERIAL_TIMEOUT);    
+    bool expect_scan(const char *pattern, void *ref, void *ref1, SoftwareSerial &s, uint16_t timeout = SIM800_SERIAL_TIMEOUT);
+    bool expect_scan(const char *pattern, void *ref, void *ref1, void *ref2, SoftwareSerial &s, uint16_t timeout = SIM800_SERIAL_TIMEOUT);
 
     void print(uint8_t s);
     void println(uint8_t s);
@@ -85,7 +84,8 @@ class Sim800l
     bool disableGPRS();
     bool checkConnected();
 
-    size_t readline(char *buf, uint8_t maxIdx, uint16_t timeout);
+//    size_t readline(char *buf, uint8_t maxIdx, uint16_t timeout);
+    size_t readline(char *buf, uint8_t maxIdx, SoftwareSerial &s, uint16_t timeout);
     size_t read(char *buf, uint8_t len, SoftwareSerial &s);
     bool is_urc(const char *line, size_t len);;
     String getUrl();
@@ -122,7 +122,7 @@ class Sim800l
 
     char buf[SIM800_BUFSIZE];
     size_t len;
-    
+
 
   private:
     int _timeout;
