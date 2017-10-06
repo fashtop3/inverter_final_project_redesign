@@ -72,6 +72,7 @@ class Sim800l
     bool expect_scan(const char *pattern, void *ref, uint16_t timeout = SIM800_SERIAL_TIMEOUT);
     bool expect_scan(const char *pattern, void *ref, void *ref1, uint16_t timeout = SIM800_SERIAL_TIMEOUT);
     bool expect_scan(const char *pattern, void *ref, void *ref1, void *ref2, uint16_t timeout = SIM800_SERIAL_TIMEOUT);
+    bool expect_scan(const char *pattern, void *ref, void *ref1, void *ref2, void *ref3, uint16_t timeout = SIM800_SERIAL_TIMEOUT);
 
 
     void print(uint8_t s);
@@ -93,7 +94,7 @@ class Sim800l
     bool shutdown();
     bool sendInverterReq();
     void httpRequest();
-    unsigned short int HTTP_get(const String &url, uint8_t &len);
+    unsigned short int HTTP_get(uint8_t &len);
     bool HTTP_read(uint8_t start, uint8_t len);
     size_t HTTP_read(char *b, uint8_t start, uint8_t len);
 
@@ -122,7 +123,11 @@ class Sim800l
     String _readSerial(uint16_t timeout = SIM800_SERIAL_TIMEOUT);
     String _readSerial(const SoftwareSerial &serial, uint16_t timeout = SIM800_SERIAL_TIMEOUT);
 
-
+    mutable uint16_t inv_ac;
+    mutable float inv_batt;
+    mutable uint8_t inv_load;
+    mutable uint8_t inv_charg;
+  
   public:
     void begin();
 

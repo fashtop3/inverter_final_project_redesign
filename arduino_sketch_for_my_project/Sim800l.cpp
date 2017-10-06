@@ -390,6 +390,17 @@ bool Sim800l::expect_scan(const char *pattern, void *ref, void *ref1, void *ref2
   return sscanf(buf, (const char *) pattern, ref, ref1, ref2) == 3;
 }
 
+bool Sim800l::expect_scan(const char *pattern, void *ref, void *ref1, void *ref2, void *ref3, uint16_t timeout)
+{
+  char buf[SIM800_BUFSIZE];
+  size_t len;
+  do len = readline(buf, SIM800_BUFSIZE, timeout); while (is_urc(buf, len));
+#ifdef DEBUG_MODE
+  Serial.println(buf);
+#endif
+  return sscanf(buf, (const char *) pattern, ref, ref1, ref2, ref3) == 4;
+}
+
 size_t Sim800l::readline(char *buf, uint8_t maxIdx, uint16_t timeout)
 {
   uint16_t idx = 0;
@@ -414,6 +425,8 @@ size_t Sim800l::readline(char *buf, uint8_t maxIdx, uint16_t timeout)
     delay(1);
   }
   buf[idx] = 0;
+  //  Serial.println(buf);
+  //  while(1);
   return idx;
 }
 
@@ -436,7 +449,6 @@ size_t Sim800l::read(char *buf, uint8_t len, SoftwareSerial &s)
 bool Sim800l::is_urc(const char *line, size_t len)
 {
   urc_status = 0xff;
-
   for (uint8_t i = 0; i < 17; i++)
   {
     char urc[30];
@@ -492,12 +504,23 @@ bool Sim800l::shutdown()
 bool Sim800l::sendInverterReq()
 {
   //  STATE:1,1,70
-#ifdef DEBUG_MODE
+  //#ifdef DEBUG_MODE
   Serial.println("PUSHING DATA TO INVERTER...");
-#endif
+  //#endif
   INV.listen();
-  param = "";
   delay(1000);
+  //  INV.println("DATA?");
+  INV.println("STATE:1,1,70");
+  delay(1000);
+  param = _readSerial(INV, 3000);
+  Serial.println("Expect.");
+  if (param.indexOf("?t=p") != -1) {
+    Serial.println(param);
+  } else {
+    sendInverterReq();
+  }
+  while (1);
+
   INV.print("STATE:");
   INV.print(_is_connected);
   INV.print(',');
@@ -507,12 +530,22 @@ bool Sim800l::sendInverterReq()
   INV.print('\n');
   //  INV.println("STATE:1,1,70");
   delay(1000);
-  param = _readSerial(INV, 3000);
-  if (param.indexOf("?t=p") != -1) {
-    Serial.println(param);
+  //response DATA:220,15.5,35,1
+  //  param = _readSerial(INV, 3000);
+  inv_ac = 0;
+  inv_batt = 25.5;
+  inv_load = 36;
+  inv_charg = 1;
+  if (expect_scan(F("DATA:%hu,%hu,%hu,%hu"), &inv_ac, &inv_batt, &inv_load, &inv_charg)) {
+    Serial.print("Read Comp.");
   } else {
     sendInverterReq();
   }
+  //  if (param.indexOf("?t=p") != -1) {
+  //    Serial.println(param);
+  //  } else {
+  //    sendInverterReq();
+  //  }
   SIM.listen();
   delay(1000);
   //  _eat_echo(INV);
@@ -530,18 +563,17 @@ String Sim800l::getUrl()
 
 void Sim800l::httpRequest()
 {
+  static uint8_t calls = 0;
   uint8_t len = 0;
 #ifdef DEBUG_MODE
   Serial.print("SENDING HTTPREQUEST:.");
 #endif
-  String url = getUrl();
-  uint8_t status = HTTP_get(url, len);
+  uint8_t status = HTTP_get(len);
   if (status == 200)
   {
     if (HTTP_read(0, len)) {
       //DATA:1,56,1
       if (expect_scan(F("DATA:%hu,%hu,%hu"), &power, &load_max, &output, 3000)) {
-
         Serial.println("confirmed");
 #ifdef DEBUG_MODE
         Serial.println(power);
@@ -550,12 +582,19 @@ void Sim800l::httpRequest()
 #endif
         delay(100);
         sendInverterReq();
+        calls++;
       }
       _eat_echo();
     }
-//    return;
+    //    return;
   }
   delay(1000);
+  if (calls >= 2) {
+    Serial.println("In delay");
+    delay(10000);
+    Serial.println("Out delay");
+    calls = 0;
+  }
   httpRequest();
 
 #ifdef DEBUG_MODE
@@ -564,22 +603,30 @@ void Sim800l::httpRequest()
 #endif
 }
 
-unsigned short int Sim800l::HTTP_get(const String & url, uint8_t &len)
+unsigned short int Sim800l::HTTP_get(uint8_t &len)
 {
   //serialWriteString(0, "Debugging\n");
   expect_AT_OK(F("+HTTPTERM"));
   delay(2000);
 
-  char bArr[url.length() + 1];
-  url.toCharArray(bArr, url.length());
+  Serial.println("debug");
 
   if (!expect_AT_OK(F("+HTTPINIT"))) return 100;
   if (!expect_AT_OK(F("+HTTPPARA=\"CID\",1"))) return 110;
   if (!expect_AT_OK(F("+HTTPPARA=\"UA\",\"IOTINV#1 r0.1\""))) return 102;
   //if (!expect_AT_OK(F("+HTTPPARA=\"REDIR\",1"))) return 1103; //1 allows reirect , o means no redirection
-  println_param("AT+HTTPPARA=\"URL\"", bArr);
+  print("AT+HTTPPARA=\"URL\"");
+  print(hostname);
+  print("?t=p&a=");
+  print(inv_ac);
+  print("&b=");
+  print(inv_batt);
+  print("&l=");
+  print(inv_load);
+  print("&c=");
+  println(inv_charg);
+
   delay(100);
-  Serial.println(bArr);
   if (!expect_OK()) return 111;
 
   if (!expect_AT_OK(F("+HTTPACTION=0"))) return 104;
@@ -594,18 +641,23 @@ unsigned short int Sim800l::HTTP_get(const String & url, uint8_t &len)
 
 bool Sim800l::HTTP_read(uint8_t start, uint8_t len)
 {
-  char c[25];
-  char s[3];
-  char l[3];
-  itoa(start, s, 10);
-  itoa(len, l, 10);
+  //  char c[25];
+  //  char s[3];
+  //  char l[3];
+  //  itoa(start, s, 10);
+  //  itoa(len, l, 10);
+  //
+  //  strcpy(c, "AT+HTTPREAD=");
+  //  strcat(c, s);
+  //  strcat(c, ",");
+  //  strcat(c, l);
 
-  strcpy(c, "AT+HTTPREAD=");
-  strcat(c, s);
-  strcat(c, ",");
-  strcat(c, l);
+  print("AT+HTTPREAD=");
+  print(start);
+  print(",");
+  println(len);
 
-  println(c);
+  //  println(c);
   //println(F("AT+HTTPREAD=0,1"));
   delay(13);
 #ifdef DEBUG_MODE
@@ -618,18 +670,24 @@ bool Sim800l::HTTP_read(uint8_t start, uint8_t len)
 
 size_t Sim800l::HTTP_read(char *b, uint8_t start, uint8_t len)
 {
-  char c[25];
-  char s[3];
-  char l[3];
-  itoa(start, s, 10);
-  itoa(len, l, 10);
+  //  char c[25];
+  //  char s[3];
+  //  char l[3];
+  //  itoa(start, s, 10);
+  //  itoa(len, l, 10);
+  //
+  //  strcpy(c, "AT+HTTPREAD=");
+  //  strcat(c, s);
+  //  strcat(c, ",");
+  //  strcat(c, l);
+  //
+  //  println(c);
 
-  strcpy(c, "AT+HTTPREAD=");
-  strcat(c, s);
-  strcat(c, ",");
-  strcat(c, l);
+  print("AT+HTTPREAD=");
+  print(start);
+  print(",");
+  println(len);
 
-  println(c);
   //println(F("AT+HTTPREAD=0,1"));
   delay(13);
 #ifdef DEBUG_MODE
