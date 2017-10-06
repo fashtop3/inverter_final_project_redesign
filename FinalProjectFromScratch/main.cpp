@@ -18,6 +18,7 @@
 #include "InvSIM800.h"
 #include "f_cpu.h"
 
+#define BAUD_RATE 57600
 //Lcd lcd;
 Inverter inverter; //initialize inverter
 //InvSIM800 sim800 = InvSIM800();
@@ -48,7 +49,7 @@ int main(void)
 	myTimerSetup();
 	_delay_ms(500); //allow boot time
 	inverter.setSwitch(true); //power on the inverter
-	serialInit(0, BAUD(57600, F_CPU));
+	serialInit(0, BAUD(BAUD_RATE, F_CPU));
 
 	char request = 0;
 	char data[30];
@@ -61,6 +62,7 @@ int main(void)
 			//serialWriteString(0, data);
 			if (request == 'Q') //query
 			{
+				_delay_ms(200);
 				serialWriteString(0, inverter.data());
 				serialWrite(0, '\n');
 			}
@@ -72,13 +74,14 @@ int main(void)
 				{ 
 					
 					if (!internet) {
+						_delay_ms(200);
 						serialWriteString(0, "Out of service\n");
 						continue;
 					}
 
 					inverter.setOverload(ref_load_protect);
 					inverter.setServerResponse(ref_power_state);
-					_delay_ms(500);
+					_delay_ms(200);
 					serialWriteString(0, inverter.data());
 					serialWrite(0, '\n');
 				}

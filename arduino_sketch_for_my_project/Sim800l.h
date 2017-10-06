@@ -123,11 +123,11 @@ class Sim800l
     String _readSerial(uint16_t timeout = SIM800_SERIAL_TIMEOUT);
     String _readSerial(const SoftwareSerial &serial, uint16_t timeout = SIM800_SERIAL_TIMEOUT);
 
-    mutable uint16_t inv_ac;
+    mutable short unsigned int inv_ac;
     mutable float inv_batt;
-    mutable uint8_t inv_load;
-    mutable uint8_t inv_charg;
-  
+    mutable short unsigned int inv_load;
+    mutable short unsigned int inv_charg;
+
   public:
     void begin();
 
