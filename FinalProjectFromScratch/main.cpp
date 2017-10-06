@@ -84,8 +84,6 @@ int main(void)
 				}
 				
 			}
-			len = 0;
-			*buf = 0;
 		}
     }
 	
