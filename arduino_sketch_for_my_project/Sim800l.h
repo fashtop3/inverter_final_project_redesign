@@ -1,18 +1,8 @@
-/* this library is writing by  Cristian Steib.
-
-      PINOUT:
-          _____________________________
-         |  ARDUINO UNO >>>   SIM800L  |
-          -----------------------------
-              GND      >>>   GND
-          RX  10       >>>   TX
-          TX  11       >>>   RX
-         RESET 2       >>>   RST
-
-     POWER SOURCE 4.2V >>> VCC
 
 
-*/
+//inverter serial response format
+//DATA:<AC IN>,<BATTERY LEVEL>,<LOAD RANGE>,<CHARGING>,<CURRENT POWER STATE>,<CURRENT BACKUP STATE>
+
 #ifndef Sim800l_h
 #define Sim800l_h
 #include <SoftwareSerial.h>
@@ -118,7 +108,6 @@ class Sim800l
     const char *_user;
     const char *_pass;
     //    String hostname;
-    mutable String param = "";
 
     char buf[SIM800_BUFSIZE];
     size_t len;

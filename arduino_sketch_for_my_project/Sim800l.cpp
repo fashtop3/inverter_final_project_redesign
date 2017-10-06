@@ -473,7 +473,7 @@ bool Sim800l::sendInverterReq()
   INV.print('\n');
   //  INV.println("STATE:1,1,70");
   delay(1000);
-//  param = _readSerial(INV, 3000); //DATA:0,13.14,38,0,1,1
+  // Response format DATA:0,13.14,38,0,1,1 => DATA:<AC IN>,<BATTERY LEVEL>,<LOAD RANGE>,<CHARGING>,<CURRENT POWER STATE>,<CURRENT BACKUP STATE>
   Serial.println("Checking..");
   
   char str[22];
