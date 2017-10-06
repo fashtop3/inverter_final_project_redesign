@@ -8,8 +8,8 @@ void setup() {
     sim800.init();
     sim800.reset();
     delay(10000);
-    sim800.sendInverterReq();
-//    sim800.setup();
+//    sim800.sendInverterReq();
+    sim800.setup();
 }
 
 void loop() {

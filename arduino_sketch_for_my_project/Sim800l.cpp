@@ -1,33 +1,3 @@
-/* this library is writing by  Cristian Steib.
-        steibkhriz@gmail.com
-    Designed to work with the GSM Sim800l,maybe work with SIM900L
-
-       This library use SoftwareSerial, you can define de RX and TX pin
-       in the header "Sim800l.h" ,by default the pin is RX=10 TX=11..
-       be sure that gnd is attached to arduino too.
-       You can also change the other preferred RESET_PIN
-
-       Esta libreria usa SoftwareSerial, se pueden cambiar los pines de RX y TX
-       en el archivo header, "Sim800l.h", por defecto los pines vienen configurado en
-       RX=10 TX=11.
-       Tambien se puede cambiar el RESET_PIN por otro que prefiera
-
-      PINOUT:
-          _____________________________
-         |  ARDUINO UNO >>>   SIM800L  |
-          -----------------------------
-              GND      >>>   GND
-          RX  10       >>>   TX
-          TX  11       >>>   RX
-         RESET 2       >>>   RST
-
-     POWER SOURCE 4.2V >>> VCC
-
-      Created on: April 20, 2016
-          Author: Cristian Steib
-
-
-*/
 #include "Arduino.h"
 #include "Sim800l.h"
 
@@ -359,8 +329,6 @@ bool Sim800l::disableGPRS()
 
 bool Sim800l::expect_scan(const char *pattern, void *ref, uint16_t timeout)
 {
-  char buf[SIM800_BUFSIZE];
-  size_t len;
   do len = readline(buf, SIM800_BUFSIZE, timeout); while (is_urc(buf, len));
 #ifdef DEBUG_MODE
   Serial.println(buf);
@@ -370,8 +338,6 @@ bool Sim800l::expect_scan(const char *pattern, void *ref, uint16_t timeout)
 
 bool Sim800l::expect_scan(const char *pattern, void *ref, void *ref1, uint16_t timeout)
 {
-  char buf[SIM800_BUFSIZE];
-  size_t len;
   do len = readline(buf, SIM800_BUFSIZE, timeout); while (is_urc(buf, len));
 #ifdef DEBUG_MODE
   Serial.println(buf);
@@ -381,8 +347,6 @@ bool Sim800l::expect_scan(const char *pattern, void *ref, void *ref1, uint16_t t
 
 bool Sim800l::expect_scan(const char *pattern, void *ref, void *ref1, void *ref2, uint16_t timeout)
 {
-  char buf[SIM800_BUFSIZE];
-  size_t len;
   do len = readline(buf, SIM800_BUFSIZE, timeout); while (is_urc(buf, len));
 #ifdef DEBUG_MODE
   Serial.println(buf);
@@ -507,14 +471,14 @@ bool Sim800l::sendInverterReq()
   INV.print('\n');
   //  INV.println("STATE:1,1,70");
   delay(1000);
-    param = _readSerial(INV, 3000); //DATA:0,13.14,38,0,1,1
+  param = _readSerial(INV, 3000); //DATA:0,13.14,38,0,1,1
   Serial.println("Checking..");
-  
-//  expect_scan(F("+HTTPACTION: 0,%hu,%su"), &stat, &len, 30000);
-  
+
+  //  expect_scan(F("+HTTPACTION: 0,%hu,%su"), &stat, &len, 30000);
+
   if (param.indexOf("DATA") != -1) {
     Serial.println(param);
-  } 
+  }
   else {
     sendInverterReq();
   }

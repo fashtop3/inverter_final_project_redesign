@@ -120,6 +120,10 @@ class Sim800l
     //    String hostname;
     mutable String param = "";
 
+    char buf[SIM800_BUFSIZE];
+    size_t len;
+    
+
   private:
     int _timeout;
     String _buffer;
