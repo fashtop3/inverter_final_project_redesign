@@ -71,15 +71,16 @@ int main(void)
 				short unsigned int ref_internet = 0;
 				short unsigned int ref_power_state;
 				short unsigned int ref_load_protect;
-				if (sscanf(data, "%hu,%hu,%hu", &ref_internet, &ref_power_state, &ref_load_protect) == 3) //0,1,70
+				if (sscanf(data, "%hu,%hu,%hu", &internet, &ref_power_state, &ref_load_protect) == 3) //0,1,70
 				{ 
 					
-					if (!ref_internet) {
+					if (!internet) {
 						serialWriteString(0, "Out of service\n");
 						continue;
 					}
-					power_state = ref_internet;
-					load_protect = ref_load_protect;	
+
+					inverter.setOverload(ref_load_protect);
+					inverter.setServerResponse(ref_power_state);
 					_delay_ms(500);
 					serialWriteString(0, inverter.data());
 					serialWrite(0, '\n');
@@ -182,8 +183,7 @@ ISR(TIMER1_COMPA_vect)
 		if (!internet) {
 			if (internet_delay_check >= 1800) //equals 30 mins delay
 			{
-				power_state = 0; // set power state to off
-				load_protect = inverter.getOverloadDefault();
+				inverter.setOverload(inverter.getOverloadDefault());
 				internet_delay_check = 1;
 			}
 			internet_delay_check++;
