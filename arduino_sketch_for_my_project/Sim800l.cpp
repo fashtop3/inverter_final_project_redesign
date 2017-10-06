@@ -486,6 +486,7 @@ bool Sim800l::sendInverterReq()
   delay(1000);
   param = _readSerial(INV, 3000);
   Serial.println("Expect.");
+  Serial.println(param);
   if (param.indexOf("DATA") != -1) {
     Serial.println(param);
   } else if (param.indexOf("Out") != -1) {

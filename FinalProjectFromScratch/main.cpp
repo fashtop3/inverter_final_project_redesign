@@ -13,7 +13,7 @@
 #include <util/delay.h>
 #include <string.h>
 #include "Inverter.h"
-#include "Lcd.h"
+//#include "Lcd.h"
 #include "serial.h"
 #include "InvSIM800.h"
 #include "f_cpu.h"
@@ -23,8 +23,8 @@ Inverter inverter; //initialize inverter
 //InvSIM800 sim800 = InvSIM800();
 
 uint8_t urc_status;
-char buf[SIM800_BUFSIZE];
-size_t len = 0;
+//char buf[SIM800_BUFSIZE];
+//size_t len = 0;
 
 //function prototype
 void myTimerSetup();
@@ -35,10 +35,7 @@ unsigned short int internet = 0; //char load_protect_str[4];
 
 bool is_urc(const char *line, size_t len);
 bool expect(const char *expected, uint16_t timeout=SIM800_SERIAL_TIMEOUT);
-bool expect_scan(const char *pattern, void *ref, uint16_t timeout = SIM800_SERIAL_TIMEOUT);
 bool expect_scan(const char *pattern, void *ref, void *ref1, uint16_t timeout = SIM800_SERIAL_TIMEOUT);
-bool expect_scan(const char *pattern, void *ref, void *ref1, void *ref2, uint16_t timeout = SIM800_SERIAL_TIMEOUT);
-bool expect_scan(const char *pattern, void *ref, void *ref1, void *ref2, void *ref3, uint16_t timeout=SIM800_SERIAL_TIMEOUT);
 
 
 int main(void)
@@ -62,8 +59,9 @@ int main(void)
     while (1) 
     {	
 		//len = readline(buf, SIM800_BUFSIZE);
+		serialWriteString(0, "hellol\n");
 		if(expect_scan(F("DATA:%c:%s"), &request, data, 3000)){
-			//serialWriteString(0, data);
+			serialWriteString(0, data);
 			if (request == 'Q') //query
 			{
 				serialWriteString(0, inverter.data());
@@ -87,8 +85,6 @@ int main(void)
 				}
 				
 			}
-			len = 0;
-			*buf = 0;
 		}
     }
 	
@@ -96,42 +92,18 @@ int main(void)
 
 bool expect(const char *expected, uint16_t timeout)
 {
-	//char buf[SIM800_BUFSIZE];
-	//size_t len;
+	char buf[SIM800_BUFSIZE];
+	size_t len;
 	do len = readline(buf, SIM800_BUFSIZE, timeout); while (is_urc(buf, len));	
 	return strcmp(buf, (const char *) expected) == 0;
 }
 
-bool expect_scan(const char *pattern, void *ref, uint16_t timeout)
-{
-	//char buf[SIM800_BUFSIZE];
-	//size_t len;
-	do len = readline(buf, SIM800_BUFSIZE, timeout); while (is_urc(buf, len));
-	return sscanf(buf, (const char *) pattern, ref) == 1;
-}
-
 bool expect_scan(const char *pattern, void *ref, void *ref1, uint16_t timeout)
 {
-	//char buf[SIM800_BUFSIZE];
-	//size_t len;
+	char buf[SIM800_BUFSIZE];
+	size_t len;
 	do len = readline(buf, SIM800_BUFSIZE, timeout); while (is_urc(buf, len));
 	return sscanf(buf, (const char *) pattern, ref, ref1) == 2;
-}
-
-bool expect_scan(const char *pattern, void *ref, void *ref1, void *ref2, uint16_t timeout)
-{
-	//char buf[SIM800_BUFSIZE];
-	//size_t len;
-	do len = readline(buf, SIM800_BUFSIZE, timeout); while (is_urc(buf, len));
-	return sscanf(buf, (const char *) pattern, ref, ref1, ref2) == 3;
-}
-
-bool expect_scan(const char *pattern, void *ref, void *ref1, void *ref2, void *ref3, uint16_t timeout)
-{
-	//char buf[SIM800_BUFSIZE];
-	//size_t len;
-	do len = readline(buf, SIM800_BUFSIZE, timeout); while (is_urc(buf, len));
-	return sscanf(buf, (const char *) pattern, ref, ref1, ref2, ref3) == 4;
 }
 
 bool is_urc(const char *line, size_t len)
