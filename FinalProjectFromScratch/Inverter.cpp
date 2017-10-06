@@ -192,6 +192,22 @@ Inverter* Inverter::setSwitch(bool on)
 	}
 	
 	return this;
+} 
+
+
+/**
+ * \brief 
+ *  Get if inverter switch 
+ * is enabled
+ * \return bool
+ */
+bool Inverter::getSwitchSet()
+{
+	if(INV_CTR & ~(1<<POWER))
+	{
+		return true;
+	}
+	return false;
 }
 
 /**
@@ -225,6 +241,21 @@ Inverter* Inverter::__setLoad(bool load)
 	}
 	
 	return this;
+}
+
+
+/**
+ * \brief 
+ * Get if load is enabled
+ * \return bool
+ */
+bool Inverter::getLoadSet()
+{
+	if (INV_CTR & 1<<LOAD)
+	{
+		return true;
+	}
+	return false;
 }
 
 /**
@@ -367,27 +398,74 @@ bool Inverter::isModuleAvailable()
 	return false;
 }
 
+//char ac_str[4];
+//char batt_str[6];
+//char load_str[4];
+//itoa(getAcInputReadings(), ac_str, 10);
+//dtostrf(getBattInputReadings(), 5, 2, batt_str);
+//itoa(getOverloadInputReadings(), load_str, 10);
+//
+//char paradata[100] = "?t=p"; // &a=190&b=78&c=1&l=40";
+//strcat(paradata, "&a=");
+//strcat(paradata, ac_str);
+
+//strcat(paradata, "&b=");
+//strcat(paradata, batt_str);
+//
+//strcat(paradata, "&c=");
+//strcat(paradata, (_isCharging)?"1":"0");
+//
+//strcat(paradata, "&l=");
+//strcat(paradata, load_str);
+
+
 char * Inverter::data()
 {
 	char ac_str[4];
 	char batt_str[6];
 	char load_str[4];
-	itoa(getAcInputReadings(), ac_str, 10); 
+	itoa(getAcInputReadings(), ac_str, 10);
 	dtostrf(getBattInputReadings(), 5, 2, batt_str);
 	itoa(getOverloadInputReadings(), load_str, 10);
 	
-	char paradata[100] = "?t=p"; // &a=190&b=78&c=1&l=40";
-	strcat(paradata, "&a=");  
+	char paradata[100] = "DATA:"; // &a=190&b=78&c=1&l=40";
 	strcat(paradata, ac_str);
-	
-	strcat(paradata, "&b=");
+
+	strcat(paradata, ",");
 	strcat(paradata, batt_str);
-	
-	strcat(paradata, "&c=");
+
+	strcat(paradata, ",");
+	strcat(paradata, load_str);
+		
+	strcat(paradata, ",");
 	strcat(paradata, (_isCharging)?"1":"0");
 	
-	strcat(paradata, "&l=");
-	strcat(paradata, load_str);
+	strcat(paradata, ",");
+	strcat(paradata, (getSwitchSet())?"1":"0");	
+	
+	strcat(paradata, ",");
+	strcat(paradata, (getLoadSet())?"1":"0");
+	
+	//char ac_str[4];
+	//char batt_str[6];
+	//char load_str[4];
+	//itoa(getAcInputReadings(), ac_str, 10); 
+	//dtostrf(getBattInputReadings(), 5, 2, batt_str);
+	//itoa(getOverloadInputReadings(), load_str, 10);
+	//
+	//char paradata[100] = "DATA:"; // &a=190&b=78&c=1&l=40"; //DATA:190,15.5,35,1 
+	//strcat(paradata, ac_str);
+	//strcat(paradata, ",");
+	//strcat(paradata, batt_str);
+	//strcat(paradata, ",");
+	//strcat(paradata, load_str);
+	//strcat(paradata, ",");
+	//strcat(paradata, (_isCharging)?"1":"0");
+	//strcat(paradata, ",");
+	//strcat(paradata, getSwitchSet()?"1":"0");
+	//strcat(paradata, ",");
+	//strcat(paradata, getLoadSet()?"1":"0");
+	
 	
 	return paradata;	
 }
