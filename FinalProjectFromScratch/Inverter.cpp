@@ -11,19 +11,20 @@
 #include "Inverter.h"
 #include <string.h>
 
+
+#ifndef LCD_INIT
+#define LCD_INIT
+	Lcd lcd;
+#endif
+
 volatile uint16_t Inverter::__analog_ac_value__ = 0;
 volatile uint16_t Inverter::__analog_batt_value__ = 0;
 volatile uint16_t Inverter::__analog_overload_value__ = 0;
 
-void Inverter::setServerResponse(const char &serverSwitch)
+
+void Inverter::setServerResponse(const uint8_t &serverSwitch)
 {
-	//if (serverSwitch != 0)
-	//{
 		_serverPort = serverSwitch;
-		//return;
-	//}
-	//
-	//_serverPort = 0;
 }
 
 uint8_t Inverter::getEntryCounter()
@@ -76,14 +77,16 @@ void Inverter::incrementEntryCounter()
 			++_entryCounter5;
 		}
 	}
+	
+	if (!_isMains && _load_delay < 6) _load_delay++;
 }
 
 // default constructor
-Inverter::Inverter(Lcd &lcd)
+Inverter::Inverter()
 	:__BATT_LOW_LEVEL__(10.5),
 	 __BATT_FULL_LEVEL__(14.5),
 	 __OVERLOAD_VAL__(OVERLOAD_DEFAULT),
-	 _lcd(lcd),
+	 //lcd(lcd),
 	 _isCharging(false), 
 	 _isModeSet(false),
 	 _entryCounter1(1),
@@ -91,6 +94,7 @@ Inverter::Inverter(Lcd &lcd)
 	 _entryCounter3(1),
 	 _entryCounter4(1),
 	 _entryCounter5(1),
+	 _load_delay(1),
 	 _serverPort(0)
 {
 	//initialize analog holding variables
@@ -165,7 +169,7 @@ Inverter::~Inverter()
  */
 Inverter* Inverter::setSwitch(bool on)
 {
-	if(on)
+	if(on) 
 	{
 		if (__isBattLow())
 		{			
@@ -177,7 +181,8 @@ Inverter* Inverter::setSwitch(bool on)
 		else
 		{
 			//__restoreEventFor(INT_BATTERY_LOW_vect);
-			INV_CTR &= ~(1<<POWER);
+			if (_load_delay == 6) _load_delay = 1;
+			INV_CTR &= ~(1<<POWER); //negative logic to Power ON
 		}
 		
 	}
@@ -188,7 +193,7 @@ Inverter* Inverter::setSwitch(bool on)
 		} else {
 			__restoreEventFor(INT_CHARGE_REQ_vect);
 		}
-		INV_CTR |= 1<<POWER;
+		INV_CTR |= 1<<POWER; //negative logic to Power Off
 	}
 	
 	return this;
@@ -231,8 +236,11 @@ Inverter* Inverter::__setLoad(bool load)
 			}
 		} 
 		else
-		{
-			INV_CTR |= 1<<LOAD;
+		{   
+			if (_load_delay == 5)
+			{
+				INV_CTR |= 1<<LOAD;
+			}
 		}
 	} 
 	else
@@ -251,7 +259,7 @@ Inverter* Inverter::__setLoad(bool load)
  */
 bool Inverter::getLoadSet()
 {
-	if (INV_CTR & 1<<LOAD)
+	if (INV_CTR & (1<<LOAD))
 	{
 		return true;
 	}
@@ -282,6 +290,8 @@ Inverter* Inverter::switchToMains(bool mainsOrInverter)
 			__setChargeEnable(true); 
 			_isCharging = true;
 		}
+		_load_delay = 5;
+		//__setLoad(true); //allowing automatic backup::: effective if inverter is powered on
 	} 
 	else
 	{
@@ -378,6 +388,7 @@ Inverter* Inverter::__remoteSourceOrBypass()
 		}
 		else if (_serverPort == 0)
 		{
+			__setLoad(false);
 			return setSwitch(false);
 		}
 		
@@ -542,7 +553,7 @@ void Inverter::emitMessage()
 	switch(__INVERTER_INT__) 
 	{
 		case CLEAR_SCR_INT_vect:
-			_lcd.clScr();
+			lcd.clScr();
 			break;
 		case INT_BATTERY_LOW_vect:
 			__messageBattLow();
@@ -570,13 +581,13 @@ void Inverter::__messageBattLow()
 {
 	if(!_isMains) //only emit message when source is inverter
 	{
-		_lcd.printStringToLCD(1, 1, "BATTERY LOW!!!");
-		_lcd.printStringToLCD(1, 2, "BATT:");
+		lcd.printStringToLCD(1, 1, "BATTERY LOW!!!");
+		lcd.printStringToLCD(1, 2, "BATT:");
 		
 		//Todo: if value flickers try introducing a variable to delay
-		_lcd.printDoubleToLCD(7, 2, getBattInputReadings(), 4, 1);
-		_lcd.send_A_String("v");
-		_lcd.send_A_String(" ");
+		lcd.printDoubleToLCD(7, 2, getBattInputReadings(), 4, 1);
+		lcd.send_A_String("v");
+		lcd.send_A_String(" ");
 	}
 }
 
@@ -584,8 +595,8 @@ void Inverter::__chargeRequired()
 {
 	if(!_isMains) //only emit message when source is inverter
 	{
-		_lcd.printStringToLCD(1, 1, "BATTERY LOW!!!");
-		_lcd.printStringToLCD(1, 2, "CHARGE REQUIRED");
+		lcd.printStringToLCD(1, 1, "BATTERY LOW!!!");
+		lcd.printStringToLCD(1, 2, "CHARGE REQUIRED");
 	}
 }
 
@@ -606,15 +617,15 @@ void Inverter::__text_load()
 {
 	if (_isOverloaded)
 	{
-		_lcd.printStringToLCD(13, 1, "OVER");
-		_lcd.printStringToLCD(13, 2, "LOAD");
+		lcd.printStringToLCD(13, 1, "OVER");
+		lcd.printStringToLCD(13, 2, "LOAD");
 	} 
 	else
 	{
-		_lcd.printStringToLCD(13, 1, "LOAD");
-		_lcd.printIntToLCD(13, 2, getOverloadInputReadings(), 3);
-		_lcd.send_A_String("%");
-		_lcd.send_A_String(" ");
+		lcd.printStringToLCD(13, 1, "LOAD");
+		lcd.printIntToLCD(13, 2, getOverloadInputReadings(), 3);
+		lcd.send_A_String("%");
+		lcd.send_A_String(" ");
 	}
 }
 
@@ -625,45 +636,45 @@ void Inverter::__text_battery()
 	{
 		if (_isFullyCharged)
 		{
-			_lcd.printStringToLCD(7, 1, "BATT ");
-			_lcd.printStringToLCD(7, 2, "FULL ");
+			lcd.printStringToLCD(7, 1, "BATT ");
+			lcd.printStringToLCD(7, 2, "FULL ");
 		} 
 		else
 		{
 			switch(styleCounter)
 			{
-				case 0: _lcd.printStringToLCD(7, 1, "BATT "); break;
-				case 1: _lcd.printStringToLCD(7, 1, ".    "); break;
-				case 2: _lcd.printStringToLCD(7, 1, "..   "); break;
-				case 3: _lcd.printStringToLCD(7, 1, "...  "); break;
-				case 4: _lcd.printStringToLCD(7, 1, ".... "); break;
-				case 5: _lcd.printStringToLCD(7, 1, "....."); break;
+				case 0: lcd.printStringToLCD(7, 1, "BATT "); break;
+				case 1: lcd.printStringToLCD(7, 1, ".    "); break;
+				case 2: lcd.printStringToLCD(7, 1, "..   "); break;
+				case 3: lcd.printStringToLCD(7, 1, "...  "); break;
+				case 4: lcd.printStringToLCD(7, 1, ".... "); break;
+				case 5: lcd.printStringToLCD(7, 1, "....."); break;
 				default:
 				break;
 			}
 						
-			_lcd.printDoubleToLCD(7, 2, getBattInputReadings(), 4, 1);
-			_lcd.send_A_String("v");
-			_lcd.send_A_String(" ");
+			lcd.printDoubleToLCD(7, 2, getBattInputReadings(), 4, 1);
+			lcd.send_A_String("v");
+			lcd.send_A_String(" ");
 						
 			(styleCounter == 5) ? styleCounter = 0 : styleCounter++;
 		}
 	}
 	else
 	{
-		_lcd.printStringToLCD(7, 1, "BATT ");
-		_lcd.printDoubleToLCD(7, 2, getBattInputReadings(), 4, 1);
-		_lcd.send_A_String("v");
-		_lcd.send_A_String(" ");
+		lcd.printStringToLCD(7, 1, "BATT ");
+		lcd.printDoubleToLCD(7, 2, getBattInputReadings(), 4, 1);
+		lcd.send_A_String("v");
+		lcd.send_A_String(" ");
 	}
 }
 
 void Inverter::__text_mains()
 {
-	_lcd.printStringToLCD(1, 1, "MAINS");
-	_lcd.printIntToLCD(1, 2, getAcInputReadings(), 3);
-	_lcd.send_A_String("v");
-	_lcd.send_A_String(" ");
+	lcd.printStringToLCD(1, 1, "MAINS");
+	lcd.printIntToLCD(1, 2, getAcInputReadings(), 3);
+	lcd.send_A_String("v");
+	lcd.send_A_String(" ");
 }
 
 /**
@@ -684,7 +695,7 @@ void Inverter::__saveCurrentEventFor(Event e)
 		__INVERTER_INT_CP__ = __INVERTER_INT__;
 		__INVERTER_INT__ = e;
 		//lcd.printIntToLCD(4, 2, INVERTER_INT, 2);
-		_lcd.clScr();
+		lcd.clScr();
 	}
 }
 
@@ -703,7 +714,7 @@ void Inverter::__restoreEventFor(Event e)
 		//lcd.printIntToLCD(1, 2, INVERTER_INT, 2);
 		__INVERTER_INT__ = __INVERTER_INT_CP__;
 		//lcd.printIntToLCD(4, 2, INVERTER_INT, 2);
-		_lcd.clScr();
+		lcd.clScr();
 	}
 }
 
@@ -822,10 +833,8 @@ Inverter* Inverter::analogPinSwitching()
  *
  * \return Inverter::Inverter*
  */
-Inverter* Inverter::monitor(char serverResponse)
-{
-	setServerResponse(serverResponse);
-		
+Inverter* Inverter::monitor()
+{		
 	if (__AcInputVoltageCheck()) //check low or high voltage
 	{
 		switchToMains(false)
@@ -842,8 +851,8 @@ Inverter* Inverter::monitor(char serverResponse)
 		//workaround a delay count here
 		if (_entryCounter1 == 5)
 		{
-			switchToMains(true)
-			->__setLoad(true);
+			switchToMains(true);
+			__setLoad(true);
 						
 			_entryCounter4 = 1;
 		}

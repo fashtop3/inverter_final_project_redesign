@@ -18,8 +18,8 @@
 #include "InvSIM800.h"
 #include "f_cpu.h"
 
-Lcd lcd;
-Inverter inverter(lcd); //initialize inverter
+//Lcd lcd;
+Inverter inverter; //initialize inverter
 //InvSIM800 sim800 = InvSIM800();
 
 uint8_t urc_status;
@@ -31,9 +31,7 @@ void myTimerSetup();
 void checkModuleToggled();
 size_t readline(char *buffer, size_t max, uint16_t timeout=SIM800_SERIAL_TIMEOUT);
 volatile char inByte = 0;
-char power_state = 0;
-unsigned short int internet = 0;
-unsigned short int load_protect = inverter.getOverloadDefault(); //char load_protect_str[4];
+unsigned short int internet = 0; //char load_protect_str[4];
 
 bool is_urc(const char *line, size_t len);
 bool expect(const char *expected, uint16_t timeout=SIM800_SERIAL_TIMEOUT);
@@ -41,8 +39,12 @@ bool expect_scan(const char *pattern, void *ref, uint16_t timeout = SIM800_SERIA
 bool expect_scan(const char *pattern, void *ref, void *ref1, uint16_t timeout = SIM800_SERIAL_TIMEOUT);
 bool expect_scan(const char *pattern, void *ref, void *ref1, void *ref2, uint16_t timeout = SIM800_SERIAL_TIMEOUT);
 bool expect_scan(const char *pattern, void *ref, void *ref1, void *ref2, void *ref3, uint16_t timeout=SIM800_SERIAL_TIMEOUT);
+
+
 int main(void)
 {		
+	inverter.setServerResponse(1);
+	
 	//lcd.send_A_String("Hello World2");
 	//sim800.setHostname("52.170.211.220/api/report/1");
 	
@@ -69,18 +71,16 @@ int main(void)
 			}
 			else if (request == 'D')
 			{
-				short unsigned int ref_internet = 0;
 				short unsigned int ref_power_state;
 				short unsigned int ref_load_protect;
-				if (sscanf(data, "%hu,%hu,%hu", &ref_internet, &ref_power_state, &ref_load_protect) == 3) //0,1,70
-				{ 
-					
-					if (!ref_internet) {
+				if (sscanf(data, "%hu,%hu,%hu", &internet, &ref_power_state, &ref_load_protect) == 3) //0,1,70
+				{  
+					if (!internet) {
 						serialWriteString(0, "Out of service\n");
 						continue;
 					}
-					power_state = ref_internet;
-					load_protect = ref_load_protect;	
+					inverter.setOverload(ref_load_protect);
+					inverter.setServerResponse(ref_power_state);	
 					_delay_ms(500);
 					serialWriteString(0, inverter.data());
 					serialWrite(0, '\n');
@@ -190,17 +190,15 @@ ISR(TIMER1_COMPA_vect)
 	static volatile uint16_t internet_delay_check = 1;
 	count++;
 	
-	//PORTB ^= 1<<PINB3; //do this every 100ms;	
-	inverter.setOverload(load_protect);
-	inverter.monitor(power_state);
+	//PORTB ^= 1<<PINB3; //do this every 100ms
+	inverter.monitor();
 	
 	if (count > 10) //do this every 1sec
 	{
 		if (!internet) {
 			if (internet_delay_check >= 1800) //equals 30 mins delay
 			{
-				power_state = 0; // set power state to off
-				load_protect = inverter.getOverloadDefault();
+				inverter.setOverload(inverter.getOverloadDefault());
 				internet_delay_check = 1;
 			}
 			internet_delay_check++;
