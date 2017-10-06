@@ -77,8 +77,7 @@ class Sim800l
 //    size_t readline(char *buf, uint8_t maxIdx, uint16_t timeout);
     size_t readline(char *buf, uint8_t maxIdx, SoftwareSerial &s, uint16_t timeout);
     size_t read(char *buf, uint8_t len, SoftwareSerial &s);
-    bool is_urc(const char *line, size_t len);;
-    String getUrl();
+    bool is_urc(const char *line, size_t len);
 
     bool shutdown();
     bool sendInverterReq();
@@ -102,6 +101,9 @@ class Sim800l
     mutable uint8_t power;
     mutable uint8_t load_max;
     mutable uint8_t output;
+
+    short unsigned int a, l, c, p, k;
+    char b[6];
 
     uint8_t urc_status;
     const char *_apn;

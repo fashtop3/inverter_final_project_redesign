@@ -19,7 +19,6 @@ Sim800l::init()
   digitalWrite(RESET_PIN, HIGH);
 
   urc_status = 0xff;
-  param = ""; //.reserve(100);
   _isModuleTimeSet = false;
   _awake_ = false;
   _is_connected = false;
@@ -462,7 +461,6 @@ bool Sim800l::sendInverterReq()
   Serial.println("PUSHING DATA TO INVERTER...");
 #endif
   INV.listen();
-  param = "";
   delay(1000);
   INV.print("DATA:Q:");
   INV.print(_is_connected);
@@ -475,11 +473,14 @@ bool Sim800l::sendInverterReq()
   delay(1000);
   // Response format DATA:0,13.14,38,0,1,1 => DATA:<AC IN>,<BATTERY LEVEL>,<LOAD RANGE>,<CHARGING>,<CURRENT POWER STATE>,<CURRENT BACKUP STATE>
   Serial.println("Checking..");
-  
-  char str[22];
-  
-  if(expect_scan(F("DATA:%s"), str, INV, 30000)) {
-    Serial.println(str);
+
+  char data[22];
+
+  if (expect_scan(F("DATA:%s"), data, INV, 5000)) {
+    Serial.println(data); //, &b, &l, &c, &p, &k //,%hu,%hu,%hu,%hu,%hu
+    if(sscanf(data, "%hu,%[^,],%hu,%hu,%hu,%hu", &a, b, &l, &c, &p, &k) == 6){
+      Serial.println("data set");
+    }
   }
   else {
     sendInverterReq();
@@ -490,14 +491,9 @@ bool Sim800l::sendInverterReq()
 #ifdef DEBUG_MODE
   Serial.println("PUSHING DATA FINISHED...");
 #endif
-  return param != "";
+  return true;
 }
 
-
-String Sim800l::getUrl()
-{
-  return hostname + param;
-}
 
 void Sim800l::httpRequest()
 {
@@ -505,7 +501,7 @@ void Sim800l::httpRequest()
 #ifdef DEBUG_MODE
   Serial.print("SENDING HTTPREQUEST:.");
 #endif
-  String url = getUrl();
+  String url = hostname;
   uint8_t status = HTTP_get(url, len);
   if (status == 200)
   {
@@ -589,18 +585,18 @@ bool Sim800l::HTTP_read(uint8_t start, uint8_t len)
 
 size_t Sim800l::HTTP_read(char *b, uint8_t start, uint8_t len)
 {
-//  char c[25];
-//  char s[3];
-//  char l[3];
-//  itoa(start, s, 10);
-//  itoa(len, l, 10);
-//
-//  strcpy(c, "AT+HTTPREAD=");
-//  strcat(c, s);
-//  strcat(c, ",");
-//  strcat(c, l);
+  //  char c[25];
+  //  char s[3];
+  //  char l[3];
+  //  itoa(start, s, 10);
+  //  itoa(len, l, 10);
+  //
+  //  strcpy(c, "AT+HTTPREAD=");
+  //  strcat(c, s);
+  //  strcat(c, ",");
+  //  strcat(c, l);
 
-//  println(c);
+  //  println(c);
 
   print("AT+HTTPREAD=");
   print(start);
