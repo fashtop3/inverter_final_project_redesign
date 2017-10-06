@@ -511,11 +511,11 @@ void Sim800l::httpRequest()
       if (expect_scan(F("DATA:%hu,%hu,%hu"), &power, &load_max, &output, SIM, 3000)) {
 
         Serial.println("confirmed");
-#ifdef DEBUG_MODE
+//#ifdef DEBUG_MODE
         Serial.println(power);
         Serial.println(load_max);
         Serial.println(output);
-#endif
+//#endif
         delay(100);
         if(sendInverterReq('D')) {
           httpRequest();
@@ -539,7 +539,7 @@ unsigned short int Sim800l::HTTP_get(uint8_t &len)
 {
   //serialWriteString(0, "Debugging\n");
   expect_AT_OK(F("+HTTPTERM"));
-  delay(1000);
+  delay(3000);
 
   if (!expect_AT_OK(F("+HTTPINIT"))) return 100;
   if (!expect_AT_OK(F("+HTTPPARA=\"CID\",1"))) return 110;
