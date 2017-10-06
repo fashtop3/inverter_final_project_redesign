@@ -428,21 +428,19 @@ char * Inverter::data()
 	dtostrf(getBattInputReadings(), 5, 2, batt_str);
 	itoa(getOverloadInputReadings(), load_str, 10);
 	
-	char paradata[100] = "?t=p"; // &a=190&b=78&c=1&l=40";
-	strcat(paradata, "&a=");
+	char paradata[100] = "DATA:"; // &a=190&b=78&c=1&l=40";
 	strcat(paradata, ac_str);
 
-	strcat(paradata, "&b=");
+	strcat(paradata, ",");
 	strcat(paradata, batt_str);
+
+	strcat(paradata, ",");
+	strcat(paradata, load_str);
+		
+	strcat(paradata, ",");
+	strcat(paradata, (_isCharging)?"1":"0");
 	
-	//strcat(paradata, "&b=");
-	//strcat(paradata, batt_str);
-	//
-	//strcat(paradata, "&c=");
-	//strcat(paradata, (_isCharging)?"1":"0");
-	//
-	//strcat(paradata, "&l=");
-	//strcat(paradata, load_str);
+;
 	
 	
 	//char ac_str[4];
