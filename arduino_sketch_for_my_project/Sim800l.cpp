@@ -397,8 +397,8 @@ size_t Sim800l::readline(char *buf, uint8_t maxIdx, uint16_t timeout)
     delay(1);
   }
   buf[idx] = 0;
-  //  Serial.println(buf);
-  //  while(1);
+//  Serial.println(buf);
+//  while(1);
   return idx;
 }
 
@@ -480,12 +480,13 @@ bool Sim800l::sendInverterReq()
   Serial.println("PUSHING DATA TO INVERTER...");
   //#endif
   INV.listen();
-  delay(1000);
+  delay(3000);
   //  INV.println("DATA?");
   INV.println("DATA:D:1,1,50");
   delay(1000);
   param = _readSerial(INV, 3000);
   Serial.println("Expect.");
+  Serial.println(param);
   if (param.indexOf("DATA") != -1) {
     Serial.println(param);
   } else if (param.indexOf("Out") != -1) {
@@ -600,6 +601,7 @@ unsigned short int Sim800l::HTTP_get(uint8_t &len)
   print(inv_load);
   print("&c=");
   println(inv_charg);
+
 
   delay(100);
   if (!expect_OK()) return 111;
