@@ -460,7 +460,7 @@ bool Sim800l::shutdown()
 
 bool Sim800l::sendInverterReq(const char req)
 {
-  //  STATE:1,1,70
+  //  DATA:D:1,0,75
 #ifdef DEBUG_MODE
   Serial.println("PUSHING DATA TO INVERTER...");
 #endif
