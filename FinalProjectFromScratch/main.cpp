@@ -33,7 +33,7 @@ void checkModuleToggled();
 size_t readline(char *buffer, size_t max, uint16_t timeout=SIM800_SERIAL_TIMEOUT);
 
 unsigned short int internet = 0;
-short unsigned int ref_power_state;
+short unsigned int ref_power_state = 0;
 short unsigned int ref_load_protect;
 
 bool is_urc(const char *line, size_t len);
@@ -81,8 +81,8 @@ int main(void)
 						continue;
 					}
 
-					inverter.setOverload(ref_load_protect);
-					inverter.setServerResponse(ref_power_state);
+					inverter.setOverload(&ref_load_protect);
+					inverter.setServerResponse((const uint8_t *)&ref_power_state);
 					_delay_ms(200);
 					serialWriteString(0, inverter.data());
 					serialWrite(0, '\n');
@@ -174,7 +174,7 @@ ISR(TIMER1_COMPA_vect)
 			if (internet_delay_check >= 1800) //equals 30 mins delay
 			{
 				ref_power_state = 0;
-				inverter.setServerResponse(ref_power_state); // intenet is 0
+				inverter.setServerResponse((const uint8_t *)&internet); // intenet is 0
 				inverter.setOverload(inverter.getOverloadDefault());
 				internet_delay_check = 1;
 			}

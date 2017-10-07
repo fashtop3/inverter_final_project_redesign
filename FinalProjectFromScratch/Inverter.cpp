@@ -22,9 +22,9 @@ volatile uint16_t Inverter::__analog_batt_value__ = 0;
 volatile uint16_t Inverter::__analog_overload_value__ = 0;
 
 
-void Inverter::setServerResponse(const uint8_t &serverSwitch)
+void Inverter::setServerResponse(const uint8_t *serverSwitch)
 {
-		_serverPort = serverSwitch;
+		_serverPort = (volatile char *)serverSwitch;
 }
 
 uint8_t Inverter::getEntryCounter()
@@ -94,9 +94,9 @@ Inverter::Inverter()
 	 _entryCounter3(1),
 	 _entryCounter4(1),
 	 _entryCounter5(1),
-	 _load_delay(1),
-	 _serverPort(0)
+	 _load_delay(1)
 {
+	*_serverPort = 0;
 	//initialize analog holding variables
 	this->__setAcAnalogValue(0)
 		->__setBattAnalogValue(0)
@@ -379,11 +379,11 @@ Inverter* Inverter::__remoteSourceOrBypass()
 {
 	if (isModuleAvailable())
 	{
-		if (_serverPort == 1)
+		if (*_serverPort == 1)
 		{
 			return setSwitch(!_hasLowBatt);
 		}
-		else if (_serverPort == 0)
+		else if (*_serverPort == 0)
 		{
 			__setLoad(false);
 			return setSwitch(false);
@@ -769,14 +769,14 @@ uint8_t Inverter::getOverloadInputReadings()
  *  Overload Level
  * \return uint8_t
  */
-uint8_t Inverter::getOverloadDefault()
+short unsigned int *Inverter::getOverloadDefault()
 {
-	return OVERLOAD_DEFAULT;
+	return (short unsigned int *)OVERLOAD_DEFAULT;
 }
 
-void Inverter::setOverload(uint8_t val)
+void Inverter::setOverload(const short unsigned *val)
 {
-	__OVERLOAD_VAL__ = val > 75 ? 75 : val;
+	__OVERLOAD_VAL__ = *val > 75 ? 75 : *val;
 }
 
 /**

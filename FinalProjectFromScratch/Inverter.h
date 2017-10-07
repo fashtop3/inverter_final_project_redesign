@@ -64,13 +64,13 @@ public:
 	uint16_t getAcInputReadings();
 	double getBattInputReadings();
 	uint8_t getOverloadInputReadings();
-	uint8_t getOverloadDefault();
-	void setOverload(uint8_t val);
+	short unsigned int *getOverloadDefault();
+	void setOverload(const short unsigned *val);
 	Inverter* analogPinSwitching();
 	uint8_t getEntryCounter();
 	void incrementEntryCounter();
 	void emitMessage();
-	void setServerResponse(const uint8_t &param1);
+	void setServerResponse(const uint8_t *param1);
 	bool isModuleAvailable();
 	
 	char *data();
@@ -104,12 +104,12 @@ private:
 	void __resetChargeSelectionControl();
 
 
-	uint8_t __OVERLOAD_VAL__;
+	short unsigned int __OVERLOAD_VAL__;
 	uint8_t __INVERTER_INT__;
 	uint8_t __INVERTER_INT_CP__;
 	const double __BATT_LOW_LEVEL__;
 	const double __BATT_FULL_LEVEL__;
-	volatile char _serverPort;
+	volatile char *_serverPort;
 	volatile bool _chargeUpgrade = true;
 	volatile bool _isUpgraded = true;
 	volatile bool _isOverloaded = false;
