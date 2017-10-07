@@ -19,7 +19,7 @@ Sim800l::init()
   digitalWrite(RESET_PIN, HIGH);
 
   urc_status = 0xff;
-  
+
   _is_connected = false;
   power = 0;
   load_max = 75;
@@ -40,15 +40,16 @@ bool Sim800l::wakeup()
   digitalWrite(LED_PIN, 1);
 #endif
 
-  if (expect_AT_OK(F(""), 2000))
+  expect_AT_OK(F(""), 2000);
+  expect_AT_OK(F("E0"), 3000);
+  if (expect_AT_OK(F("E0"), 2000))
   {
     Serial.println("SIM UP");
     delay(1000);
-    expect_AT_OK(F("E0"), 2000);
     _eat_echo();
   }
 
-  if (!registerNetwork(2000)) {
+  if (!registerNetwork()) {
     reset();
     delay(5000);
     return wakeup();
@@ -173,7 +174,7 @@ void Sim800l::setup()
         //get initial internet state here
         if (sendInverterReq('Q')) {
           delay(1000);
-          httpRequest();
+//          httpRequest();
         }
         else {
           setup();
@@ -184,26 +185,29 @@ void Sim800l::setup()
   }
 }
 
-bool Sim800l::registerNetwork(uint16_t timeout)
+bool Sim800l::registerNetwork()
 {
   _eat_echo();
   delay(20000);
   unsigned short int n = 0;
   println(F("AT+CREG?"));
-  if (expect_scan(F("+CREG: 0,%hu"), &n, SIM, timeout)) {
-    if ((n == 1 || n == 5))
+  if (expect_scan(F("+CREG: 0,%hu"), &n, SIM, 2000)) {
+    if (n == 1 || n == 5)
     {
       Serial.println("NR"); //network regsitered
       return true;
     }
   }
-
   Serial.println("NE?"); //no reg netwwrk found
   return false;
 }
 
 bool Sim800l::setSwitchAPN()
 {
+  static bool *set = 0;
+
+  if (*set) return *set;
+
   //TODO:  ADD RETRIES
   char cs[15];
   println(F("AT+CSCA?"));
@@ -214,19 +218,19 @@ bool Sim800l::setSwitchAPN()
 
     if (strcmp(cs, (char*)"+234803000000") == 0) //mtn
     {
-      setAPN("web.gprs.mtnnigeria.net", "web", "web"); return true;
+      setAPN("web.gprs.mtnnigeria.net", "web", "web"); return *set = true;
     }
     else if (strcmp(cs, (char*)"+234809000151") == 0) //etisalat correct is +2348090001518
     {
-      setAPN("etisalat", "web", "web"); return true;
+      setAPN("etisalat", "web", "web"); return *set = true;
     }
     else if (strcmp(cs, (char*)"+234802000000") == 0) //airtel correct is +2348020000009
     {
-      setAPN("internet.ng.airtel.com", "web", "web"); return true;
+      setAPN("internet.ng.airtel.com", "web", "web"); return *set = true;
     }
     else if (strcmp(cs, (char*)"+234805000150") == 0) //glo  correct is +2348050001501
     {
-      setAPN("gloflat", "web", "web"); return true;
+      setAPN("gloflat", "web", "web"); return *set = true;
     }
     else
     {
@@ -234,14 +238,18 @@ bool Sim800l::setSwitchAPN()
     }
   }
 
-  return false;
+  return *set;
 }
 
 bool Sim800l::enableGPRS(uint16_t timeout)
 {
+
+  setSwitchAPN();
+
   _is_connected = false;
 
-  if (checkConnected())disableGPRS();
+  //  if (_is_connected)
+  disableGPRS();
 
   expect_AT(F("+CIPSHUT"), F("SHUT OK"), 5000);
   expect_AT_OK(F("+CIPMUX=1")); // enable multiplex mode
@@ -288,6 +296,13 @@ bool Sim800l::enableGPRS(uint16_t timeout)
     _delay_ms(10);
   } while (--timeout && !_is_connected);
 
+  //CONNECTED or CONNECT ERROR
+  if (_is_connected) {
+    delay(2000);
+    Serial.println("CT");
+  } else {
+    Serial.println("CE");
+  }
   return _is_connected;
 }
 
@@ -454,33 +469,24 @@ bool Sim800l::sendInverterReq(const char req)
 }
 
 
-void Sim800l::httpRequest()
+void Sim800l::httpRequest(uint8_t &len)
 {
-  uint8_t len = 0;
-#ifdef DEBUG_MODE
   Serial.println("REQ.");
-#endif
   uint8_t status = HTTP_get(len);
   if (status == 200)
   {
     if (HTTP_read(0, len)) {
       //DATA:1,56,1
       if (expect_scan(F("DATA:%hu,%hu,%hu"), &power, &load_max, &output, SIM, 3000)) {
-
-        Serial.println("RDS");
+        Serial.println("RDS");//REQUEST DATA SET
 #ifdef DEBUG_MODE
         Serial.println(power);
         Serial.println(load_max);
         Serial.println(output);
 #endif
-        delay(100);
-        if (sendInverterReq('D')) {
-          httpRequest();
-        }
       }
       _eat_echo();
     }
-    //    return;
   }
 }
 
@@ -494,6 +500,7 @@ unsigned short int Sim800l::HTTP_get(uint8_t &len)
   if (!expect_AT_OK(F("+HTTPPARA=\"CID\",1"))) return 110;
   if (!expect_AT_OK(F("+HTTPPARA=\"UA\",\"IOTINV#1 r0.1\""))) return 102;
   //if (!expect_AT_OK(F("+HTTPPARA=\"REDIR\",1"))) return 1103; //1 allows reirect , o means no redirection
+  Serial.println("GET");
   print("AT+HTTPPARA=\"URL\"");
   print(F(",\""));
   print(hostname);
@@ -517,6 +524,7 @@ unsigned short int Sim800l::HTTP_get(uint8_t &len)
   uint16_t stat;
   expect_scan(F("+HTTPACTION: 0,%hu,%su"), &stat, &len, SIM, 30000);
   delay(100);
+  Serial.println(stat);
   return stat;
 }
 

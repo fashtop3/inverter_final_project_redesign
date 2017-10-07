@@ -17,17 +17,19 @@ Sim800l sim800;
  */
 
  int *control  = 0;
+ uint8_t *len = 10;
+ char *req = 'Q';
 
 void setup() {
   //STATE:1,1,70
     sim800.init();
-//    sim800.reset();
+    sim800.wakeup();
+    sim800.enableGPRS();
     delay(5000);
-    if(sim800.sendInverterReq('Q')) {
-      uint8_t len = 10;
-      sim800.HTTP_get(len);
+    while(sim800.sendInverterReq(*req)) {
+      sim800.httpRequest(*len);
+      *req = 'D';
     }
-//    sim800.setup();
 }
 
 void loop() {

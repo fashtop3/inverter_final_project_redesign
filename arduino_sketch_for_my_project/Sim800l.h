@@ -51,7 +51,7 @@ class Sim800l
 
     void setAPN(const char *apn, const char *user, const char *pass);
     bool wakeup();
-    bool registerNetwork(uint16_t timeout);
+    bool registerNetwork();
     bool expect_scan(const char *pattern, void *ref, SoftwareSerial &s, uint16_t timeout = SIM800_SERIAL_TIMEOUT);    
     bool expect_scan(const char *pattern, void *ref, void *ref1, SoftwareSerial &s, uint16_t timeout = SIM800_SERIAL_TIMEOUT);
     bool expect_scan(const char *pattern, void *ref, void *ref1, void *ref2, SoftwareSerial &s, uint16_t timeout = SIM800_SERIAL_TIMEOUT);
@@ -74,7 +74,7 @@ class Sim800l
 
     bool shutdown();
     bool sendInverterReq(const char req);
-    void httpRequest();
+    void httpRequest(uint8_t &len);
     unsigned short int HTTP_get(uint8_t &len);
     bool HTTP_read(uint8_t start, uint8_t len);
     size_t HTTP_read(char *b, uint8_t start, uint8_t len);
