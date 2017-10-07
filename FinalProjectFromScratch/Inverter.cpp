@@ -78,7 +78,7 @@ void Inverter::incrementEntryCounter()
 		}
 	}
 	
-	//if (!_isMains && _load_delay < 6) _load_delay++;
+	if (!_isMains && getSwitchSet() && _load_delay < 6) _load_delay++;
 }
 
 // default constructor
@@ -181,7 +181,7 @@ Inverter* Inverter::setSwitch(bool on)
 		else
 		{
 			//__restoreEventFor(INT_BATTERY_LOW_vect);
-			//if (_load_delay == 6) _load_delay = 1;
+			if (_load_delay == 6) _load_delay = 1;
 			INV_CTR &= ~(1<<POWER); //negative logic to Power ON
 			_isPowerSet = true;
 		}
@@ -235,16 +235,16 @@ Inverter* Inverter::__setLoad(bool load)
 		} 
 		else
 		{   
-			//if (_load_delay == 5)
-			//{
+			if (_load_delay == 5)
+			{
 				INV_CTR |= 1<<LOAD;
 				_isLoadSet = true;
-			//}
+			}
 		}
 	} 
 	else
 	{
-		//_load_delay = 1;
+		_load_delay = 1;
 		INV_CTR &= ~(1<<LOAD);
 		_isLoadSet = false;
 	}
@@ -287,7 +287,7 @@ Inverter* Inverter::switchToMains(bool mainsOrInverter)
 			__setChargeEnable(true); 
 			_isCharging = true;
 		}
-		//_load_delay = 5;
+		_load_delay = 5;
 		//__setLoad(true); //allowing automatic backup::: effective if inverter is powered on
 	} 
 	else
@@ -385,7 +385,7 @@ Inverter* Inverter::__remoteSourceOrBypass()
 		}
 		else if (_serverPort == 0)
 		{
-			//__setLoad(false);
+			__setLoad(false);
 			return setSwitch(false);
 		}
 		
