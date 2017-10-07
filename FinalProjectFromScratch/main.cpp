@@ -62,7 +62,7 @@ int main(void)
     {	
 		//len = readline(buf, SIM800_BUFSIZE);
 		//serialWriteString(0, "hellol\n");
-		if(expect_scan(F("DATA:%c:%s"), &request, data, 3000)){
+		if(expect_scan(F("DATA:%c:%s"), &request, data, 2000)){
 			//serialWriteString(0, data);
 			if (request == 'Q') //query
 			{
@@ -139,6 +139,7 @@ size_t readline(char *buffer, size_t max, uint16_t timeout)
 	while (--timeout) {
 		while (serialHasChar(0)) {
 			c = serialGet(0);
+			if(c != 'D' && !idx) continue;
 			if (c == '\r') continue;
 			if (c == '\n') {
 				if (!idx) continue;
@@ -150,7 +151,7 @@ size_t readline(char *buffer, size_t max, uint16_t timeout)
 		}
 
 		if (timeout == 0) break;
-		_delay_ms(1);
+		_delay_us(10);
 	}
 	
 	buffer[idx] = 0;

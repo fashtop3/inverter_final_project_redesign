@@ -191,12 +191,12 @@ void Sim800l::setup()
 #endif
         delay(1000);
         //get initial internet state here
-        if(sendInverterReq('Q')){
+        if (sendInverterReq('Q')) {
           delay(1000);
           httpRequest();
-        }  
+        }
         else {
-          setup();        
+          setup();
         }
         //        __hard_reset__();
       }
@@ -481,19 +481,21 @@ bool Sim800l::sendInverterReq(const char req)
   // Response format DATA:0,13.14,38,0,1,1 => DATA:<AC IN>,<BATTERY LEVEL>,<LOAD RANGE>,<CHARGING>,<CURRENT POWER STATE>,<CURRENT BACKUP STATE>
 
   char data[22];
-
+  Serial.println("DATA CHECK...");
+    Serial.println(_readSerial(INV));
   if (expect_scan(F("DATA:%s"), data, INV, 5000)) {
     //    Serial.println(data); //, &b, &l, &c, &p, &k //,%hu,%hu,%hu,%hu,%hu
     if (sscanf(data, "%hu,%[^,],%hu,%hu,%hu,%hu", &a, b, &l, &c, &p, &k) == 6) {
-//#ifdef DEBUG_MODE
+      //#ifdef DEBUG_MODE
       Serial.println("DATA SET...");
-//#endif
+      //#endif
       SIM.listen();
       delay(1000);
       return true;
     }
   }
-  return false;
+
+  return sendInverterReq(req);
 }
 
 
@@ -512,13 +514,13 @@ void Sim800l::httpRequest()
       if (expect_scan(F("DATA:%hu,%hu,%hu"), &power, &load_max, &output, SIM, 3000)) {
 
         Serial.println("confirmed");
-//#ifdef DEBUG_MODE
+        //#ifdef DEBUG_MODE
         Serial.println(power);
         Serial.println(load_max);
         Serial.println(output);
-//#endif
+        //#endif
         delay(100);
-        if(sendInverterReq('D')) {
+        if (sendInverterReq('D')) {
           httpRequest();
         }
       }
@@ -532,7 +534,7 @@ void Sim800l::httpRequest()
 
 #ifdef DEBUG_MODE
   Serial.print("HTTPREQUEST RESPONSE CODE: ");
-  Serial.println(stat);
+  Serial.println(status);
 #endif
 }
 
