@@ -78,7 +78,7 @@ void Inverter::incrementEntryCounter()
 		}
 	}
 	
-	if (!_isMains && _load_delay < 6) _load_delay++;
+	//if (!_isMains && _load_delay < 6) _load_delay++;
 }
 
 // default constructor
@@ -181,8 +181,9 @@ Inverter* Inverter::setSwitch(bool on)
 		else
 		{
 			//__restoreEventFor(INT_BATTERY_LOW_vect);
-			if (_load_delay == 6) _load_delay = 1;
+			//if (_load_delay == 6) _load_delay = 1;
 			INV_CTR &= ~(1<<POWER); //negative logic to Power ON
+			_isPowerSet = true;
 		}
 		
 	}
@@ -194,6 +195,7 @@ Inverter* Inverter::setSwitch(bool on)
 			__restoreEventFor(INT_CHARGE_REQ_vect);
 		}
 		INV_CTR |= 1<<POWER; //negative logic to Power Off
+		_isPowerSet = false;
 	}
 	
 	return this;
@@ -208,11 +210,7 @@ Inverter* Inverter::setSwitch(bool on)
  */
 bool Inverter::getSwitchSet()
 {
-	if(INV_CTR & ~(1<<POWER))
-	{
-		return true;
-	}
-	return false;
+	return _isPowerSet;
 }
 
 /**
@@ -237,16 +235,18 @@ Inverter* Inverter::__setLoad(bool load)
 		} 
 		else
 		{   
-			if (_load_delay == 5)
-			{
+			//if (_load_delay == 5)
+			//{
 				INV_CTR |= 1<<LOAD;
-			}
+				_isLoadSet = true;
+			//}
 		}
 	} 
 	else
 	{
-		_load_delay = 1;
+		//_load_delay = 1;
 		INV_CTR &= ~(1<<LOAD);
+		_isLoadSet = false;
 	}
 	
 	return this;
@@ -260,11 +260,7 @@ Inverter* Inverter::__setLoad(bool load)
  */
 bool Inverter::getLoadSet()
 {
-	if (INV_CTR & (1<<LOAD))
-	{
-		return true;
-	}
-	return false;
+	return _isLoadSet;
 }
 
 /**
@@ -291,7 +287,7 @@ Inverter* Inverter::switchToMains(bool mainsOrInverter)
 			__setChargeEnable(true); 
 			_isCharging = true;
 		}
-		_load_delay = 5;
+		//_load_delay = 5;
 		//__setLoad(true); //allowing automatic backup::: effective if inverter is powered on
 	} 
 	else
@@ -389,7 +385,7 @@ Inverter* Inverter::__remoteSourceOrBypass()
 		}
 		else if (_serverPort == 0)
 		{
-			__setLoad(false);
+			//__setLoad(false);
 			return setSwitch(false);
 		}
 		
@@ -453,7 +449,7 @@ char * Inverter::data()
 	strcat(paradata, (_isCharging)?"1":"0");
 	
 	strcat(paradata, ",");
-	strcat(paradata, (getSwitchSet())?"1":"0");	
+	strcat(paradata, getSwitchSet()?"1":"0");	
 	
 	strcat(paradata, ",");
 	strcat(paradata, (getLoadSet())?"1":"0");

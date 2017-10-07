@@ -117,6 +117,8 @@ private:
 	volatile bool _hasLowBatt = false;
 	volatile bool _isFullyCharged = false;
 	volatile bool _isModeSet;
+	volatile bool _isPowerSet;
+	volatile bool _isLoadSet;
 	volatile bool _isMains;
 	volatile bool _isCharging;
 	volatile uint8_t _entryCounter1;

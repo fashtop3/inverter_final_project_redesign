@@ -33,6 +33,8 @@ void checkModuleToggled();
 size_t readline(char *buffer, size_t max, uint16_t timeout=SIM800_SERIAL_TIMEOUT);
 
 unsigned short int internet = 0;
+short unsigned int ref_power_state;
+short unsigned int ref_load_protect;
 
 bool is_urc(const char *line, size_t len);
 bool expect(const char *expected, uint16_t timeout=SIM800_SERIAL_TIMEOUT);
@@ -40,7 +42,7 @@ bool expect_scan(const char *pattern, void *ref, void *ref1, uint16_t timeout = 
 
 int main(void)
 {		
-	inverter.setServerResponse(1);
+	//inverter.setServerResponse(1);
 	
 	//lcd.send_A_String("Hello World2");
 	//sim800.setHostname("52.170.211.220/api/report/1");
@@ -59,9 +61,9 @@ int main(void)
     while (1) 
     {	
 		//len = readline(buf, SIM800_BUFSIZE);
-		serialWriteString(0, "hellol\n");
+		//serialWriteString(0, "hellol\n");
 		if(expect_scan(F("DATA:%c:%s"), &request, data, 3000)){
-			serialWriteString(0, data);
+			//serialWriteString(0, data);
 			if (request == 'Q') //query
 			{
 				_delay_ms(200);
@@ -70,8 +72,6 @@ int main(void)
 			}
 			else if (request == 'D')
 			{
-				short unsigned int ref_power_state;
-				short unsigned int ref_load_protect;
 				if (sscanf(data, "%hu,%hu,%hu", &internet, &ref_power_state, &ref_load_protect) == 3) //0,1,70
 				{ 
 					
@@ -173,6 +173,8 @@ ISR(TIMER1_COMPA_vect)
 		if (!internet) {
 			if (internet_delay_check >= 1800) //equals 30 mins delay
 			{
+				ref_power_state = 0;
+				inverter.setServerResponse(ref_power_state); // intenet is 0
 				inverter.setOverload(inverter.getOverloadDefault());
 				internet_delay_check = 1;
 			}
