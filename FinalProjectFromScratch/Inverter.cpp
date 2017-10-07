@@ -97,6 +97,8 @@ Inverter::Inverter()
 	 _load_delay(1)
 {
 	*_serverPort = 0;
+	*_isUpgraded = true;
+	*_chargeUpgrade = true;
 	//initialize analog holding variables
 	this->__setAcAnalogValue(0)
 		->__setBattAnalogValue(0)
@@ -284,8 +286,9 @@ Inverter* Inverter::switchToMains(bool mainsOrInverter)
 		INV_MODE_CTR |=	(1<<CHANGE_OVER);
 		if (_entryCounter2 == 8)
 		{
-			__setChargeEnable(true); 
-			_isCharging = true;
+			//__setChargeEnable((bool *)true); 
+			__setChargeEnable(&mainsOrInverter); 
+			_isCharging = mainsOrInverter;
 		}
 		_load_delay = 5;
 		//__setLoad(true); //allowing automatic backup::: effective if inverter is powered on
@@ -309,19 +312,19 @@ Inverter* Inverter::switchToMains(bool mainsOrInverter)
  * 
  * \return Inverter::Inverter*
  */
-Inverter* Inverter::__setChargeEnable(bool enable)
+Inverter* Inverter::__setChargeEnable(bool *enable)
 {
 	//Todo: check the last fully charge state to prevent recursive charge
 	
-	if(enable && __isBattFull())
+	if(*enable && __isBattFull())
 	{
 		//emit message battery full
 		_isFullyCharged = true;
-		__setChargeEnable(!enable); //recall
+		__setChargeEnable((bool *)(!*enable)); //recall
 		return this;
 	}
 		
-	if (enable)
+	if (*enable)
 	{
 		if (!_isFullyCharged) //recheck
 		{
@@ -331,12 +334,12 @@ Inverter* Inverter::__setChargeEnable(bool enable)
 		if (getAcInputReadings() < 200)
 		{
 			__resetChargeSelectionControl();
-			__chargingMode(_chargeUpgrade);
+			__chargingMode((bool *)_chargeUpgrade);
 		} 
 		else
 		{
 			__resetChargeSelectionControl();
-			__chargingMode(!_chargeUpgrade);
+			__chargingMode((bool *)(!*_chargeUpgrade));
 		}
 	} 
 	else
@@ -355,11 +358,11 @@ Inverter* Inverter::__setChargeEnable(bool enable)
  * 
  * \return Inverter::Inverter*
  */
-Inverter* Inverter::__chargingMode(bool upgrade /*= false*/)
+Inverter* Inverter::__chargingMode(bool *upgrade /*= false*/)
 {
 	if (_entryCounter3 == 10)
 	{
-		if (upgrade)
+		if (*upgrade)
 		{
 			INV_MODE_CTR &= ~(1<<CHARGE_SELECT); //upgrade when mains is < 200
 			_isUpgraded = upgrade;
