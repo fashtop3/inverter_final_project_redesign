@@ -8,7 +8,7 @@ Sim800l::init()
 {
   Serial.begin(115200);
   while (!Serial);
-  Serial.println("Initializing sim module....");
+  Serial.println("INIT.");
 
   INV.begin(57600);
   SIM.begin(9600); // INITIALIZE UART
@@ -19,11 +19,8 @@ Sim800l::init()
   digitalWrite(RESET_PIN, HIGH);
 
   urc_status = 0xff;
-  _isModuleTimeSet = false;
-  _awake_ = false;
+  
   _is_connected = false;
-  _is_ntwk_reg = 0;
-
   power = 0;
   load_max = 75;
 }
@@ -43,41 +40,32 @@ bool Sim800l::wakeup()
   digitalWrite(LED_PIN, 1);
 #endif
 
-  _eat_echo();
-  _awake_ = false;
-  if (!expect_AT_OK(F(""), 2000))
+  if (expect_AT_OK(F(""), 2000))
   {
-    Serial.println("!!! SIM800 Unavailable.... Restarting....");
-    if (reset()) {
-      Serial.println("SIM800 Restarted!!!");
-      delay(5000);
-    }
-    wakeup();
+    Serial.println("SIM UP");
+    delay(1000);
+    expect_AT_OK(F("E0"), 2000);
+    _eat_echo();
   }
 
-  _awake_ = true;
-  Serial.println("!!! SIM800 awake");
-  delay(1000);
-  expect_AT_OK(F("E0"), 2000);
-  _eat_echo();
   if (!registerNetwork(2000)) {
     reset();
     delay(5000);
-    wakeup();
+    return wakeup();
   }
 
 #if (LED)
   digitalWrite(LED_PIN, 0);
 #endif
 
-  return _awake_;
+  return true;
 }
 
 
 bool Sim800l::reset() {
   bool ok = false;
 
-  Serial.println("Reset Called...");
+  Serial.println("RST"); // REset
 #if (LED)
   digitalWrite(LED_PIN, 1);
 #endif
@@ -89,10 +77,7 @@ bool Sim800l::reset() {
 
   delay(3000);
   _eat_echo();
-  expect_AT_OK(F(""), 2000);
-  expect_AT_OK(F(""), 2000);
-  expect_AT_OK(F(""), 2000);
-  ok = expect_AT_OK(F("E0"), 2000); //TODO: PUT RETRIES HERE
+  expect_AT_OK(F(""), 6000);
   _eat_echo();
 
 
@@ -100,7 +85,7 @@ bool Sim800l::reset() {
   digitalWrite(LED_PIN, 0);
 #endif
 
-  return ok;
+  return expect_AT_OK(F("E0"), 2000); //TODO: PUT RETRIES HERE
 }
 
 
@@ -123,12 +108,8 @@ bool Sim800l::expect_OK(uint16_t timeout)
 
 bool Sim800l::expect(const char *expected, SoftwareSerial &s, uint16_t timeout)
 {
-  char buf[SIM800_BUFSIZE];
-  size_t len;
   do len = readline(buf, SIM800_BUFSIZE, s, timeout); while (is_urc(buf, len));
-  //  Serial.println(buf);
   return strcmp(buf, (const char *) expected) == 0;
-  //  return _readSerial(timeout).indexOf(expected) != -1 ? true : false;
 }
 
 
@@ -178,7 +159,6 @@ void Sim800l::_eat_echo(SoftwareSerial &serial)
 void Sim800l::setup()
 {
   if (wakeup()) {
-    Serial.println("APN config.");
     if (setSwitchAPN()) {
 #ifdef DEBUG_MODE
       Serial.println("APN Saved..");
@@ -206,10 +186,6 @@ void Sim800l::setup()
 
 bool Sim800l::registerNetwork(uint16_t timeout)
 {
-  _is_ntwk_reg = false;
-#ifdef DEBUG_MODE
-  Serial.println("Check Registered Network?...");
-#endif
   _eat_echo();
   delay(20000);
   unsigned short int n = 0;
@@ -217,15 +193,12 @@ bool Sim800l::registerNetwork(uint16_t timeout)
   if (expect_scan(F("+CREG: 0,%hu"), &n, SIM, timeout)) {
     if ((n == 1 || n == 5))
     {
-      _is_ntwk_reg = true;
-#ifdef DEBUG_MODE
-      Serial.println("Registered Network");
-#endif
+      Serial.println("NR"); //network regsitered
       return true;
     }
   }
 
-  Serial.println("No Registered Network Found?...");
+  Serial.println("NE?"); //no reg netwwrk found
   return false;
 }
 
@@ -266,7 +239,7 @@ bool Sim800l::setSwitchAPN()
 
 bool Sim800l::enableGPRS(uint16_t timeout)
 {
-  bool attached = false;
+  _is_connected = false;
 
   if (checkConnected())disableGPRS();
 
@@ -274,13 +247,14 @@ bool Sim800l::enableGPRS(uint16_t timeout)
   expect_AT_OK(F("+CIPMUX=1")); // enable multiplex mode
   expect_AT_OK(F("+CIPRXGET=1")); // we will receive manually
 
-  while (!attached && timeout > 0) {
-    attached = expect_AT_OK(F("+CGATT=1"), 5000);
+  while (!_is_connected && timeout > 0) {
+    _is_connected = expect_AT_OK(F("+CGATT=1"), 5000);
     delay(1000);
     timeout -= 1000;
   }
 
-  if (!attached) return false;
+  if (!_is_connected) return false;
+  _is_connected = false;
 
   if (!expect_AT_OK(F("+SAPBR=3,1,\"CONTYPE\",\"GPRS\""), 10000)) return false;
 
@@ -307,17 +281,14 @@ bool Sim800l::enableGPRS(uint16_t timeout)
 
   // open GPRS context
   if (!expect_AT_OK(F("+SAPBR=1,1"), 30000)) return false;
-  _is_connected = true;
 
   do {
     println(F("AT+CGATT?"));
-    attached = expect(F("+CGATT: 1"), SIM);
+    _is_connected = expect(F("+CGATT: 1"), SIM);
     _delay_ms(10);
-  } while (--timeout && !attached);
+  } while (--timeout && !_is_connected);
 
-  //_gprs_enable_delay = 0;
-
-  return attached;
+  return _is_connected;
 }
 
 bool Sim800l::disableGPRS()
@@ -334,27 +305,18 @@ bool Sim800l::disableGPRS()
 bool Sim800l::expect_scan(const char *pattern, void *ref, SoftwareSerial &s, uint16_t timeout)
 {
   do len = readline(buf, SIM800_BUFSIZE, s, timeout); while (is_urc(buf, len));
-#ifdef DEBUG_MODE
-  Serial.println(buf);
-#endif
   return sscanf(buf, (const char *) pattern, ref) == 1;
 }
 
 bool Sim800l::expect_scan(const char *pattern, void *ref, void *ref1, SoftwareSerial &s, uint16_t timeout)
 {
   do len = readline(buf, SIM800_BUFSIZE, s, timeout); while (is_urc(buf, len));
-#ifdef DEBUG_MODE
-  Serial.println(buf);
-#endif
   return sscanf(buf, pattern, ref, ref1) == 2;
 }
 
 bool Sim800l::expect_scan(const char *pattern, void *ref, void *ref1, void *ref2, SoftwareSerial &s, uint16_t timeout)
 {
   do len = readline(buf, SIM800_BUFSIZE, s, timeout); while (is_urc(buf, len));
-#ifdef DEBUG_MODE
-  Serial.println(buf);
-#endif
   return sscanf(buf, (const char *) pattern, ref, ref1, ref2) == 3;
 }
 
@@ -441,18 +403,14 @@ bool Sim800l::shutdown()
   disableGPRS();
   _eat_echo();
   delay(2000);
-#ifdef DEBUG_MODE
-  Serial.println("SHUTTING DOWN");
-#endif
   println(F("AT+CPOWD=1"));
   _delay_ms(20);
   //expect_AT_OK(F("+CPOWD=1"));
   if (expect(F("NORMAL POWER DOWN"), SIM)) {
 #ifdef DEBUG_MODE
-    Serial.println("NORMAL POWER DOWN");
+    Serial.println("NPD"); //NORMAL POWER DOWN
 #endif
   }
-  _awake_ = false;
 
   return true;
 }
@@ -481,14 +439,11 @@ bool Sim800l::sendInverterReq(const char req)
   // Response format DATA:0,13.14,38,0,1,1 => DATA:<AC IN>,<BATTERY LEVEL>,<LOAD RANGE>,<CHARGING>,<CURRENT POWER STATE>,<CURRENT BACKUP STATE>
 
   char data[22];
-  Serial.println("DATA CHECK...");
-    Serial.println(_readSerial(INV));
+  Serial.println("DQR"); //DATA QUERY
   if (expect_scan(F("DATA:%s"), data, INV, 5000)) {
     //    Serial.println(data); //, &b, &l, &c, &p, &k //,%hu,%hu,%hu,%hu,%hu
     if (sscanf(data, "%hu,%[^,],%hu,%hu,%hu,%hu", &a, b, &l, &c, &p, &k) == 6) {
-      //#ifdef DEBUG_MODE
-      Serial.println("DATA SET...");
-      //#endif
+      Serial.println("+DSET");
       SIM.listen();
       delay(1000);
       return true;
@@ -503,9 +458,8 @@ void Sim800l::httpRequest()
 {
   uint8_t len = 0;
 #ifdef DEBUG_MODE
-  Serial.print("SENDING HTTPREQUEST:.");
+  Serial.println("REQ.");
 #endif
-  Serial.println("H");
   uint8_t status = HTTP_get(len);
   if (status == 200)
   {
@@ -513,12 +467,12 @@ void Sim800l::httpRequest()
       //DATA:1,56,1
       if (expect_scan(F("DATA:%hu,%hu,%hu"), &power, &load_max, &output, SIM, 3000)) {
 
-        Serial.println("confirmed");
-        //#ifdef DEBUG_MODE
+        Serial.println("RDS");
+#ifdef DEBUG_MODE
         Serial.println(power);
         Serial.println(load_max);
         Serial.println(output);
-        //#endif
+#endif
         delay(100);
         if (sendInverterReq('D')) {
           httpRequest();
@@ -528,14 +482,6 @@ void Sim800l::httpRequest()
     }
     //    return;
   }
-  Serial.println(status);
-  delay(1000);
-  httpRequest();
-
-#ifdef DEBUG_MODE
-  Serial.print("HTTPREQUEST RESPONSE CODE: ");
-  Serial.println(status);
-#endif
 }
 
 unsigned short int Sim800l::HTTP_get(uint8_t &len)
@@ -571,7 +517,6 @@ unsigned short int Sim800l::HTTP_get(uint8_t &len)
   uint16_t stat;
   expect_scan(F("+HTTPACTION: 0,%hu,%su"), &stat, &len, SIM, 30000);
   delay(100);
-  //  Serial.println(len); //printing data length
   return stat;
 }
 
@@ -598,7 +543,7 @@ bool Sim800l::HTTP_read(uint8_t start, uint8_t len)
   //println(F("AT+HTTPREAD=0,1"));
   delay(13);
 #ifdef DEBUG_MODE
-  Serial.println("POINT OF READING DATA.");
+  Serial.println("HTTP_read");
 #endif
   uint16_t avail;
   return expect_scan(F("+HTTPREAD: %hu"), &avail, SIM);
@@ -628,7 +573,7 @@ size_t Sim800l::HTTP_read(char *b, uint8_t start, uint8_t len)
   //println(F("AT+HTTPREAD=0,1"));
   delay(13);
 #ifdef DEBUG_MODE
-  Serial.println("POINT OF READING DATA.");
+  Serial.println("HTTP_read");
 #endif
   uint16_t avail;
   expect_scan(F("+HTTPREAD: %hu"), &avail, SIM);

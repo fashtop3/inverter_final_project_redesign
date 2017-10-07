@@ -35,13 +35,6 @@
 #define SIM800_BUFSIZE 64
 #define hostname  "52.170.211.220/api/r/1"
 
-enum EventSync {
-  SYNC_WAKEUP = 0x0,
-  SYNC_REG_NTWK,
-  SYNC_SET_APN,
-  SYNC_ENABLE_GPRS,
-  SYNC_HTTP_REQUEST
-};
 
 class Sim800l
 {
@@ -94,9 +87,6 @@ class Sim800l
     void _eat_echo();
     void _eat_echo(SoftwareSerial &serial);
     bool __hard_reset__();
-    bool _isModuleTimeSet;
-    bool _is_ntwk_reg;
-    volatile bool _awake_;
     volatile bool _is_connected;
     mutable uint8_t power;
     mutable uint8_t load_max;
