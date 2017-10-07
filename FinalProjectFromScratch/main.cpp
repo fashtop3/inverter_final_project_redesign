@@ -168,13 +168,13 @@ ISR(TIMER1_COMPA_vect)
 
 	inverter.monitor();
 	
-	if (count > 10) //do this every 1sec
+	if (count > 8) //do this every 1sec
 	{
 		if (!internet) {
-			if (internet_delay_check >= 1800) //equals 30 mins delay
+			if (internet_delay_check >= 600) // 1800 equals 30 mins delay
 			{
 				ref_power_state = 0;
-				inverter.setServerResponse((const uint8_t *)&internet); // intenet is 0
+				inverter.setServerResponse((const uint8_t *)&internet); // internet is 0
 				inverter.setOverload(inverter.getOverloadDefault());
 				internet_delay_check = 1;
 			}
