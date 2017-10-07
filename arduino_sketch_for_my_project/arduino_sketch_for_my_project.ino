@@ -16,9 +16,8 @@ Sim800l sim800;
  *    else go to STEP 3 if attempt 3x if Fail goto STEP 1 
  */
 
- int *control  = 0;
- uint8_t *len = 10;
- char *req = 'Q';
+ uint8_t len = 10;
+ char req = 'Q';
 
 void setup() {
   //STATE:1,1,70
@@ -26,9 +25,9 @@ void setup() {
     sim800.wakeup();
     sim800.enableGPRS();
     delay(5000);
-    while(sim800.sendInverterReq(*req)) {
-      sim800.httpRequest(*len);
-      *req = 'D';
+    while(sim800.sendInverterReq('Q')) {
+      sim800.httpRequest(len);
+      req = 'D';
     }
 }
 
