@@ -42,7 +42,7 @@ bool expect_scan(const char *pattern, void *ref, void *ref1, uint16_t timeout = 
 
 int main(void)
 {		
-	//inverter.setServerResponse(1);
+	inverter.setServerResponse((const uint8_t *)&ref_power_state);
 	
 	//lcd.send_A_String("Hello World2");
 	//sim800.setHostname("52.170.211.220/api/report/1");
