@@ -530,18 +530,6 @@ unsigned short int Sim800l::HTTP_get(uint8_t &len)
 
 bool Sim800l::HTTP_read(uint8_t start, uint8_t len)
 {
-  //  char c[25];
-  //  char s[3];
-  //  char l[3];
-  //  itoa(start, s, 10);
-  //  itoa(len, l, 10);
-  //
-  //  strcpy(c, "AT+HTTPREAD=");
-  //  strcat(c, s);
-  //  strcat(c, ",");
-  //  strcat(c, l);
-  //
-  //  println(c);
 
   print("AT+HTTPREAD=");
   print(start);
@@ -560,19 +548,6 @@ bool Sim800l::HTTP_read(uint8_t start, uint8_t len)
 
 size_t Sim800l::HTTP_read(char *b, uint8_t start, uint8_t len)
 {
-  //  char c[25];
-  //  char s[3];
-  //  char l[3];
-  //  itoa(start, s, 10);
-  //  itoa(len, l, 10);
-  //
-  //  strcpy(c, "AT+HTTPREAD=");
-  //  strcat(c, s);
-  //  strcat(c, ",");
-  //  strcat(c, l);
-
-  //  println(c);
-
   print("AT+HTTPREAD=");
   print(start);
   print(",");

@@ -77,8 +77,8 @@ public:
 	bool getLoadSet();
 protected:
 	Inverter* __setLoad(bool attach);
-	Inverter* __setChargeEnable(bool *enable);
-	Inverter* __chargingMode(bool *upgrade);
+	Inverter* __setChargeEnable(bool enable);
+	Inverter* __chargingMode(bool upgrade);
 	Inverter* __remoteSourceOrBypass();
 	
 	bool __isBattLow();
@@ -110,8 +110,8 @@ private:
 	const double __BATT_LOW_LEVEL__;
 	const double __BATT_FULL_LEVEL__;
 	volatile char *_serverPort;
-	volatile bool *_chargeUpgrade;
-	volatile bool *_isUpgraded;
+	volatile bool _chargeUpgrade = true;
+	volatile bool _isUpgraded = true;
 	volatile bool _isOverloaded = false;
 	volatile bool _isLoadEnabled = false;
 	volatile bool _hasLowBatt = false;
