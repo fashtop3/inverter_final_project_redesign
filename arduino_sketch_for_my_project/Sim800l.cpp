@@ -1,6 +1,7 @@
 #include "Arduino.h"
 #include "Sim800l.h"
 
+
 SoftwareSerial SIM(SIM_RX_PIN, SIM_TX_PIN);
 SoftwareSerial INV(INV_RX_PIN, INV_TX_PIN);
 
@@ -76,7 +77,7 @@ bool Sim800l::reset() {
   digitalWrite(RESET_PIN, 1);
   // wait for the module response
 
-  delay(3000);
+  delay(5000);
   _eat_echo();
   expect_AT_OK(F(""), 6000);
   _eat_echo();
@@ -188,7 +189,7 @@ void Sim800l::setup()
 bool Sim800l::registerNetwork()
 {
   _eat_echo();
-  delay(20000);
+  delay(30000);
   unsigned short int n = 0;
   println(F("AT+CREG?"));
   if (expect_scan(F("+CREG: 0,%hu"), &n, SIM, 2000)) {

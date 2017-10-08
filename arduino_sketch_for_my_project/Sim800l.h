@@ -35,7 +35,6 @@
 #define SIM800_BUFSIZE 64
 #define hostname  "52.170.211.220/api/r/1"
 
-
 class Sim800l
 {
 
