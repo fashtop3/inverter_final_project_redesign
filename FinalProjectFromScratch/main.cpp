@@ -209,7 +209,7 @@ ISR(TIMER1_COMPA_vect)
 
 	inverter.monitor();
 
-	if (count > 8) //do this every 1sec
+	if (count > 7) //do this every 1sec
 	{
 		if (inverter.isModuleAvailable())
 		{
