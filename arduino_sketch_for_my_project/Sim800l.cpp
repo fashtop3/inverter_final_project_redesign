@@ -17,6 +17,10 @@ Sim800l::init()
 
   pinMode(LED_PIN, OUTPUT);
   pinMode(RESET_PIN, OUTPUT);
+  pinMode(DQR_LED, OUTPUT);
+  pinMode(RDS_LED, OUTPUT);
+  digitalWrite(DQR_LED, LOW);
+  digitalWrite(RDS_LED, LOW);
   digitalWrite(RESET_PIN, HIGH);
 
   urc_status = 0xff;
@@ -37,9 +41,7 @@ void Sim800l::setAPN(const char *apn, const char *user, const char *pass)
 
 bool Sim800l::wakeup()
 {
-#if (LED)
-  digitalWrite(LED_PIN, 1);
-#endif
+  blink_reset_led();
 
   expect_AT_OK(F(""), 2000);
   expect_AT_OK(F("E0"), 3000);
@@ -56,9 +58,7 @@ bool Sim800l::wakeup()
     return wakeup();
   }
 
-#if (LED)
-  digitalWrite(LED_PIN, 0);
-#endif
+  blink_reset_led();
 
   return true;
 }
@@ -68,13 +68,8 @@ bool Sim800l::reset() {
   bool ok = false;
 
   Serial.println("RST"); // REset
-#if (LED)
-  digitalWrite(LED_PIN, 1);
-#endif
 
-  digitalWrite(RESET_PIN, 0);
-  delay(1000);
-  digitalWrite(RESET_PIN, 1);
+  blink_reset_led();
   // wait for the module response
 
   delay(5000);
@@ -83,13 +78,33 @@ bool Sim800l::reset() {
   _eat_echo();
 
 
-#if (LED)
-  digitalWrite(LED_PIN, 0);
-#endif
+  blink_reset_led();
 
   return expect_AT_OK(F("E0"), 2000); //TODO: PUT RETRIES HERE
 }
 
+
+void Sim800l::blink_led(unsigned char PIN)
+{
+  uint8_t level = 0;
+  for (int i = 0; i < 10; i++) {
+    digitalWrite(PIN, level);
+    delay(200);
+    level ^= 1;
+  }
+}
+
+void Sim800l::blink_reset_led()
+{
+  uint8_t level = 0;
+  for (int i = 0; i < 15; i++) {
+    level ^= 1;
+    digitalWrite(LED_PIN, level);
+    digitalWrite(DQR_LED, level);
+    digitalWrite(RDS_LED, level);
+    delay(200);
+  }
+}
 
 bool Sim800l::expect_AT_OK(const char *cmd, uint16_t timeout)
 {
@@ -175,7 +190,7 @@ void Sim800l::setup()
         //get initial internet state here
         if (sendInverterReq('Q')) {
           delay(1000);
-//          httpRequest();
+          //          httpRequest();
         }
         else {
           setup();
@@ -247,6 +262,9 @@ bool Sim800l::enableGPRS(uint16_t timeout)
 
   setSwitchAPN();
 
+#if (LED)
+  digitalWrite(LED_PIN, 0);
+#endif
   _is_connected = false;
 
   //  if (_is_connected)
@@ -301,6 +319,9 @@ bool Sim800l::enableGPRS(uint16_t timeout)
   if (_is_connected) {
     delay(2000);
     Serial.println("CT");
+#if (LED)
+    digitalWrite(LED_PIN, 1);
+#endif
   } else {
     Serial.println("CE");
   }
@@ -439,6 +460,9 @@ bool Sim800l::sendInverterReq(const char req)
 #ifdef DEBUG_MODE
   Serial.println("PUSHING DATA TO INVERTER...");
 #endif
+#if (LED)
+  digitalWrite(LED_PIN, 1);
+#endif
   INV.listen();
   delay(1000);
   INV.print("DATA:");
@@ -460,12 +484,15 @@ bool Sim800l::sendInverterReq(const char req)
     //    Serial.println(data); //, &b, &l, &c, &p, &k //,%hu,%hu,%hu,%hu,%hu
     if (sscanf(data, "%hu,%[^,],%hu,%hu,%hu,%hu", &a, b, &l, &c, &p, &k) == 6) {
       Serial.println("+DSET");
+      blink_led(DQR_LED);
       SIM.listen();
       delay(1000);
       return true;
     }
   }
-
+#if (LED)
+  digitalWrite(LED_PIN, 0);
+#endif
   return sendInverterReq(req);
 }
 
@@ -473,6 +500,10 @@ bool Sim800l::sendInverterReq(const char req)
 void Sim800l::httpRequest(uint8_t &len)
 {
   Serial.println("REQ.");
+#if (LED)
+  digitalWrite(LED_PIN, 1);
+#endif
+
   uint8_t status = HTTP_get(len);
   if (status == 200)
   {
@@ -485,10 +516,16 @@ void Sim800l::httpRequest(uint8_t &len)
         Serial.println(load_max);
         Serial.println(output);
 #endif
+        blink_led(RDS_LED);
       }
       _eat_echo();
     }
   }
+
+#if (LED)
+  digitalWrite(LED_PIN, 0);
+#endif
+
 }
 
 unsigned short int Sim800l::HTTP_get(uint8_t &len)

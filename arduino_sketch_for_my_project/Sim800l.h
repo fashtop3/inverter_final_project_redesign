@@ -17,6 +17,8 @@
 
 #define LED true // used for indicator led, in case that you don want set to false . 
 #define LED_PIN 13 //pin to indicate states. 
+#define DQR_LED 4
+#define RDS_LED 3
 
 
 //#define DEBUG_MODE
@@ -51,7 +53,7 @@ class Sim800l
     void setAPN(const char *apn, const char *user, const char *pass);
     bool wakeup();
     bool registerNetwork();
-    bool expect_scan(const char *pattern, void *ref, SoftwareSerial &s, uint16_t timeout = SIM800_SERIAL_TIMEOUT);    
+    bool expect_scan(const char *pattern, void *ref, SoftwareSerial &s, uint16_t timeout = SIM800_SERIAL_TIMEOUT);
     bool expect_scan(const char *pattern, void *ref, void *ref1, SoftwareSerial &s, uint16_t timeout = SIM800_SERIAL_TIMEOUT);
     bool expect_scan(const char *pattern, void *ref, void *ref1, void *ref2, SoftwareSerial &s, uint16_t timeout = SIM800_SERIAL_TIMEOUT);
 
@@ -66,7 +68,7 @@ class Sim800l
     bool disableGPRS();
     bool checkConnected();
 
-//    size_t readline(char *buf, uint8_t maxIdx, uint16_t timeout);
+    //    size_t readline(char *buf, uint8_t maxIdx, uint16_t timeout);
     size_t readline(char *buf, uint8_t maxIdx, SoftwareSerial &s, uint16_t timeout);
     size_t read(char *buf, uint8_t len, SoftwareSerial &s);
     bool is_urc(const char *line, size_t len);
@@ -81,6 +83,9 @@ class Sim800l
     void RTCtime(int *day, int *month, int *year, int *hour, int *minute, int *second);
     String dateNet(); //return date,time, of the network
     bool updateRtc(int utc);  //Update the RTC Clock with de Time AND Date of red-.
+
+    void blink_led(unsigned char PIN);
+    void Sim800l::blink_reset_led();
 
   protected:
     void _eat_echo();

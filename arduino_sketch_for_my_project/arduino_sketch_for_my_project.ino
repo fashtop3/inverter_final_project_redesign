@@ -41,7 +41,7 @@ void setup() {
 void loop() {
 
   currentMillis = millis();
-  
+
   //Inverter data req. loop
   while (sim800.sendInverterReq(req)) {
     currentMillis = millis();
