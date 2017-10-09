@@ -26,7 +26,7 @@ void setup() {
     sim800.wakeup();
     sim800.enableGPRS();
     delay(5000);
-    WDT_rst();
+//    WDT_rst();
     while(sim800.sendInverterReq(req)) {
       sim800.httpRequest(len);
       req = 'D';

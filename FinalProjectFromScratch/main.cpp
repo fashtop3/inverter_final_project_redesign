@@ -81,21 +81,24 @@ int main(void)
 			}
 			else if (request == 'D')
 			{
-				if (sscanf(data, "%hu,%hu,%hu", &internet, &ref_power_state, &ref_load_protect) == 3) //0,1,70
-				{ 
-					
-					if (!internet) {
-						_delay_ms(200);
-						serialWriteString(0, "Out of service\n");
-						continue;
-					}
+				if (inverter.isModuleAvailable())
+				{
+					if (sscanf(data, "%hu,%hu,%hu", &internet, &ref_power_state, &ref_load_protect) == 3) //0,1,70
+					{
+						
+						if (!internet) {
+							_delay_ms(200);
+							serialWriteString(0, "Out of service\n");
+							continue;
+						}
 
-					inverter.setOverload(&ref_load_protect);
-					inverter.setServerResponse((const uint8_t *)&ref_power_state);
-					DQR();
+						inverter.setOverload(&ref_load_protect);
+						inverter.setServerResponse((const uint8_t *)&ref_power_state);
+					}
 				}
-				
+				DQR();				
 			}
+			*data = '\0';
 		}
     }
 	

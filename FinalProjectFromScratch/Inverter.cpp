@@ -402,12 +402,7 @@ Inverter* Inverter::__remoteSourceOrBypass()
 bool Inverter::isModuleAvailable()
 {
 	//return true;
-	if ( (INV_CTR_READ & (1<<SIM_MODULE)) ) 
-	{ 
-		return true;
-	}
-	
-	return false;
+	return (INV_CTR_READ & (1<<SIM_MODULE));
 }
 
 //char ac_str[4];
