@@ -34,7 +34,8 @@
 #define INV_MODE_CTR	PORTB
 
 //sim module
-#define SIM_MODULE		PIND2 //to check if sim module is accessible
+#define SIM_MODULE			PIND2 //to check if sim module is accessible
+#define MODULE_HARD_RESET	PIND4 //Hardware Reset for ATMEGA328 controlling the sim module
 
 //Analog conversion pins
 #define AC_OP			PINA0 // main input

@@ -40,6 +40,7 @@ short unsigned int ref_load_protect;
 volatile int press_debounce = 0;
 volatile int release_debounce = 0;
 volatile int pressed = 0;
+volatile bool received_data = false;
 
 bool is_urc(const char *line, size_t len);
 bool expect(const char *expected, uint16_t timeout=SIM800_SERIAL_TIMEOUT);
@@ -49,13 +50,8 @@ int main(void)
 {		
 	inverter.setServerResponse((const uint8_t *)&ref_power_state);
 	
-	//lcd.send_A_String("Hello World2");
-	//sim800.setHostname("52.170.211.220/api/report/1");
 	cli(); //clear global interrupt
 	
-	//GICR |= 1<<INT1;
-	//MCUCR &= ~(1<<ISC11);// | 1<<ISC10);
-	//MCUCR |= (1<<ISC10);
 	sei(); //Enable Global Interrupt
 	
 	myTimerSetup();
@@ -74,6 +70,7 @@ int main(void)
 		//power_button_ctrl();
 
 		if(expect_scan(F("DATA:%c:%s"), &request, data, 2000)){
+			received_data = true;
 			//serialWriteString(0, data);
 			if (request == 'Q') //query
 			{
@@ -99,6 +96,9 @@ int main(void)
 				DQR();				
 			}
 			*data = '\0';
+		}
+		else {
+			received_data = false;
 		}
     }
 	
@@ -168,7 +168,6 @@ bool is_urc(const char *line, size_t len)
 	return false;
 }
 
-
 size_t readline(char *buffer, size_t max, uint16_t timeout)
 {
 	static volatile uint16_t idx = 0;
@@ -202,6 +201,7 @@ ISR(TIMER1_COMPA_vect)
 {
 	//this ISR runs every 100ms;
 	static volatile uint8_t count = 0;
+	static volatile uint16_t data_check = 0;
 	static volatile uint16_t internet_delay_check = 1;
 	count++;
 
@@ -213,6 +213,24 @@ ISR(TIMER1_COMPA_vect)
 	{
 		if (inverter.isModuleAvailable())
 		{
+			//HARD RESET SECTION
+			data_check++;
+			if ( data_check >= 600 )
+			{
+				if (!received_data)
+				{
+					INV_CTR &= ~(1<<MODULE_HARD_RESET);
+					if (data_check >= 630)
+					{
+						INV_CTR |= (1<<MODULE_HARD_RESET);
+						data_check = 0;
+					}
+				} else {
+					data_check = 0;	
+				}
+			}
+			
+			//INTERNET VISIBLE SECTION
 			if (!internet) {
 				if (internet_delay_check >= 600) // 1800 equals 30 mins delay
 				{

@@ -111,13 +111,13 @@ Inverter::Inverter()
 		
 	//enable pins for output
 	INV_DIR |= (1<<POWER) | (1<<LOAD);
-		
-	//enable pins for input
-	//INV_DIR &= ~( (1<<BATT_LOW) | (1<<BATT_FULL) | (1<<AC_PIN) | (1<<OVERLOAD) );
-	
+			
 	//module control
 	INV_DIR &= ~(1<<SIM_MODULE | 1<<POWER_BUTTON);
+	INV_DIR |= 1<<MODULE_HARD_RESET;
+	
 	INV_CTR &= ~(1<<SIM_MODULE); //set it to low
+	INV_CTR |= 1<<MODULE_HARD_RESET;
 	
 	INV_CTR |= (1<<POWER_BUTTON);
 	//INV_CTR &= ~(1<<SIM_MODULE);
@@ -404,27 +404,6 @@ bool Inverter::isModuleAvailable()
 	//return true;
 	return (INV_CTR_READ & (1<<SIM_MODULE));
 }
-
-//char ac_str[4];
-//char batt_str[6];
-//char load_str[4];
-//itoa(getAcInputReadings(), ac_str, 10);
-//dtostrf(getBattInputReadings(), 5, 2, batt_str);
-//itoa(getOverloadInputReadings(), load_str, 10);
-//
-//char paradata[100] = "?t=p"; // &a=190&b=78&c=1&l=40";
-//strcat(paradata, "&a=");
-//strcat(paradata, ac_str);
-
-//strcat(paradata, "&b=");
-//strcat(paradata, batt_str);
-//
-//strcat(paradata, "&c=");
-//strcat(paradata, (_isCharging)?"1":"0");
-//
-//strcat(paradata, "&l=");
-//strcat(paradata, load_str);
-
 
 char * Inverter::data()
 {
