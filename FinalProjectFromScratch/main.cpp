@@ -211,17 +211,23 @@ ISR(TIMER1_COMPA_vect)
 
 	if (count > 8) //do this every 1sec
 	{
-		if (!internet && inverter.isModuleAvailable()) {
-			if (internet_delay_check >= 600) // 1800 equals 30 mins delay
-			{
-				ref_power_state = 0;
-				inverter.setServerResponse((const uint8_t *)&internet); // internet is 0
-				inverter.setOverload(inverter.getOverloadDefault());
+		if (inverter.isModuleAvailable())
+		{
+			if (!internet) {
+				if (internet_delay_check >= 600) // 1800 equals 30 mins delay
+				{
+					ref_power_state = 0;
+					inverter.setServerResponse((const uint8_t *)&internet); // internet is 0
+					inverter.setOverload(inverter.getOverloadDefault());
+					internet_delay_check = 1;
+				}
+				internet_delay_check++;
+			} else {
 				internet_delay_check = 1;
 			}
-			internet_delay_check++;
-		} else {
-			internet_delay_check = 1;
+		}
+		else {
+			inverter.setOverload(inverter.getOverloadDefault());
 		}
 		
 		inverter.incrementEntryCounter();
