@@ -151,7 +151,7 @@ Inverter::Inverter()
 
 void Inverter::__resetChargeSelectionControl()
 {
-	if(_isModeSet && _entryCounter3 == 10)
+	if(_isModeSet && _entryCounter3 >= 10)
 	{
 		_entryCounter3 = 5;
 		_isModeSet = false;
@@ -361,7 +361,7 @@ Inverter* Inverter::__setChargeEnable(bool enable)
  */
 Inverter* Inverter::__chargingMode(bool upgrade /*= false*/)
 {
-	if (_entryCounter3 == 10)
+	if (_entryCounter3 >= 10)
 	{
 		if (upgrade)
 		{
