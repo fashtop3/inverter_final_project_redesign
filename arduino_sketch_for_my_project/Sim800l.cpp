@@ -1,6 +1,6 @@
 #include "Arduino.h"
 #include "Sim800l.h"
-
+#include "wdt.h"
 
 SoftwareSerial SIM(SIM_RX_PIN, SIM_TX_PIN);
 SoftwareSerial INV(INV_RX_PIN, INV_TX_PIN);
@@ -58,7 +58,7 @@ bool Sim800l::wakeup()
     return wakeup();
   }
 
-  blink_reset_led();
+//  blink_reset_led();
 
   return true;
 }
@@ -97,9 +97,20 @@ void Sim800l::blink_led(unsigned char PIN)
 void Sim800l::blink_reset_led()
 {
   uint8_t level = 0;
-  for (int i = 0; i < 15; i++) {
+  for (int i = 0; i < 14; i++) {
     level ^= 1;
     digitalWrite(LED_PIN, level);
+    digitalWrite(DQR_LED, level);
+    digitalWrite(RDS_LED, level);
+    delay(200);
+  }
+}
+
+void Sim800l::http_error_led()
+{
+  uint8_t level = 0;
+  for (int i = 0; i < 6; i++) {
+    level ^= 1;
     digitalWrite(DQR_LED, level);
     digitalWrite(RDS_LED, level);
     delay(200);
@@ -204,18 +215,48 @@ void Sim800l::setup()
 bool Sim800l::registerNetwork()
 {
   _eat_echo();
-  delay(30000);
+  //  delay(30000);
+  network_led();
   unsigned short int n = 0;
   println(F("AT+CREG?"));
   if (expect_scan(F("+CREG: 0,%hu"), &n, SIM, 2000)) {
     if (n == 1 || n == 5)
     {
       Serial.println("NR"); //network regsitered
+      network_led_found(true);
       return true;
     }
   }
   Serial.println("NE?"); //no reg netwwrk found
+  network_led_found(false);
+  delay(2000);
+  if(millis() > 40000){
+    WDT_rst();
+  }
   return false;
+}
+
+void Sim800l::network_led()
+{
+  for (int i = 0; i < 100; i++) {
+    digitalWrite(LED_PIN, 1);
+    delay(100);
+    digitalWrite(LED_PIN, 0);
+    digitalWrite(DQR_LED, 1);
+    delay(100);
+    digitalWrite(DQR_LED, 0);
+    digitalWrite(RDS_LED, 1);
+    delay(100);
+    digitalWrite(RDS_LED, 0);
+  }
+}
+
+void Sim800l::network_led_found(bool found)
+{
+  if(found){
+     digitalWrite(RDS_LED, 1); return;
+  }
+  digitalWrite(DQR_LED, 1);
 }
 
 bool Sim800l::setSwitchAPN()
@@ -520,6 +561,8 @@ void Sim800l::httpRequest(uint8_t &len)
       }
       _eat_echo();
     }
+  } else {
+    http_error_led();
   }
 
 #if (LED)

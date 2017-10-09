@@ -85,7 +85,10 @@ class Sim800l
     bool updateRtc(int utc);  //Update the RTC Clock with de Time AND Date of red-.
 
     void blink_led(unsigned char PIN);
-    void Sim800l::blink_reset_led();
+    void blink_reset_led();
+    void http_error_led();
+    void network_led();    
+    void network_led_found(bool found);
 
   protected:
     void _eat_echo();
