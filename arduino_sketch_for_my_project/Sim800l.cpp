@@ -72,6 +72,11 @@ bool Sim800l::reset() {
   blink_reset_led();
   // wait for the module response
 
+  digitalWrite(RESET_PIN, 0);
+  delay(1000);
+  digitalWrite(RESET_PIN, 1);
+  // wait for the module response
+
   delay(5000);
   _eat_echo();
   expect_AT_OK(F(""), 6000);
