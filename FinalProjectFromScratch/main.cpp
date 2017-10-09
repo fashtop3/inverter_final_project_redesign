@@ -113,11 +113,10 @@ void power_button_ctrl()
 	if (bit_is_clear(PIND, POWER_BUTTON) && bit_is_clear(PIND, SIM_MODULE))
 	{
 		++press_debounce;
-		if (press_debounce > 20)
+		if (press_debounce > 1)
 		{
 			if (pressed == 0)
 			{
-				//INV_CTR ^= (1<<POWER);
 				ref_power_state ^= 1;
 				inverter.setServerResponse((const uint8_t *)&ref_power_state);
 				pressed = 1;
@@ -125,14 +124,9 @@ void power_button_ctrl()
 			press_debounce = 0;
 		}
 	}
-	else  
-	{
-		release_debounce++;
-		if (release_debounce > 20)
-		{
-			pressed = 0;
-			release_debounce = 0;
-		}
+	else {
+		pressed = 0;
+		press_debounce = 0;
 	}
 }
 
@@ -208,28 +202,10 @@ ISR(TIMER1_COMPA_vect)
 	static volatile uint16_t internet_delay_check = 1;
 	count++;
 
-	if (bit_is_clear(PIND, POWER_BUTTON) && bit_is_clear(PIND, SIM_MODULE))
-	{
-		++press_debounce;
-		if (press_debounce > 1) 
-		{
-			if (pressed == 0)
-			{
-				ref_power_state ^= 1;
-				inverter.setServerResponse((const uint8_t *)&ref_power_state);
-				pressed = 1;
-			}
-			press_debounce = 0;
-		}
-	}
-	else {
-		pressed = 0;
-	}
+	power_button_ctrl();
 
 	inverter.monitor();
-	
-	
-	
+
 	if (count > 8) //do this every 1sec
 	{
 		if (!internet && inverter.isModuleAvailable()) {
@@ -250,28 +226,6 @@ ISR(TIMER1_COMPA_vect)
 		count = 0;
 	}
 }
-
-
-ISR(INT1_vect)
-{
-	//if (bit_is_clear(PIND, POWER_BUTTON) && bit_is_clear(PIND, SIM_MODULE))
-	//{
-		////INV_CTR ^= (1<<POWER);
-		//++press_debounce;
-		//if (press_debounce > 1)
-		//{
-			//ref_power_state ^= 1;
-			//inverter.setServerResponse((const uint8_t *)&ref_power_state);
-			//pressed = 1;
-			//press_debounce = 0;
-		//}
-	//}
-	//else {
-		//press_debounce = 0;
-	//}
-	
-}
-
 
 ISR(ADC_vect)
 {
