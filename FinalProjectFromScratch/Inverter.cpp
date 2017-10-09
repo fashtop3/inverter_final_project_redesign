@@ -116,8 +116,9 @@ Inverter::Inverter()
 	//INV_DIR &= ~( (1<<BATT_LOW) | (1<<BATT_FULL) | (1<<AC_PIN) | (1<<OVERLOAD) );
 	
 	//module control
-	INV_DIR &= ~(1<<SIM_MODULE);
+	INV_DIR &= ~(1<<SIM_MODULE | 1<<POWER_BUTTON);
 	INV_CTR &= ~(1<<SIM_MODULE); //set it to low
+	INV_CTR |= (1<<POWER_BUTTON);
 		
 	//enable analog conversions
 	//configure ADC
@@ -378,8 +379,8 @@ Inverter* Inverter::__chargingMode(bool upgrade /*= false*/)
 
 Inverter* Inverter::__remoteSourceOrBypass()
 {
-	if (isModuleAvailable())
-	{
+	//if (isModuleAvailable())
+	//{
 		if (*_serverPort == 1)
 		{
 			return setSwitch(!_hasLowBatt);
@@ -391,9 +392,9 @@ Inverter* Inverter::__remoteSourceOrBypass()
 		}
 		
 		return this;
-	}
+	//}
 
-	return setSwitch(!_hasLowBatt);
+	//return setSwitch(!_hasLowBatt);
 }
 
 bool Inverter::isModuleAvailable()

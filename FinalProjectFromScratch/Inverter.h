@@ -19,6 +19,8 @@
 //#define BATT_FULL		PIND3
 //#define AC_PIN			PIND4
 //#define OVERLOAD		PIND5
+
+#define POWER_BUTTON	PIND3
 #define POWER			PIND6
 #define LOAD			PIND7
 #define INV_DIR			DDRD //module control pin	//Data Direction Register controlling inverter functions

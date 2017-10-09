@@ -30,11 +30,16 @@ uint8_t urc_status;
 //function prototype
 void myTimerSetup();
 void checkModuleToggled();
+void power_button_ctrl();
+void DQR();
 size_t readline(char *buffer, size_t max, uint16_t timeout=SIM800_SERIAL_TIMEOUT);
 
 unsigned short int internet = 0;
 short unsigned int ref_power_state = 0;
 short unsigned int ref_load_protect;
+volatile int press_debounce = 0;
+volatile int release_debounce = 0;
+volatile int pressed = 0;
 
 bool is_urc(const char *line, size_t len);
 bool expect(const char *expected, uint16_t timeout=SIM800_SERIAL_TIMEOUT);
@@ -46,13 +51,18 @@ int main(void)
 	
 	//lcd.send_A_String("Hello World2");
 	//sim800.setHostname("52.170.211.220/api/report/1");
-	
 	cli(); //clear global interrupt
+	
+	//GICR |= 1<<INT1;
+	//MCUCR &= ~(1<<ISC11);// | 1<<ISC10);
+	//MCUCR |= (1<<ISC10);
 	sei(); //Enable Global Interrupt
+	
 	myTimerSetup();
 	_delay_ms(500); //allow boot time
 	inverter.setSwitch(true); //power on the inverter
 	serialInit(0, BAUD(BAUD_RATE, F_CPU));
+	
 
 	char request = 0;
 	char data[30];
@@ -60,38 +70,70 @@ int main(void)
 		
     while (1) 
     {	
-		//len = readline(buf, SIM800_BUFSIZE);
-		//serialWriteString(0, "hellol\n");
-		if(expect_scan(F("DATA:%c:%s"), &request, data, 2000)){
-			//serialWriteString(0, data);
-			if (request == 'Q') //query
-			{
-				_delay_ms(200);
-				serialWriteString(0, inverter.data());
-				serialWrite(0, '\n');
-			}
-			else if (request == 'D')
-			{
-				if (sscanf(data, "%hu,%hu,%hu", &internet, &ref_power_state, &ref_load_protect) == 3) //0,1,70
-				{ 
 					
-					if (!internet) {
-						_delay_ms(200);
-						serialWriteString(0, "Out of service\n");
-						continue;
-					}
+		//power_button_ctrl();
 
-					inverter.setOverload(&ref_load_protect);
-					inverter.setServerResponse((const uint8_t *)&ref_power_state);
-					_delay_ms(200);
-					serialWriteString(0, inverter.data());
-					serialWrite(0, '\n');
-				}
-				
-			}
-		}
+		//if(expect_scan(F("DATA:%c:%s"), &request, data, 2000)){
+			////serialWriteString(0, data);
+			//if (request == 'Q') //query
+			//{
+				//DQR();
+			//}
+			//else if (request == 'D')
+			//{
+				//if (sscanf(data, "%hu,%hu,%hu", &internet, &ref_power_state, &ref_load_protect) == 3) //0,1,70
+				//{ 
+					//
+					//if (!internet) {
+						//_delay_ms(200);
+						//serialWriteString(0, "Out of service\n");
+						//continue;
+					//}
+//
+					//inverter.setOverload(&ref_load_protect);
+					//inverter.setServerResponse((const uint8_t *)&ref_power_state);
+					//DQR();
+				//}
+				//
+			//}
+		//}
     }
 	
+}
+
+void DQR()
+{
+	_delay_ms(200);
+	serialWriteString(0, inverter.data());
+	serialWrite(0, '\n');
+}
+
+void power_button_ctrl()
+{
+	if (bit_is_clear(PIND, POWER_BUTTON) && bit_is_clear(PIND, SIM_MODULE))
+	{
+		++press_debounce;
+		if (press_debounce > 20)
+		{
+			if (pressed == 0)
+			{
+				//INV_CTR ^= (1<<POWER);
+				ref_power_state ^= 1;
+				inverter.setServerResponse((const uint8_t *)&ref_power_state);
+				pressed = 1;
+			}
+			press_debounce = 0;
+		}
+	}
+	else  
+	{
+		release_debounce++;
+		if (release_debounce > 20)
+		{
+			pressed = 0;
+			release_debounce = 0;
+		}
+	}
 }
 
 bool expect(const char *expected, uint16_t timeout)
@@ -159,7 +201,6 @@ size_t readline(char *buffer, size_t max, uint16_t timeout)
 	return rx;
 }
 
-
 ISR(TIMER1_COMPA_vect)
 {
 	//this ISR runs every 100ms;
@@ -167,11 +208,31 @@ ISR(TIMER1_COMPA_vect)
 	static volatile uint16_t internet_delay_check = 1;
 	count++;
 
+	if (bit_is_clear(PIND, POWER_BUTTON) && bit_is_clear(PIND, SIM_MODULE))
+	{
+		++press_debounce;
+		if (press_debounce > 1) 
+		{
+			if (pressed == 0)
+			{
+				ref_power_state ^= 1;
+				inverter.setServerResponse((const uint8_t *)&ref_power_state);
+				pressed = 1;
+			}
+			press_debounce = 0;
+		}
+	}
+	else {
+		pressed = 0;
+	}
+
 	inverter.monitor();
+	
+	
 	
 	if (count > 8) //do this every 1sec
 	{
-		if (!internet) {
+		if (!internet && inverter.isModuleAvailable()) {
 			if (internet_delay_check >= 600) // 1800 equals 30 mins delay
 			{
 				ref_power_state = 0;
@@ -188,6 +249,27 @@ ISR(TIMER1_COMPA_vect)
 		inverter.emitMessage();
 		count = 0;
 	}
+}
+
+
+ISR(INT1_vect)
+{
+	//if (bit_is_clear(PIND, POWER_BUTTON) && bit_is_clear(PIND, SIM_MODULE))
+	//{
+		////INV_CTR ^= (1<<POWER);
+		//++press_debounce;
+		//if (press_debounce > 1)
+		//{
+			//ref_power_state ^= 1;
+			//inverter.setServerResponse((const uint8_t *)&ref_power_state);
+			//pressed = 1;
+			//press_debounce = 0;
+		//}
+	//}
+	//else {
+		//press_debounce = 0;
+	//}
+	
 }
 
 
