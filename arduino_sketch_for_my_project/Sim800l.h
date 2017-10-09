@@ -19,6 +19,7 @@
 #define LED_PIN 13 //pin to indicate states. 
 #define DQR_LED 4
 #define RDS_LED 3
+#define MODULE_AVAILABLE 7
 
 
 //#define DEBUG_MODE

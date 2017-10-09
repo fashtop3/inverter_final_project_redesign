@@ -14,11 +14,13 @@ Sim800l::init()
   INV.begin(57600);
   SIM.begin(9600); // INITIALIZE UART
 
-
+  pinMode(MODULE_AVAILABLE, OUTPUT);
   pinMode(LED_PIN, OUTPUT);
   pinMode(RESET_PIN, OUTPUT);
   pinMode(DQR_LED, OUTPUT);
   pinMode(RDS_LED, OUTPUT);
+
+  digitalWrite(MODULE_AVAILABLE, HIGH);
   digitalWrite(DQR_LED, LOW);
   digitalWrite(RDS_LED, LOW);
   digitalWrite(RESET_PIN, HIGH);
@@ -228,11 +230,13 @@ bool Sim800l::registerNetwork()
     if (n == 1 || n == 5)
     {
       Serial.println("NR"); //network regsitered
+      digitalWrite(MODULE_AVAILABLE, HIGH);
       network_led_found(true);
       return true;
     }
   }
   Serial.println("NE?"); //no reg netwwrk found
+  digitalWrite(MODULE_AVAILABLE, LOW);
   network_led_found(false);
   delay(2000);
   if (millis() > 40000) {
