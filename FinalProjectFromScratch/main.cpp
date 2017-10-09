@@ -219,14 +219,11 @@ ISR(TIMER1_COMPA_vect)
 			{
 				if (!received_data)
 				{
-					INV_CTR &= ~(1<<MODULE_HARD_RESET);
-					if (data_check >= 630)
-					{
-						INV_CTR |= (1<<MODULE_HARD_RESET);
-						data_check = 0;
-					}
+					INV_CTR &= ~(1<<MODULE_HARD_RESET); //issue reset
+					data_check = 605; //set a constant check
 				} else {
 					data_check = 0;	
+					INV_CTR |= (1<<MODULE_HARD_RESET);
 				}
 			}
 			
@@ -245,6 +242,11 @@ ISR(TIMER1_COMPA_vect)
 			}
 		}
 		else {
+			if (data_check >= 605)
+			{
+				INV_CTR |= (1<<MODULE_HARD_RESET); //Release reset... ///when module is unavailable after issue it jumps here
+				data_check = 0;
+			}
 			inverter.setOverload(inverter.getOverloadDefault());
 		}
 		
@@ -265,6 +267,9 @@ void myTimerSetup()
 	//16000000/1024 = 15625 //FOR 1sec
 	TCCR1B |= (1<<WGM12) | (1<<CS12) | (1<<CS10);
 	TIMSK |= (1<<OCIE1A);
-	//OCR1A = 15624; //timer overflow value set to 1sec
-	OCR1A = 1562; //timer overflow value set to 1sec
+	////////OCR1A = 15624; //timer overflow value set to 1sec ---> for 16MHz
+	
+	OCR1A = 1562; //timer overflow value set to 1sec ---> for 16MHz
+	
+	//OCR1A = 1953; //timer overflow value set to 1sec ---> for 20MHz
 }
