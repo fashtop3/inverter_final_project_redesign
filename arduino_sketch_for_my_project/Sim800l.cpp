@@ -58,7 +58,7 @@ bool Sim800l::wakeup()
     return wakeup();
   }
 
-//  blink_reset_led();
+  //  blink_reset_led();
 
   return true;
 }
@@ -230,7 +230,7 @@ bool Sim800l::registerNetwork()
   Serial.println("NE?"); //no reg netwwrk found
   network_led_found(false);
   delay(2000);
-  if(millis() > 40000){
+  if (millis() > 40000) {
     WDT_rst();
   }
   return false;
@@ -238,6 +238,7 @@ bool Sim800l::registerNetwork()
 
 void Sim800l::network_led()
 {
+  //30 sec delay
   for (int i = 0; i < 100; i++) {
     digitalWrite(LED_PIN, 1);
     delay(100);
@@ -253,8 +254,8 @@ void Sim800l::network_led()
 
 void Sim800l::network_led_found(bool found)
 {
-  if(found){
-     digitalWrite(RDS_LED, 1); return;
+  if (found) {
+    digitalWrite(RDS_LED, 1); return;
   }
   digitalWrite(DQR_LED, 1);
 }

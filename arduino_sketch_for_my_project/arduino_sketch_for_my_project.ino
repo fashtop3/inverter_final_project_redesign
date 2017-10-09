@@ -60,7 +60,6 @@ void loop() {
   if ((currentMillis - wdtPrevMillis) > wdtInterval) {
     // save the last time you blinked the LED
     wdtPrevMillis = currentMillis;
-    Serial.println("SOFT.RST");
     WDT_rst();
   }
 }

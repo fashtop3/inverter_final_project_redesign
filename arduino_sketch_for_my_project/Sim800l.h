@@ -87,7 +87,7 @@ class Sim800l
     void blink_led(unsigned char PIN);
     void blink_reset_led();
     void http_error_led();
-    void network_led();    
+    void network_led();
     void network_led_found(bool found);
 
   protected:

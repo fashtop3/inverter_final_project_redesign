@@ -3,7 +3,8 @@
 
 void WDT_rst(void)
 {
-    WDTCSR = 0x18;
-    WDTCSR = 0x08;
-    while(1);
+  WDTCSR = 0x18;
+  WDTCSR = 0x08;
+  Serial.println("SOFT.RST");
+  while (1);
 }
