@@ -73,30 +73,30 @@ int main(void)
 					
 		//power_button_ctrl();
 
-		//if(expect_scan(F("DATA:%c:%s"), &request, data, 2000)){
-			////serialWriteString(0, data);
-			//if (request == 'Q') //query
-			//{
-				//DQR();
-			//}
-			//else if (request == 'D')
-			//{
-				//if (sscanf(data, "%hu,%hu,%hu", &internet, &ref_power_state, &ref_load_protect) == 3) //0,1,70
-				//{ 
-					//
-					//if (!internet) {
-						//_delay_ms(200);
-						//serialWriteString(0, "Out of service\n");
-						//continue;
-					//}
-//
-					//inverter.setOverload(&ref_load_protect);
-					//inverter.setServerResponse((const uint8_t *)&ref_power_state);
-					//DQR();
-				//}
-				//
-			//}
-		//}
+		if(expect_scan(F("DATA:%c:%s"), &request, data, 2000)){
+			//serialWriteString(0, data);
+			if (request == 'Q') //query
+			{
+				DQR();
+			}
+			else if (request == 'D')
+			{
+				if (sscanf(data, "%hu,%hu,%hu", &internet, &ref_power_state, &ref_load_protect) == 3) //0,1,70
+				{ 
+					
+					if (!internet) {
+						_delay_ms(200);
+						serialWriteString(0, "Out of service\n");
+						continue;
+					}
+
+					inverter.setOverload(&ref_load_protect);
+					inverter.setServerResponse((const uint8_t *)&ref_power_state);
+					DQR();
+				}
+				
+			}
+		}
     }
 	
 }
@@ -113,7 +113,7 @@ void power_button_ctrl()
 	if (bit_is_clear(PIND, POWER_BUTTON) && bit_is_clear(PIND, SIM_MODULE))
 	{
 		++press_debounce;
-		if (press_debounce > 1)
+		if (press_debounce > 3)
 		{
 			if (pressed == 0)
 			{

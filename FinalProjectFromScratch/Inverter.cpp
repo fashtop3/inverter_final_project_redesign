@@ -96,7 +96,7 @@ Inverter::Inverter()
 	 _entryCounter5(1),
 	 _load_delay(1)
 {
-	*_serverPort = 0;
+	//*_serverPort = 0;
 	//initialize analog holding variables
 	this->__setAcAnalogValue(0)
 		->__setBattAnalogValue(0)
@@ -118,7 +118,9 @@ Inverter::Inverter()
 	//module control
 	INV_DIR &= ~(1<<SIM_MODULE | 1<<POWER_BUTTON);
 	INV_CTR &= ~(1<<SIM_MODULE); //set it to low
+	
 	INV_CTR |= (1<<POWER_BUTTON);
+	//INV_CTR &= ~(1<<SIM_MODULE);
 		
 	//enable analog conversions
 	//configure ADC
