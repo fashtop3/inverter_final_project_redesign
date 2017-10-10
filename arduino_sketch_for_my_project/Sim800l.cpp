@@ -517,7 +517,6 @@ bool Sim800l::sendInverterReq(const char req)
 #if (LED)
   digitalWrite(LED_PIN, 1);
 #endif
-  checkConnected();
   INV.listen();
   delay(1000);
   INV.print("DATA:");
