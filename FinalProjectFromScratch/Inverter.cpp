@@ -145,6 +145,8 @@ Inverter::Inverter()
 		
 	_delay_ms(50); //delays for 500ms for stabilize
 	//outputLoad(); //put load on by default
+	
+	setSwitch(false);
 
 } //Inverter
 

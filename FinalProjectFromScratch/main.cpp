@@ -66,20 +66,19 @@ int main(void)
 		
     while (1) 
     {	
-					
-		//power_button_ctrl();
 
-		if(expect_scan(F("DATA:%c:%s"), &request, data, 2000)){
-			received_data = true;
-			//serialWriteString(0, data);
-			if (request == 'Q') //query
-			{
-				DQR();
-			}
-			else if (request == 'D')
-			{
-				if (inverter.isModuleAvailable())
+		if (inverter.isModuleAvailable())
+		{
+			if(expect_scan(F("DATA:%c:%s"), &request, data, 2000)){
+				received_data = true;
+				//serialWriteString(0, data);
+				if (request == 'Q') //query
 				{
+					DQR();
+				}
+				else if (request == 'D')
+				{
+					
 					if (sscanf(data, "%hu,%hu,%hu", &internet, &ref_power_state, &ref_load_protect) == 3) //0,1,70
 					{
 						
@@ -92,16 +91,15 @@ int main(void)
 						inverter.setOverload(&ref_load_protect);
 						inverter.setServerResponse((const uint8_t *)&ref_power_state);
 					}
+					DQR();
 				}
-				DQR();				
+				*data = '\0';
 			}
-			*data = '\0';
+			else {
+				received_data = false;
+			}
 		}
-		else {
-			received_data = false;
-		}
-    }
-	
+	}
 }
 
 void DQR()
