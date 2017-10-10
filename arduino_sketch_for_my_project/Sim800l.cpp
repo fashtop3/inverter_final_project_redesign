@@ -474,10 +474,13 @@ bool Sim800l::is_urc(const char *line, size_t len)
 bool Sim800l::checkConnected()
 {
   uint8_t status = 0;
+  Serial.print("CCT:"); //check connected
   println(F("AT+SAPBR=2,1")); //check if module is connected to Internet
   expect_scan(F("+SAPBR: 1,%hu,\"%*hu.%*hu.%*hu.%*hu\""), &status, SIM, 3000); //+SAPBR: 1,1,"10.96.42.184"
+  Serial.println(status);
 
-  return  status == 0 ? false : true;
+  _is_connected = status ? true:false;
+  return  _is_connected;// == 0 ? false : true;
 }
 
 bool Sim800l::__hard_reset__()
@@ -514,6 +517,7 @@ bool Sim800l::sendInverterReq(const char req)
 #if (LED)
   digitalWrite(LED_PIN, 1);
 #endif
+  checkConnected();
   INV.listen();
   delay(1000);
   INV.print("DATA:");

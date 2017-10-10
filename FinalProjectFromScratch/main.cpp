@@ -209,44 +209,49 @@ ISR(TIMER1_COMPA_vect)
 
 	inverter.monitor();
 
-	if (count > 7) //do this every 1sec
+	if (count > 9) //do this every 1sec
 	{
+		INV_CTR |= (1<<MODULE_HARD_RESET); //set logic high
+		
 		if (inverter.isModuleAvailable())
 		{
 			//HARD RESET SECTION
-			data_check++;
-			if ( data_check >= 600 )
+			if (!received_data) //when SIM MODULE CONTROLLER HANGS
 			{
-				if (!received_data)
+				data_check++;
+				if (data_check >= 610)
 				{
 					INV_CTR &= ~(1<<MODULE_HARD_RESET); //issue reset
-					data_check = 605; //set a constant check
-				} else {
-					data_check = 0;	
-					INV_CTR |= (1<<MODULE_HARD_RESET);
-				}
-			}
-			
-			//INTERNET VISIBLE SECTION
-			if (!internet) {
-				if (internet_delay_check >= 600) // 1800 equals 30 mins delay
-				{
+					data_check = 0; //set a constant check
+					
 					ref_power_state = 0;
 					inverter.setServerResponse((const uint8_t *)&internet); // internet is 0
 					inverter.setOverload(inverter.getOverloadDefault());
+				}
+			}
+			else // SIM MODULE IS STILL SENDING
+			{
+				data_check = 0;
+				////INTERNET VISIBLE SECTION
+				if (!internet)
+				{ 
+					internet_delay_check++; 
+					if (internet_delay_check >= 310) //5min check
+					{
+						ref_power_state = 0;
+						inverter.setServerResponse((const uint8_t *)&internet); // internet is 0
+						inverter.setOverload(inverter.getOverloadDefault());
+						internet_delay_check = 1;
+					}
+				}
+				else
+				{
 					internet_delay_check = 1;
 				}
-				internet_delay_check++;
-			} else {
-				internet_delay_check = 1;
 			}
 		}
-		else {
-			if (data_check >= 605)
-			{
-				INV_CTR |= (1<<MODULE_HARD_RESET); //Release reset... ///when module is unavailable after issue it jumps here
-				data_check = 0;
-			}
+		else
+		{
 			inverter.setOverload(inverter.getOverloadDefault());
 		}
 		
