@@ -33,11 +33,6 @@ void setup() {
   sim800.enableGPRS();
   delay(5000);
   wdtPrevMillis = millis();
-  //    WDT_rst();
-  //  while (sim800.sendInverterReq(req)) {
-  //    sim800.httpRequest(len);
-  //    req = 'D';
-  //  }
 }
 
 void loop() {

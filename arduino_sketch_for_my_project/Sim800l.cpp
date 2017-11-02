@@ -276,7 +276,7 @@ bool Sim800l::setSwitchAPN()
   if (*set) return *set;
 
   //TODO:  ADD RETRIES
-  char cs[15];
+  char cs[15] = {0};
   println(F("AT+CSCA?"));
   //+CSCA: "+234803000000",145
   if (expect_scan(F("+CSCA: \"%13s\",%*lu"), &cs, SIM, 5000))
@@ -458,7 +458,7 @@ bool Sim800l::is_urc(const char *line, size_t len)
 
   for (uint8_t i = 0; i < 17; i++)
   {
-    char urc[30];
+    char urc[30] = {0};
     strcpy(urc, (PGM_P)pgm_read_word(&(_urc_messages[i])));
     uint8_t urc_len = strlen(urc);
     if (len >= urc_len && !strncmp(urc, line, urc_len))
@@ -532,7 +532,7 @@ bool Sim800l::sendInverterReq(const char req)
   delay(1000);
   // Response format DATA:0,13.14,38,0,1,1 => DATA:<AC IN>,<BATTERY LEVEL>,<LOAD RANGE>,<CHARGING>,<CURRENT POWER STATE>,<CURRENT BACKUP STATE>
 
-  char data[22];
+  char data[22] = {0};
   Serial.println("DQR"); //DATA QUERY
   if (expect_scan(F("DATA:%s"), data, INV, 5000)) {
     //    Serial.println(data); //, &b, &l, &c, &p, &k //,%hu,%hu,%hu,%hu,%hu
