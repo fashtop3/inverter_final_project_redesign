@@ -114,7 +114,7 @@ Inverter::Inverter()
 			
 	//module control
 	INV_DIR &= ~(1<<SIM_MODULE | 1<<POWER_BUTTON);
-	INV_DIR |= 1<<MODULE_HARD_RESET;
+	INV_DIR |= 1<<MODULE_HARD_RESET | 1<<MODULE_SENSE;
 	
 	INV_CTR &= ~(1<<SIM_MODULE); //set it to low
 	INV_CTR |= 1<<MODULE_HARD_RESET;

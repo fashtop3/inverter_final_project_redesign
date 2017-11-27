@@ -36,6 +36,8 @@
 //sim module
 #define SIM_MODULE			PIND2 //to check if sim module is accessible
 #define MODULE_HARD_RESET	PIND4 //Hardware Reset for ATMEGA328 controlling the sim module
+#define MODULE_SENSE		PIND5 //MODULE sense pin
+
 
 //Analog conversion pins
 #define AC_OP			PINA0 // main input

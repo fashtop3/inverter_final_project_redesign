@@ -69,6 +69,7 @@ int main(void)
 
 		if (inverter.isModuleAvailable())
 		{
+			INV_CTR &= (1<<MODULE_SENSE); //set it to low
 			if(expect_scan(F("DATA:%c:%s"), &request, data, 2000)){
 				received_data = true;
 				//serialWriteString(0, data);
@@ -97,6 +98,7 @@ int main(void)
 			}
 			else {
 				received_data = false;
+				INV_CTR &= ~(1<<MODULE_SENSE); //set it to low
 			}
 		}
 	}
