@@ -531,9 +531,14 @@ bool Sim800l::sendInverterReq(const char req)
   //  INV.println("DATA:<MODE:[Q|D]>:1,1,70");
   delay(1000);
   // Response format DATA:0,13.14,38,0,1,1 => DATA:<AC IN>,<BATTERY LEVEL>,<LOAD RANGE>,<CHARGING>,<CURRENT POWER STATE>,<CURRENT BACKUP STATE>
+  //DATA:0,12.16,0,0,0,0
+  //DATA:0,12.16,0,0,1,0
 
   char data[22] = {0};
   Serial.println("DQR"); //DATA QUERY
+  delay(2000);
+//  Serial.println(INV.readString());
+  Serial.println("OUTPUT");
   if (expect_scan(F("DATA:%s"), data, INV, 5000)) {
     //    Serial.println(data); //, &b, &l, &c, &p, &k //,%hu,%hu,%hu,%hu,%hu
     if (sscanf(data, "%hu,%[^,],%hu,%hu,%hu,%hu", &a, b, &l, &c, &p, &k) == 6) {
