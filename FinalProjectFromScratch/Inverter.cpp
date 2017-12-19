@@ -83,7 +83,7 @@ void Inverter::incrementEntryCounter()
 
 // default constructor
 Inverter::Inverter()
-	:__BATT_LOW_LEVEL__(10.5),
+	:__BATT_LOW_LEVEL__(3)//(10.5),
 	 __BATT_FULL_LEVEL__(14.5),
 	 __OVERLOAD_VAL__(OVERLOAD_DEFAULT),
 	 //lcd(lcd),
@@ -475,7 +475,7 @@ bool Inverter::__isBattLow()
 
 bool Inverter::__isBattFull()
 {
-	return (getBattInputReadings() > __BATT_FULL_LEVEL__);
+	return (getBattInputReadings() >= __BATT_FULL_LEVEL__);
 }
 
 bool Inverter::__AcInputVoltageCheck()
